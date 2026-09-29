@@ -1,0 +1,288 @@
+.dashboard {
+  width: 100%;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.header,
+.section,
+.kpi {
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1.05fr);
+  align-items: start;
+  gap: 20px;
+  padding: 20px;
+}
+
+.headerMain {
+  min-width: 0;
+}
+
+.eyebrow {
+  display: block;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 30px;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.header p {
+  margin: 10px 0 0;
+  color: #475569;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.headerGrid,
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.kpi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+}
+
+.kpiLabel,
+.fieldLabel {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 1.25;
+}
+
+.kpiValue {
+  display: block;
+  margin-top: 6px;
+  color: #0f172a;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.kpi i {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-style: normal;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+
+.sectionFull {
+  grid-column: 1 / -1;
+}
+
+.section {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px;
+  height: auto;
+}
+
+.compactSection {
+  gap: 10px;
+  padding: 14px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1d4ed8;
+}
+
+.sectionTitle h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.field {
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 12px;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.fieldValue {
+  display: block;
+  margin-top: 6px;
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.textBlock {
+  min-width: 0;
+  border-left: 3px solid #93c5fd;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.textBlock p {
+  margin: 7px 0 0;
+  color: #334155;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.evidenceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.timelineBox {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.empty {
+  min-width: 0;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #64748b;
+  padding: 14px;
+  font-weight: 700;
+}
+
+.trace {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.traceStep {
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 12px;
+  min-width: 0;
+}
+
+.traceStep .fieldValue {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.traceStepLinked::after {
+  content: '→';
+  position: absolute;
+  top: 50%;
+  right: -11px;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-weight: 900;
+  line-height: 1;
+  z-index: 1;
+}
+
+@media (max-width: 1100px) {
+  .header {
+    grid-template-columns: 1fr;
+  }
+
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trace {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .traceStepLinked::after {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .header,
+  .section {
+    padding: 14px;
+  }
+
+  .headerGrid,
+  .fields,
+  .evidenceGrid,
+  .grid,
+  .kpis,
+  .trace {
+    grid-template-columns: 1fr;
+  }
+
+  .header h1 {
+    font-size: 25px;
+  }
+}

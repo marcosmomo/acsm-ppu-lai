@@ -1,0 +1,175 @@
+[
+    {
+        "id":  "acsm_ai_enrichment_tab",
+        "type":  "tab",
+        "label":  "ACSM CPS Generative AI Enrichment",
+        "disabled":  false,
+        "info":  "Per-CPS AI enrichment flow. Throttle is intentionally placed before the HTTP request builder."
+    },
+    {
+        "id":  "ai_analytics_event_input",
+        "type":  "mqtt in",
+        "z":  "acsm_ai_enrichment_tab",
+        "name":  "analytics/event input",
+        "topic":  "acsm1/+/analytics/event",
+        "qos":  "0",
+        "datatype":  "auto-detect",
+        "broker":  "ai_hivemq_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  170,
+        "y":  120,
+        "wires":  [
+                      [
+                          "per_cps_ai_throttle"
+                      ]
+                  ]
+    },
+    {
+        "id":  "per_cps_ai_throttle",
+        "type":  "function",
+        "z":  "acsm_ai_enrichment_tab",
+        "name":  "Per-CPS AI throttle",
+        "func":  "const THROTTLE_MS = 5000;\n\nfunction parsePayload(value) {\n    if (!value) return {};\n    if (typeof value === \"string\") {\n        try { return JSON.parse(value); } catch (err) { return { raw: value }; }\n    }\n    if (Buffer.isBuffer(value)) {\n        try { return JSON.parse(value.toString(\"utf8\")); } catch (err) { return { raw: value.toString(\"utf8\") }; }\n    }\n    return value \u0026\u0026 typeof value === \"object\" ? value : { raw: value };\n}\n\nfunction normalizeCpsId(value) {\n    return String(value || \"\")\n        .trim()\n        .toLowerCase()\n        .replace(/^cps-?0*/, \"cps\")\n        .replace(/[^a-z0-9_-]/g, \"\");\n}\n\nconst originalPayload = parsePayload(msg.payload);\nconst topicParts = String(msg.topic || \"\").split(\"/\");\nconst topicCps = topicParts.length \u003e= 3 \u0026\u0026 topicParts[0] === \"acsm1\" ? topicParts[1] : null;\nconst baseTopic = normalizeCpsId(originalPayload.baseTopic || originalPayload.cpsId || msg.baseTopic || msg.cpsId || topicCps || \"cps7\") || \"cps7\";\nconst now = Date.now();\nconst throttleState = flow.get(\"perCpsAiThrottle\") || {};\nconst lastCallAt = Number(throttleState[baseTopic] || 0);\n\nmsg._aiOriginalPayload = originalPayload;\nmsg._aiEnrichmentContext = {\n    cpsId: originalPayload.cpsId || baseTopic,\n    baseTopic,\n    sourceTopic: msg.topic,\n    receivedAt: new Date(now).toISOString(),\n    throttleMs: THROTTLE_MS\n};\n\nif (lastCallAt \u003e 0 \u0026\u0026 now - lastCallAt \u003c THROTTLE_MS) {\n    const retryAfterMs = THROTTLE_MS - (now - lastCallAt);\n    msg._aiEnrichmentContext.rateLimited = true;\n    msg._aiEnrichmentContext.retryAfterMs = retryAfterMs;\n    msg.aiInterpretation = {\n        summary: \"Generative AI interpretation skipped by the per-CPS throttle; publishing a freshness update with the latest structured analytics.\",\n        diagnosis: \"No new AI diagnosis was generated because this CPS is still inside the throttle window.\",\n        prediction: \"Prediction remains based on the latest available structured forecast from the CPS analytics payload.\",\n        recommendation: originalPayload.recommendation || originalPayload.reasoning?.recommendation || \"Maintain the current operational monitoring strategy until the next AI enrichment window.\",\n        decisionJustification: \"The existing analytics payload is preserved; the generative AI layer did not create or alter decisions.\",\n        riskInterpretation: originalPayload.riskLevel ? `Current structured risk level remains ${originalPayload.riskLevel}.` : \"Risk interpretation is based on the latest structured analytics payload.\",\n        confidenceInterpretation: originalPayload.confidence != null ? `Current structured confidence remains ${originalPayload.confidence}.` : \"Confidence interpretation is based on the latest structured analytics payload.\",\n        generatedAt: new Date(now).toISOString(),\n        model: \"fallback\",\n        fallback: true,\n        reason: \"rate_limit\",\n        retryAfterMs\n    };\n    node.status({ fill: \"yellow\", shape: \"ring\", text: `${baseTopic} throttled ${retryAfterMs}ms` });\n    return [null, msg];\n}\n\nthrottleState[baseTopic] = now;\nflow.set(\"perCpsAiThrottle\", throttleState);\nnode.status({ fill: \"green\", shape: \"dot\", text: `${baseTopic} AI allowed` });\nreturn [msg, null];",
+        "outputs":  2,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  420,
+        "y":  120,
+        "wires":  [
+                      [
+                          "build_vercel_ai_request"
+                      ],
+                      [
+                          "build_mqtt_ai_payload"
+                      ]
+                  ]
+    },
+    {
+        "id":  "build_vercel_ai_request",
+        "type":  "function",
+        "z":  "acsm_ai_enrichment_tab",
+        "name":  "Build Vercel AI request",
+        "func":  "const originalPayload = msg._aiOriginalPayload || (msg.payload \u0026\u0026 typeof msg.payload === \"object\" ? msg.payload : {});\nconst aiContext = msg._aiEnrichmentContext || {};\nconst endpoint = env.get(\"VERCEL_AI_DESCRIBE_URL\") || \"http://localhost:3000/api/ai/describe-level\";\n\nconst knowledgePackage = originalPayload.knowledgePackage || originalPayload.analytics || originalPayload;\n\nmsg.method = \"POST\";\nmsg.url = endpoint;\nmsg.headers = {\n    \"Content-Type\": \"application/json\"\n};\nmsg.payload = {\n    level: \"level1\",\n    contextType: \"operational\",\n    knowledgePackage,\n    language: \"en\",\n    outputType: \"summary\"\n};\n\nnode.status({ fill: \"blue\", shape: \"dot\", text: `AI request ready for ${aiContext.baseTopic || \"cps\"}` });\nnode.warn({\n    eventType: \"AI_REQUEST_READY\",\n    cpsId: aiContext.cpsId || originalPayload.cpsId || aiContext.baseTopic,\n    baseTopic: aiContext.baseTopic,\n    endpoint: \"/api/ai/describe-level\"\n});\n\nreturn msg;",
+        "outputs":  1,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  690,
+        "y":  90,
+        "wires":  [
+                      [
+                          "http_describe_level"
+                      ]
+                  ]
+    },
+    {
+        "id":  "http_describe_level",
+        "type":  "http request",
+        "z":  "acsm_ai_enrichment_tab",
+        "name":  "HTTP request /api/ai/describe-level",
+        "method":  "use",
+        "ret":  "obj",
+        "paytoqs":  "ignore",
+        "url":  "",
+        "tls":  "",
+        "persist":  false,
+        "proxy":  "",
+        "insecureHTTPParser":  false,
+        "authType":  "",
+        "senderr":  true,
+        "headers":  [
+
+                    ],
+        "x":  1010,
+        "y":  90,
+        "wires":  [
+                      [
+                          "build_mqtt_ai_payload"
+                      ]
+                  ]
+    },
+    {
+        "id":  "build_mqtt_ai_payload",
+        "type":  "function",
+        "z":  "acsm_ai_enrichment_tab",
+        "name":  "Build MQTT AI payload",
+        "func":  "function toObject(value) {\n    if (!value) return {};\n    if (typeof value === \"string\") {\n        try { return JSON.parse(value); } catch (err) { return { raw: value }; }\n    }\n    if (Buffer.isBuffer(value)) {\n        try { return JSON.parse(value.toString(\"utf8\")); } catch (err) { return { raw: value.toString(\"utf8\") }; }\n    }\n    return value \u0026\u0026 typeof value === \"object\" ? value : { raw: value };\n}\n\nfunction normalizeCpsId(value) {\n    return String(value || \"\")\n        .trim()\n        .toLowerCase()\n        .replace(/^cps-?0*/, \"cps\")\n        .replace(/[^a-z0-9_-]/g, \"\");\n}\n\nfunction fallbackFrom(originalPayload, reason) {\n    const nowIso = new Date().toISOString();\n    return {\n        summary: \"Generative AI interpretation fallback generated from the existing structured CPS analytics payload.\",\n        diagnosis: originalPayload.reasoning?.primaryIssue || originalPayload.reasoning?.diagnosis || \"Structured analytics remain available; no new generative diagnosis was produced.\",\n        prediction: originalPayload.forecastOEE != null ? `Structured forecast OEE remains ${originalPayload.forecastOEE}.` : \"Prediction remains based on the latest structured forecast fields, when available.\",\n        recommendation: originalPayload.recommendation || originalPayload.reasoning?.recommendation || \"Maintain monitoring based on the current CPS analytics payload.\",\n        decisionJustification: \"The AI interpretation layer did not change metrics, reasoning, decisions, MQTT topics, or feedback payloads.\",\n        riskInterpretation: originalPayload.riskLevel ? `Structured risk level: ${originalPayload.riskLevel}.` : \"Risk level was not explicitly provided in the source payload.\",\n        confidenceInterpretation: originalPayload.confidence != null ? `Structured confidence: ${originalPayload.confidence}.` : \"Confidence was not explicitly provided in the source payload.\",\n        generatedAt: nowIso,\n        model: \"fallback\",\n        fallback: true,\n        reason\n    };\n}\n\nconst aiContext = msg._aiEnrichmentContext || {};\nconst originalPayload = msg._aiOriginalPayload || {};\nconst httpPayload = toObject(msg.payload);\nconst statusCode = Number(msg.statusCode || 0);\nlet aiInterpretation = msg.aiInterpretation || httpPayload;\n\nif (msg.error || statusCode \u003e= 400 || !aiInterpretation || typeof aiInterpretation !== \"object\" || Object.keys(aiInterpretation).length === 0) {\n    aiInterpretation = fallbackFrom(originalPayload, msg.error ? \"http_error\" : `http_${statusCode || \"empty_response\"}`);\n}\n\nconst baseTopic = normalizeCpsId(aiContext.baseTopic || originalPayload.baseTopic || originalPayload.cpsId || \"cps7\") || \"cps7\";\nconst nowIso = new Date().toISOString();\n\nmsg.topic = `acsm1/${baseTopic}/analytics/enriched`;\nmsg.payload = {\n    ...originalPayload,\n    aiInterpretation,\n    generativeAIInterpretation: aiInterpretation,\n    aiEnrichment: {\n        generatedAt: aiInterpretation.generatedAt || nowIso,\n        fallback: aiInterpretation.fallback === true,\n        reason: aiInterpretation.reason || null,\n        model: aiInterpretation.model || \"gemini\",\n        source: aiContext.rateLimited ? \"per_cps_throttle\" : \"vercel_describe_level\"\n    },\n    enrichedAt: nowIso\n};\n\nnode.status({ fill: aiInterpretation.fallback ? \"yellow\" : \"green\", shape: \"dot\", text: `${baseTopic} enriched${aiInterpretation.fallback ? \" fallback\" : \"\"}` });\nreturn msg;",
+        "outputs":  1,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  1280,
+        "y":  150,
+        "wires":  [
+                      [
+                          "mqtt_publish_enriched"
+                      ]
+                  ]
+    },
+    {
+        "id":  "mqtt_publish_enriched",
+        "type":  "mqtt out",
+        "z":  "acsm_ai_enrichment_tab",
+        "name":  "MQTT publish enriched",
+        "topic":  "",
+        "qos":  "0",
+        "retain":  "",
+        "respTopic":  "",
+        "contentType":  "",
+        "userProps":  "",
+        "correl":  "",
+        "expiry":  "",
+        "broker":  "ai_hivemq_broker",
+        "x":  1540,
+        "y":  150,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "ai_hivemq_broker",
+        "type":  "mqtt-broker",
+        "name":  "HiveMQ AI enrichment",
+        "broker":  "localhost",
+        "port":  "1883",
+        "clientid":  "",
+        "autoConnect":  true,
+        "usetls":  false,
+        "protocolVersion":  "4",
+        "keepalive":  "60",
+        "cleansession":  true,
+        "birthTopic":  "",
+        "birthQos":  "0",
+        "birthPayload":  "",
+        "birthMsg":  {
+
+                     },
+        "closeTopic":  "",
+        "closeQos":  "0",
+        "closePayload":  "",
+        "closeMsg":  {
+
+                     },
+        "willTopic":  "",
+        "willQos":  "0",
+        "willPayload":  "",
+        "willMsg":  {
+
+                    },
+        "userProps":  "",
+        "sessionExpiry":  ""
+    }
+]

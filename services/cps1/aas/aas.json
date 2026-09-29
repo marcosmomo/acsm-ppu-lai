@@ -1,0 +1,759 @@
+{
+  "assetAdministrationShells": [
+    {
+      "modelType": "AssetAdministrationShell",
+      "id": "urn:uuid:cps1-aas-001",
+      "idShort": "CPS1_AAS",
+      "description": [
+        {
+          "language": "pt-BR",
+          "text": "AAS do CPS-1 (EstaÃƒÂ§ÃƒÂ£o de Soldagem Alfa) integrado ÃƒÂ  ACSM, BaSyx, Node-RED, dashboard local e broker MQTT HiveMQ."
+        }
+      ],
+      "assetInformation": {
+        "assetKind": "Instance",
+        "globalAssetId": "urn:asset:cps1:robosoldagem_alfa_v3",
+        "specificAssetIds": [
+          { "name": "cpsId", "value": "CPS-001" },
+          { "name": "assetName", "value": "RoboSoldagemAlfa" },
+          { "name": "manufacturer", "value": "IndustrialRobotics Corp" },
+          { "name": "assetType", "value": "Welding Robot 6-Axis" },
+          { "name": "serialNumber", "value": "SN-WELD-9921" },
+          { "name": "baseTopic", "value": "cps1" }
+        ]
+      },
+      "submodels": [
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:digitalnameplate" }]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:technicaldata" }]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:operationaldata" }]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:statusandhealth" }]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:documents" }]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:assetinterfaces" }]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:lifecycleintegration" }]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:acsmintegration" }]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:oeemonitoring" }]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:learning" }]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [{ "type": "Submodel", "value": "urn:uuid:submodel:cps1:functions" }]
+        }
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:digitalnameplate",
+      "idShort": "DigitalNameplate",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "ManufacturerName",
+          "valueType": "xs:string",
+          "value": "IndustrialRobotics Corp"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ManufacturerProductDesignation",
+          "valueType": "xs:string",
+          "value": "RoboSoldagemAlfa"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CPSId",
+          "valueType": "xs:string",
+          "value": "CPS-001"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "SerialNumber",
+          "valueType": "xs:string",
+          "value": "SN-WELD-9921"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:technicaldata",
+      "idShort": "TechnicalData",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "MaxPayload",
+          "valueType": "xs:string",
+          "value": "10kg"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "DegreesOfFreedom",
+          "valueType": "xs:int",
+          "value": "6"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "WeldingProcess",
+          "valueType": "xs:string",
+          "value": "Arc Welding"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "NominalCycleTimeMs",
+          "valueType": "xs:int",
+          "value": "1800"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:operationaldata",
+      "idShort": "OperationalData",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "TempPontaSolda",
+          "valueType": "xs:decimal",
+          "value": "180.5"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CorrenteArco",
+          "valueType": "xs:decimal",
+          "value": "45.2"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "PressaoGas",
+          "valueType": "xs:decimal",
+          "value": "12.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "PieceCounter",
+          "valueType": "xs:int",
+          "value": "0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CycleTimeMs",
+          "valueType": "xs:int",
+          "value": "0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OperationMode",
+          "valueType": "xs:string",
+          "value": "play"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:statusandhealth",
+      "idShort": "StatusAndHealth",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "OperationalState",
+          "valueType": "xs:string",
+          "value": "Running"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Availability",
+          "valueType": "xs:string",
+          "value": "Available"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "HealthState",
+          "valueType": "xs:string",
+          "value": "Healthy"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LastHeartbeat",
+          "valueType": "xs:dateTime",
+          "value": "2026-03-23T09:00:00Z"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:documents",
+      "idShort": "Documents",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "DashboardURL",
+          "valueType": "xs:string",
+          "value": "http://localhost:3007/cps1"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "DatasheetPDF",
+          "valueType": "xs:string",
+              "value": "/api/cps1/datasheet/pdf"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ScientificReportPDF",
+          "valueType": "xs:string",
+          "value": "http://localhost:1881/files/cps1/scientific-report.pdf"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:assetinterfaces",
+      "idShort": "AssetInterfacesDescription",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "PrimaryProtocol",
+          "valueType": "xs:string",
+          "value": "MQTT"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BrokerHost",
+          "valueType": "xs:string",
+          "value": "localhost"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BrokerPort",
+          "valueType": "xs:string",
+          "value": "1883"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BaseTopic",
+          "valueType": "xs:string",
+          "value": "cps1"
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "WebSocketInterfaces",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "MQTTWS",
+              "valueType": "xs:string",
+              "value": "ws://localhost:9001/mqtt"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "MQTTWSS",
+              "valueType": "xs:string",
+              "value": "wss://localhost:9001/mqtt"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "CommandInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps1/cmd"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Inbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "StatusInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps1/status"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "AckInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps1/ack"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "HealthInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps1/health"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "DataInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps1/data"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "OEEInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps1/oee"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ACSMOEEInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps1/oee"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Producer",
+              "valueType": "xs:string",
+              "value": "CPS-1 / Node-RED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Consumer",
+              "valueType": "xs:string",
+              "value": "ACSM"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ACSMLearningInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps1/learning"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Producer",
+              "valueType": "xs:string",
+              "value": "CPS-1 / Node-RED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Consumer",
+              "valueType": "xs:string",
+              "value": "ACSM"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "RESTEndpoints",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "DescriptionEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps1/description"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "SummaryEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps1/summary"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "IndicatorsEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps1/indicators"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "HistoryEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps1/history"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "HealthEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps1/health"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:lifecycleintegration",
+      "idShort": "LifecycleIntegration",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "SupportedPhases",
+          "valueType": "xs:string",
+          "value": "plug, play, stop, maintenance, return, unplug"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CurrentPhase",
+          "valueType": "xs:string",
+          "value": "play"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:acsmintegration",
+      "idShort": "ACSMIntegration",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "ACSMAssetId",
+          "valueType": "xs:string",
+          "value": "ACSM-CPS1-001"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "NodeRedFlowReference",
+          "valueType": "xs:string",
+          "value": "flow:cps1-welding-logic"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "DashboardURL",
+          "valueType": "xs:string",
+          "value": "http://localhost:3007/cps1"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "AnalyticsIntegrationMode",
+          "valueType": "xs:string",
+          "value": "MQTT + AAS"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEEPublishTopic",
+          "valueType": "xs:string",
+          "value": "acsm/cps1/oee"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LearningPublishTopic",
+          "valueType": "xs:string",
+          "value": "acsm/cps1/learning"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEESubmodelRef",
+          "valueType": "xs:string",
+          "value": "urn:uuid:submodel:cps1:oeemonitoring"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LearningSubmodelRef",
+          "valueType": "xs:string",
+          "value": "urn:uuid:submodel:cps1:learning"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:oeemonitoring",
+      "idShort": "OEEMonitoring",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "Availability",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Performance",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Quality",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEEOverall",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Publishing",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps1/oee"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Protocol",
+              "valueType": "xs:string",
+              "value": "MQTT"
+            }
+          ]
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LastUpdate",
+          "valueType": "xs:dateTime",
+          "value": "2026-03-21T00:00:00Z"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:learning",
+      "idShort": "Learning",
+      "submodelElements": [
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Reasoning",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "DominantLoss",
+              "valueType": "xs:string",
+              "value": "availability"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Explanation",
+              "valueType": "xs:string",
+              "value": "A principal perda do OEE tende a estar associada ÃƒÂ  disponibilidade do ciclo de soldagem e ÃƒÂ s interrupÃƒÂ§ÃƒÂµes do processo."
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Recommendation",
+              "valueType": "xs:string",
+              "value": "Verificar paradas, microparadas, sincronizaÃƒÂ§ÃƒÂ£o do ciclo e estabilidade do processo de soldagem."
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "LearningModel",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "ModelName",
+              "valueType": "xs:string",
+              "value": "local_statistical_learning_v1"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "ModelType",
+              "valueType": "xs:string",
+              "value": "statistical_pattern_learning"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Confidence",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "LearnedPattern",
+              "valueType": "xs:string",
+              "value": "Nenhum padrÃƒÂ£o relevante aprendido atÃƒÂ© o momento."
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Evidence",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "CycleDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "RPMDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "TorqueDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "TemperatureDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OEEDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Publishing",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps1/learning"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Protocol",
+              "valueType": "xs:string",
+              "value": "MQTT"
+            }
+          ]
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LastLearningUpdate",
+          "valueType": "xs:dateTime",
+          "value": "2026-03-21T00:00:00Z"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps1:functions",
+      "idShort": "Functions",
+      "submodelElements": [
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "execute_welding_cycle",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Name",
+              "valueType": "xs:string",
+              "value": "Execute Welding Cycle"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Description",
+              "valueType": "xs:string",
+              "value": "ExecuÃƒÂ§ÃƒÂ£o do ciclo de soldagem com controle de temperatura da ponta, corrente de arco e pressÃƒÂ£o de gÃƒÂ¡s."
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AllowedStatuses",
+              "valueType": "xs:string",
+              "value": "active|maintenance|awaiting_replacement|failure"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,13 @@
+{
+  "name": "cps1-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Independent CPS-1 service in shadow mode",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "mqtt": "^5.14.1"
+  }
+}

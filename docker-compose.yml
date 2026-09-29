@@ -1,0 +1,99 @@
+services:
+  acsm-mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: acsm-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    networks:
+      - acsm-network
+
+  acsm-cps1:
+    build:
+      context: ./services/cps1
+    image: acsm-cps1:latest
+    container_name: acsm-cps1
+    restart: unless-stopped
+    environment:
+      CPS_RUNTIME_MODE: active
+      CPS_ID: CPS-001
+      CPS_NAME: RoboSoldagemAlfa
+      CPS_BASE_TOPIC: cps1
+      MQTT_BROKER: acsm-mosquitto
+      MQTT_PORT: "1883"
+      CPS_TELEMETRY_INTERVAL_MS: "1000"
+      HTTP_PORT: "3001"
+      NODE_ENV: production
+    ports:
+      - "3001:3001"
+    volumes:
+      - cps1-data:/app/data
+    depends_on:
+      - acsm-mosquitto
+    networks:
+      - acsm-network
+
+  acsm-cps5:
+    build:
+      context: ./services/cps5
+    image: acsm-cps5:latest
+    container_name: acsm-cps5
+    restart: unless-stopped
+    environment:
+      CPS_RUNTIME_MODE: active
+      CPS_ID: CPS-005
+      CPS_NAME: SistemaVisao_Qualit
+      CPS_BASE_TOPIC: cps5
+      MQTT_BROKER: acsm-mosquitto
+      MQTT_PORT: "1883"
+      CPS_TELEMETRY_INTERVAL_MS: "1000"
+      HTTP_PORT: "3005"
+      NODE_ENV: production
+    ports:
+      - "3005:3005"
+    volumes:
+      - cps5-data:/app/data
+    depends_on:
+      - acsm-mosquitto
+    networks:
+      - acsm-network
+
+  acsm-cps7:
+    build:
+      context: ./services/cps7
+    image: acsm-cps7:latest
+    container_name: acsm-cps7
+    restart: unless-stopped
+    environment:
+      CPS_RUNTIME_MODE: active
+      CPS_ID: CPS-007
+      CPS_NAME: Transportband_50464
+      CPS_BASE_TOPIC: cps7
+      MQTT_BROKER: acsm-mosquitto
+      MQTT_PORT: "1883"
+      CPS_TELEMETRY_INTERVAL_MS: "1000"
+      HTTP_PORT: "3007"
+      NODE_ENV: production
+    ports:
+      - "3007:3007"
+    volumes:
+      - cps7-data:/app/data
+    depends_on:
+      - acsm-mosquitto
+    networks:
+      - acsm-network
+
+networks:
+  acsm-network:
+    external: true
+
+volumes:
+  cps1-data:
+    external: true
+  cps5-data:
+    external: true
+  cps7-data:
+    external: true

@@ -1,0 +1,113 @@
+[
+  {
+    "id": "cpslai1_mqtt_smoke_tab",
+    "type": "tab",
+    "label": "CPS-LAI-01 MQTT Connectivity Smoke Test",
+    "disabled": true,
+    "info": "DISABLED BY DEFAULT. Manual MQTT connectivity test only. No OPC UA, commands, timers, simulated telemetry, or physical data. Enable only for one manual Inject, then disable again."
+  },
+  {
+    "id": "cpslai1_mqtt_smoke_broker",
+    "type": "mqtt-broker",
+    "name": "Local ACSM Mosquitto (TCP)",
+    "broker": "${MQTT_BROKER_HOST}",
+    "port": "${MQTT_BROKER_PORT}",
+    "clientid": "cpslai1-nodered-mqtt-smoke",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": ""
+  },
+  {
+    "id": "cpslai1_mqtt_smoke_inject",
+    "type": "inject",
+    "z": "cpslai1_mqtt_smoke_tab",
+    "name": "MANUAL: publish once",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": "0.1",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 180,
+    "y": 120,
+    "wires": [
+      [
+        "cpslai1_mqtt_smoke_payload"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_mqtt_smoke_payload",
+    "type": "function",
+    "z": "cpslai1_mqtt_smoke_tab",
+    "name": "Build controlled diagnostic payload",
+    "func": "msg.topic = (env.get('MQTT_BASE_TOPIC') || 'cpslai1') + '/data';\nmsg.payload = {\n  cpsId: 'cpslai1',\n  timestamp: new Date().toISOString(),\n  diagnostic: 'CONTROLLED_MQTT_CONNECTIVITY_TEST_NOT_PLC_DATA'\n};\nmsg.qos = 1;\nmsg.retain = false;\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 470,
+    "y": 120,
+    "wires": [
+      [
+        "cpslai1_mqtt_smoke_out",
+        "cpslai1_mqtt_smoke_debug"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_mqtt_smoke_out",
+    "type": "mqtt out",
+    "z": "cpslai1_mqtt_smoke_tab",
+    "name": "Publish cpslai1/data once",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "cpslai1_mqtt_smoke_broker",
+    "x": 780,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "cpslai1_mqtt_smoke_debug",
+    "type": "debug",
+    "z": "cpslai1_mqtt_smoke_tab",
+    "name": "Local diagnostic payload",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 790,
+    "y": 160,
+    "wires": []
+  }
+]

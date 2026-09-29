@@ -1,0 +1,9 @@
+{
+  "name": "cps5-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Independent CPS-5 vision inspection service",
+  "main": "src/server.js",
+  "scripts": { "start": "node src/server.js" },
+  "dependencies": { "mqtt": "^5.14.1" }
+}

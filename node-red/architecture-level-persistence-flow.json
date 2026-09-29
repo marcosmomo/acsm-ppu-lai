@@ -1,0 +1,419 @@
+[
+    {
+        "id":  "arch_level_persistence_tab",
+        "type":  "tab",
+        "label":  "Architecture Level Persistence",
+        "disabled":  false,
+        "info":  "Persists observed data and generated knowledge by cognitive architecture level into JSON Lines and simple JSON document stores."
+    },
+    {
+        "id":  "arch_level_persistence_broker",
+        "type":  "mqtt-broker",
+        "name":  "HiveMQ Architecture Persistence",
+        "broker":  "localhost",
+        "port":  "1883",
+        "clientid":  "",
+        "autoConnect":  true,
+        "usetls":  false,
+        "protocolVersion":  "4",
+        "keepalive":  "60",
+        "cleansession":  true,
+        "autoUnsubscribe":  true,
+        "birthTopic":  "",
+        "birthQos":  "0",
+        "birthPayload":  "",
+        "birthMsg":  {
+
+                     },
+        "closeTopic":  "",
+        "closeQos":  "0",
+        "closePayload":  "",
+        "closeMsg":  {
+
+                     },
+        "willTopic":  "",
+        "willQos":  "0",
+        "willPayload":  "",
+        "willMsg":  {
+
+                    }
+    },
+    {
+        "id":  "persist_level1_oee_in",
+        "type":  "mqtt in",
+        "z":  "arch_level_persistence_tab",
+        "name":  "L1 observed cpsX/oee",
+        "topic":  "+/oee",
+        "qos":  "0",
+        "datatype":  "auto",
+        "broker":  "arch_level_persistence_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  160,
+        "y":  100,
+        "wires":  [
+                      [
+                          "persist_level1_cps"
+                      ]
+                  ]
+    },
+    {
+        "id":  "persist_level1_data_in",
+        "type":  "mqtt in",
+        "z":  "arch_level_persistence_tab",
+        "name":  "L1 observed cpsX/data",
+        "topic":  "+/data",
+        "qos":  "0",
+        "datatype":  "auto",
+        "broker":  "arch_level_persistence_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  160,
+        "y":  145,
+        "wires":  [
+                      [
+                          "persist_level1_cps"
+                      ]
+                  ]
+    },
+    {
+        "id":  "persist_level1_adaptive_in",
+        "type":  "mqtt in",
+        "z":  "arch_level_persistence_tab",
+        "name":  "L1 knowledge cpsX/local/adaptive",
+        "topic":  "+/local/adaptive",
+        "qos":  "0",
+        "datatype":  "auto",
+        "broker":  "arch_level_persistence_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  190,
+        "y":  190,
+        "wires":  [
+                      [
+                          "persist_level1_cps"
+                      ]
+                  ]
+    },
+    {
+        "id":  "persist_level1_cps",
+        "type":  "function",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Persist Level 1 CPS",
+        "func":  "const LEVEL = \"level1\";\nconst JSONL_PATH = \"C:\\\\Users\\\\marco\\\\data\\\\knowledge\\\\level1-cps.jsonl\";\nconst DB_PATH = \"C:\\\\Users\\\\marco\\\\data\\\\db\\\\level1-cps.json\";\nconst DB_KEY = \"persistence_db_level1_cps\";\nconst MAX_RECORDS = 1000;\n\nfunction parsePayload(payload) {\n    if (!payload) return {};\n    if (typeof payload === \"string\") {\n        try { return JSON.parse(payload); } catch (err) { return { raw: payload }; }\n    }\n    if (Buffer.isBuffer(payload)) {\n        try { return JSON.parse(payload.toString()); } catch (err) { return { raw: payload.toString() }; }\n    }\n    return payload \u0026\u0026 typeof payload === \"object\" ? payload : { raw: payload };\n}\n\nfunction normalizeId(value) {\n    return String(value || \"\").trim().toLowerCase().replace(/[^a-z0-9]/g, \"\").replace(/(cps)0+/, \"$1\");\n}\n\nfunction inferKind(topic) {\n    if (topic.endsWith(\"/oee\") || topic.endsWith(\"/data\")) return \"observed\";\n    if (topic.endsWith(\"/local/adaptive\")) return \"knowledge\";\n    return null;\n}\n\nconst topic = String(msg.topic || \"\").trim();\nconst source = normalizeId(topic.split(\"/\")[0]);\nconst kind = inferKind(topic);\nif (!source.startsWith(\"cps\") || !kind) return null;\n\nconst payload = parsePayload(msg.payload);\nconst now = Date.now();\nconst timestamp = payload.timestamp || new Date(now).toISOString();\nconst ts = Number(payload.ts || Date.parse(timestamp) || now);\nconst messageType = payload.messageType || (kind === \"knowledge\" ? \"cps_adaptive_local_intelligence\" : topic.endsWith(\"/oee\") ? \"cps_oee_observation\" : \"cps_data_observation\");\nconst record = {\n    id: LEVEL + \"-\" + kind + \"-\" + source + \"-\" + ts,\n    level: LEVEL,\n    kind,\n    source: payload.source || payload.cpsId || source,\n    topic,\n    messageType,\n    ts,\n    timestamp,\n    payload\n};\n\nconst records = Array.isArray(global.get(DB_KEY)) ? global.get(DB_KEY) : [];\nconst nextRecords = records.concat(record).slice(-MAX_RECORDS);\nglobal.set(DB_KEY, nextRecords);\nnode.status({ fill: kind === \"knowledge\" ? \"blue\" : \"green\", shape: \"dot\", text: source + \" \" + kind + \" | \" + nextRecords.length });\n\nreturn [\n    { payload: JSON.stringify(record), filename: JSONL_PATH },\n    { payload: JSON.stringify({ records: nextRecords }, null, 2), filename: DB_PATH }\n];",
+        "outputs":  2,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  500,
+        "y":  145,
+        "wires":  [
+                      [
+                          "file_level1_jsonl"
+                      ],
+                      [
+                          "file_level1_db"
+                      ]
+                  ]
+    },
+    {
+        "id":  "file_level1_jsonl",
+        "type":  "file",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Append level1-cps.jsonl",
+        "filename":  "C:\\Users\\marco\\data\\knowledge\\level1-cps.jsonl",
+        "filenameType":  "str",
+        "appendNewline":  true,
+        "createDir":  true,
+        "overwriteFile":  "false",
+        "encoding":  "none",
+        "x":  820,
+        "y":  125,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "file_level1_db",
+        "type":  "file",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Write level1-cps.json",
+        "filename":  "C:\\Users\\marco\\data\\db\\level1-cps.json",
+        "filenameType":  "str",
+        "appendNewline":  false,
+        "createDir":  true,
+        "overwriteFile":  "true",
+        "encoding":  "none",
+        "x":  810,
+        "y":  170,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "persist_level2_observed_acsm1_in",
+        "type":  "mqtt in",
+        "z":  "arch_level_persistence_tab",
+        "name":  "L2 observed acsm1",
+        "topic":  "acsm1/level2/intelligence",
+        "qos":  "0",
+        "datatype":  "auto",
+        "broker":  "arch_level_persistence_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  160,
+        "y":  260,
+        "wires":  [
+                      [
+                          "persist_level2_acsm"
+                      ]
+                  ]
+    },
+    {
+        "id":  "persist_level2_knowledge_acsm1_in",
+        "type":  "mqtt in",
+        "z":  "arch_level_persistence_tab",
+        "name":  "L2 knowledge acsm1",
+        "topic":  "acsm1/local/adaptive",
+        "qos":  "0",
+        "datatype":  "auto",
+        "broker":  "arch_level_persistence_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  160,
+        "y":  395,
+        "wires":  [
+                      [
+                          "persist_level2_acsm"
+                      ]
+                  ]
+    },
+    {
+        "id":  "persist_level2_acsm",
+        "type":  "function",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Persist Level 2 ACSM",
+        "func":  "const LEVEL = \"level2\";\nconst JSONL_PATH = \"C:\\\\Users\\\\marco\\\\data\\\\knowledge\\\\level2-acsm.jsonl\";\nconst DB_PATH = \"C:\\\\Users\\\\marco\\\\data\\\\db\\\\level2-acsm.json\";\nconst DB_KEY = \"persistence_db_level2_acsm\";\nconst MAX_RECORDS = 1000;\n\nfunction parsePayload(payload) {\n    if (!payload) return {};\n    if (typeof payload === \"string\") {\n        try { return JSON.parse(payload); } catch (err) { return { raw: payload }; }\n    }\n    if (Buffer.isBuffer(payload)) {\n        try { return JSON.parse(payload.toString()); } catch (err) { return { raw: payload.toString() }; }\n    }\n    return payload \u0026\u0026 typeof payload === \"object\" ? payload : { raw: payload };\n}\n\nfunction inferKind(topic) {\n    if (/^acsm[123]\\/level2\\/intelligence$/.test(topic)) return \"observed\";\n    if (/^acsm[123]\\/local\\/adaptive$/.test(topic)) return \"knowledge\";\n    return null;\n}\n\nconst topic = String(msg.topic || \"\").trim();\nconst source = topic.split(\"/\")[0] || \"acsm\";\nconst kind = inferKind(topic);\nif (!kind) return null;\n\nconst payload = parsePayload(msg.payload);\nconst now = Date.now();\nconst timestamp = payload.timestamp || new Date(now).toISOString();\nconst ts = Number(payload.ts || Date.parse(timestamp) || now);\nconst messageType = payload.messageType || (kind === \"knowledge\" ? \"acsm_local_adaptive_intelligence\" : \"acsm_level2_intelligence\");\nconst record = {\n    id: LEVEL + \"-\" + kind + \"-\" + source + \"-\" + ts,\n    level: LEVEL,\n    kind,\n    source: payload.source || payload.acsmId || source,\n    topic,\n    messageType,\n    ts,\n    timestamp,\n    payload\n};\n\nconst records = Array.isArray(global.get(DB_KEY)) ? global.get(DB_KEY) : [];\nconst nextRecords = records.concat(record).slice(-MAX_RECORDS);\nglobal.set(DB_KEY, nextRecords);\nnode.status({ fill: kind === \"knowledge\" ? \"blue\" : \"green\", shape: \"dot\", text: source + \" \" + kind + \" | \" + nextRecords.length });\n\nreturn [\n    { payload: JSON.stringify(record), filename: JSONL_PATH },\n    { payload: JSON.stringify({ records: nextRecords }, null, 2), filename: DB_PATH }\n];",
+        "outputs":  2,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  500,
+        "y":  370,
+        "wires":  [
+                      [
+                          "file_level2_jsonl"
+                      ],
+                      [
+                          "file_level2_db"
+                      ]
+                  ]
+    },
+    {
+        "id":  "file_level2_jsonl",
+        "type":  "file",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Append level2-acsm.jsonl",
+        "filename":  "C:\\Users\\marco\\data\\knowledge\\level2-acsm.jsonl",
+        "filenameType":  "str",
+        "appendNewline":  true,
+        "createDir":  true,
+        "overwriteFile":  "false",
+        "encoding":  "none",
+        "x":  820,
+        "y":  345,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "file_level2_db",
+        "type":  "file",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Write level2-acsm.json",
+        "filename":  "C:\\Users\\marco\\data\\db\\level2-acsm.json",
+        "filenameType":  "str",
+        "appendNewline":  false,
+        "createDir":  true,
+        "overwriteFile":  "true",
+        "encoding":  "none",
+        "x":  810,
+        "y":  390,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "history_level1_http_in",
+        "type":  "http in",
+        "z":  "arch_level_persistence_tab",
+        "name":  "GET /api/history/level1",
+        "url":  "/api/history/level1",
+        "method":  "get",
+        "upload":  false,
+        "swaggerDoc":  "",
+        "x":  190,
+        "y":  980,
+        "wires":  [
+                      [
+                          "prepare_history_level1"
+                      ]
+                  ]
+    },
+    {
+        "id":  "prepare_history_level1",
+        "type":  "function",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Prepare Level 1 History Query",
+        "func":  "const rawLimit = Number(msg.req?.query?.limit || 25);\nmsg.historyLevel = \"level1\";\nmsg.historyFile = \"C:\\\\Users\\\\marco\\\\data\\\\knowledge\\\\level1-cps.jsonl\";\nmsg.historyLimit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 25, 1), 200);\nmsg.filename = msg.historyFile;\nreturn msg;",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  500,
+        "y":  980,
+        "wires":  [
+                      [
+                          "read_history_level1"
+                      ]
+                  ]
+    },
+    {
+        "id":  "read_history_level1",
+        "type":  "file in",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Read level1-cps.jsonl",
+        "filename":  "",
+        "filenameType":  "msg",
+        "format":  "utf8",
+        "chunk":  false,
+        "sendError":  true,
+        "encoding":  "none",
+        "allProps":  false,
+        "x":  785,
+        "y":  980,
+        "wires":  [
+                      [
+                          "build_history_response"
+                      ]
+                  ]
+    },
+    {
+        "id":  "history_level2_http_in",
+        "type":  "http in",
+        "z":  "arch_level_persistence_tab",
+        "name":  "GET /api/history/level2",
+        "url":  "/api/history/level2",
+        "method":  "get",
+        "upload":  false,
+        "swaggerDoc":  "",
+        "x":  190,
+        "y":  1035,
+        "wires":  [
+                      [
+                          "prepare_history_level2"
+                      ]
+                  ]
+    },
+    {
+        "id":  "prepare_history_level2",
+        "type":  "function",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Prepare Level 2 History Query",
+        "func":  "const rawLimit = Number(msg.req?.query?.limit || 25);\nmsg.historyLevel = \"level2\";\nmsg.historyFile = \"C:\\\\Users\\\\marco\\\\data\\\\knowledge\\\\level2-acsm.jsonl\";\nmsg.historyLimit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 25, 1), 200);\nmsg.filename = msg.historyFile;\nreturn msg;",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  500,
+        "y":  1035,
+        "wires":  [
+                      [
+                          "read_history_level2"
+                      ]
+                  ]
+    },
+    {
+        "id":  "read_history_level2",
+        "type":  "file in",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Read level2-acsm.jsonl",
+        "filename":  "",
+        "filenameType":  "msg",
+        "format":  "utf8",
+        "chunk":  false,
+        "sendError":  true,
+        "encoding":  "none",
+        "allProps":  false,
+        "x":  785,
+        "y":  1035,
+        "wires":  [
+                      [
+                          "build_history_response"
+                      ]
+                  ]
+    },
+    {
+        "id":  "build_history_response",
+        "type":  "function",
+        "z":  "arch_level_persistence_tab",
+        "name":  "Build History HTTP Response",
+        "func":  "function extractAdaptive(payload) {\n    const candidates = [\n        payload?.adaptiveLearningCps,\n        payload?.adaptiveLearningLocal,\n        payload?.adaptiveLearningService,\n        payload?.adaptiveLearning,\n        payload?.raw?.adaptiveLearning\n    ];\n    return candidates.find((item) =\u003e item \u0026\u0026 typeof item === \"object\") || {};\n}\n\nfunction parseLines(raw) {\n    if (!raw || typeof raw !== \"string\") return [];\n    return raw\n        .split(/\\r?\\n/)\n        .map((line) =\u003e line.trim())\n        .filter(Boolean)\n        .map((line) =\u003e {\n            try { return JSON.parse(line); } catch (err) { return null; }\n        })\n        .filter(Boolean);\n}\n\nfunction isMissingFileError(message, code) {\n    const text = String(message || \"\").toLowerCase();\n    const errorCode = String(code || \"\").toLowerCase();\n    return errorCode.includes(\"enoent\") || text.includes(\"enoent\") || text.includes(\"no such file\");\n}\n\nconst limit = Math.min(Math.max(Number(msg.historyLimit || msg.req?.query?.limit || 25), 1), 200);\nconst level = msg.historyLevel || \"unknown\";\nconst file = msg.historyFile || msg.filename || \"\";\nconst details = msg.error?.message || msg.error?.toString?.() || \"\";\nconst code = msg.error?.code || msg.error?.source?.type || \"\";\n\nmsg.headers = {\n    \"content-type\": \"application/json\",\n    \"access-control-allow-origin\": \"*\"\n};\n\nif (msg.error) {\n    if (isMissingFileError(details, code)) {\n        msg.statusCode = 200;\n        msg.payload = {\n            ok: true,\n            level,\n            file,\n            limit,\n            count: 0,\n            records: []\n        };\n        return msg;\n    }\n\n    msg.statusCode = 500;\n    msg.payload = {\n        ok: false,\n        level,\n        file,\n        error: \"Failed to read history file\",\n        details: details || \"Unknown file read error\"\n    };\n    return msg;\n}\n\nconst records = parseLines(String(msg.payload || \"\"))\n    .sort((a, b) =\u003e Number(b.ts || Date.parse(b.timestamp) || 0) - Number(a.ts || Date.parse(a.timestamp) || 0))\n    .slice(0, limit)\n    .map((record) =\u003e {\n        const adaptive = extractAdaptive(record.payload || {});\n        return {\n            ...record,\n            temporalState: adaptive.temporalState || \"\",\n            adaptiveAction: adaptive.adaptiveAction || \"\"\n        };\n    });\n\nmsg.statusCode = 200;\nmsg.payload = {\n    ok: true,\n    level,\n    file,\n    limit,\n    count: records.length,\n    records\n};\nreturn msg;",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  1090,
+        "y":  1060,
+        "wires":  [
+                      [
+                          "history_http_response"
+                      ]
+                  ]
+    },
+    {
+        "id":  "history_http_response",
+        "type":  "http response",
+        "z":  "arch_level_persistence_tab",
+        "name":  "History HTTP response",
+        "statusCode":  "",
+        "headers":  {
+
+                    },
+        "x":  1360,
+        "y":  1060,
+        "wires":  [
+
+                  ]
+    }
+]

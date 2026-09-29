@@ -1,0 +1,128 @@
+[
+  {
+    "id": "d0c5000000000000",
+    "type": "tab",
+    "label": "CPS document endpoints",
+    "disabled": false,
+    "info": "CPS-1 serves its local datasheet. CPS-5 returns 404 until its PDF is added.",
+    "env": []
+  },
+  {
+    "id": "d0c1000000000001",
+    "type": "http in",
+    "z": "d0c5000000000000",
+    "name": "GET /api/cps1/datasheet/pdf",
+    "url": "/api/cps1/datasheet/pdf",
+    "method": "get",
+    "upload": false,
+    "swaggerDoc": "",
+    "wires": [["d0c1000000000002"]]
+  },
+  {
+    "id": "d0c1000000000002",
+    "type": "function",
+    "z": "d0c5000000000000",
+    "name": "Definir caminho documental CPS-1",
+    "func": "const configuredRoot = env.get('ACSM_PROJECT_ROOT');\nconst root = configuredRoot || 'C:\\\\bkp\\\\estagio doutoral\\\\Implementa\\u00e7\\u00e3o ACSM PPU\\\\acsm-main';\nconst separator = root.includes('\\\\') ? '\\\\' : '/';\nmsg.filename = root.replace(/[\\\\\\/]+$/, '') + separator + 'resources' + separator + 'cps1' + separator + 'datasheet.pdf';\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [["d0c1000000000004"]]
+  },
+  {
+    "id": "d0c1000000000004",
+    "type": "file in",
+    "z": "d0c5000000000000",
+    "name": "Ler CPS-1 datasheet",
+    "filename": "filename",
+    "format": "",
+    "chunk": false,
+    "sendError": true,
+    "encoding": "none",
+    "allProps": false,
+    "wires": [["d0c1000000000005"]]
+  },
+  {
+    "id": "d0c1000000000005",
+    "type": "function",
+    "z": "d0c5000000000000",
+    "name": "Responder datasheet CPS-1",
+    "func": "if (msg.error) {\n    msg.statusCode = 404;\n    msg.headers = { 'Content-Type': 'application/json; charset=utf-8' };\n    msg.payload = JSON.stringify({ error: 'Datasheet not available' });\n    return msg;\n}\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/pdf',\n    'Content-Disposition': 'inline; filename=\"cps1-datasheet.pdf\"'\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [["d0c1000000000003"]]
+  },
+  {
+    "id": "d0c1000000000003",
+    "type": "http response",
+    "z": "d0c5000000000000",
+    "name": "Resposta CPS-1 datasheet",
+    "statusCode": "",
+    "headers": {},
+    "wires": []
+  },
+  {
+    "id": "d0c5000000000001",
+    "type": "http in",
+    "z": "d0c5000000000000",
+    "name": "GET /api/cps5/datasheet/pdf",
+    "url": "/api/cps5/datasheet/pdf",
+    "method": "get",
+    "upload": false,
+    "swaggerDoc": "",
+    "wires": [["d0c5000000000002"]]
+  },
+  {
+    "id": "d0c5000000000002",
+    "type": "function",
+    "z": "d0c5000000000000",
+    "name": "Definir caminho documental CPS-5",
+    "func": "const configuredRoot = env.get('ACSM_PROJECT_ROOT');\nconst root = configuredRoot || 'C:\\\\bkp\\\\estagio doutoral\\\\Implementa\\u00e7\\u00e3o ACSM PPU\\\\acsm-main';\nconst separator = root.includes('\\\\') ? '\\\\' : '/';\nmsg.filename = root.replace(/[\\\\\\/]+$/, '') + separator + 'resources' + separator + 'cps5' + separator + 'datasheet.pdf';\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [["d0c5000000000004"]]
+  },
+  {
+    "id": "d0c5000000000004",
+    "type": "file in",
+    "z": "d0c5000000000000",
+    "name": "Ler CPS-5 datasheet",
+    "filename": "filename",
+    "format": "",
+    "chunk": false,
+    "sendError": true,
+    "encoding": "none",
+    "allProps": false,
+    "wires": [["d0c5000000000005"]]
+  },
+  {
+    "id": "d0c5000000000005",
+    "type": "function",
+    "z": "d0c5000000000000",
+    "name": "Responder datasheet CPS-5",
+    "func": "if (msg.error) {\n    msg.statusCode = 404;\n    msg.headers = { 'Content-Type': 'application/json; charset=utf-8' };\n    msg.payload = JSON.stringify({ error: 'Datasheet not available' });\n    return msg;\n}\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/pdf',\n    'Content-Disposition': 'inline; filename=\"cps5-datasheet.pdf\"'\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [["d0c5000000000003"]]
+  },
+  {
+    "id": "d0c5000000000003",
+    "type": "http response",
+    "z": "d0c5000000000000",
+    "name": "Resposta CPS-5 datasheet",
+    "statusCode": "",
+    "headers": {},
+    "wires": []
+  }
+]

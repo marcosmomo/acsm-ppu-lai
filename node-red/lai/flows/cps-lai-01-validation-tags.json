@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "2.0",
+  "cpsId": "cpslai1",
+  "endpoint": "opc.tcp://192.168.1.10:4840",
+  "tags": [
+    { "tag": "G1BG1", "semanticName": "PieceAtEntry", "logicalAddress": "%I0.0", "dataType": "Boolean", "nodeId": "ns=3;s=\"G1BG1\"", "evidenceStatus": "VALIDATED" },
+    { "tag": "G1BG2", "semanticName": "PieceAtMiddle", "logicalAddress": "%I0.1", "dataType": "Boolean", "nodeId": "ns=3;s=\"G1BG2\"", "evidenceStatus": "VALIDATED" },
+    { "tag": "G1BG3", "semanticName": "PieceAtExit", "logicalAddress": "%I0.2", "dataType": "Boolean", "nodeId": "ns=3;s=\"G1BG3\"", "evidenceStatus": "VALIDATED" },
+    { "tag": "C2BG1", "semanticName": "SlideRetracted", "logicalAddress": "%I0.4", "dataType": "Boolean", "nodeId": "ns=3;s=\"C2BG1\"", "evidenceStatus": "VALIDATED" },
+    { "tag": "C2BG2", "semanticName": "SlideExtended", "logicalAddress": "%I0.5", "dataType": "Boolean", "nodeId": "ns=3;s=\"C2BG2\"", "evidenceStatus": "VALIDATED" },
+    { "tag": "C2BG3", "semanticName": "MagazineEmpty", "logicalAddress": "%I0.6", "dataType": "Boolean", "nodeId": "ns=3;s=\"C2BG3\"", "evidenceStatus": "VALIDATED" },
+    { "tag": "SF4", "candidateSemantic": "AutoManualSwitch", "logicalAddress": "%I1.2", "dataType": "Boolean", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "SF5", "candidateSemantic": "EmergencyStopInput", "logicalAddress": "%I1.5", "dataType": "Boolean", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "xMEnAuto", "candidateSemantic": "AutoEnabled", "logicalAddress": "%M400.7", "dataType": "Boolean", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "xMProcessBusy", "candidateSemantic": "ProcessBusy", "logicalAddress": "%M300.1", "dataType": "Boolean", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "running_sys", "candidateSemantic": "Running", "logicalAddress": "%M68.4", "dataType": "Boolean", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "Manual_sys", "candidateSemantic": "ManualMode", "logicalAddress": "%M68.5", "dataType": "Boolean", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "STOP", "candidateSemantic": "Stopped", "logicalAddress": "%M1.4", "dataType": "Boolean", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "ready_var", "candidateSemantic": "Ready", "logicalAddress": "%M67.7", "dataType": "Boolean", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "ALARMS", "candidateSemantic": "AlarmActive", "logicalAddress": "%M75.4", "dataType": "Boolean", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "ALARM", "candidateSemantic": "AlarmCode", "logicalAddress": "%MW50", "dataType": "Word", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "bErrCodeMod1", "logicalAddress": "%MB450", "dataType": "Byte", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "bErrCodeMod2", "logicalAddress": "%MB451", "dataType": "Byte", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "bErrCodeMod3", "logicalAddress": "%MB452", "dataType": "Byte", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "bErrCodeSeq", "logicalAddress": "%MB453", "dataType": "Byte", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" },
+    { "tag": "bErrCodeOpMode", "logicalAddress": "%MB454", "dataType": "Byte", "nodeId": "FIELD_CONFIRMATION_REQUIRED", "evidenceStatus": "TO_VALIDATE" }
+  ]
+}

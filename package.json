@@ -1,0 +1,31 @@
+{
+  "name": "acsmia",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test:play": "node --test test/play-service.test.mjs",
+    "test:plug": "node --test test/plug-service.test.mjs",
+    "test:api-catalog": "node --test test/api-catalog.test.mjs",
+    "validate:play:local": "node test/play-local-validation.mjs",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "lucide-react": "^0.548.0",
+    "mqtt": "^5.14.1",
+    "next": "^16.1.6",
+    "pdf-lib": "^1.17.1",
+    "pdfkit": "^0.17.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "recharts": "^3.8.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/react": "19.2.6",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.5"
+  }
+}

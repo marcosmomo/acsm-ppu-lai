@@ -1,0 +1,706 @@
+{
+  "assetAdministrationShells": [
+    {
+      "modelType": "AssetAdministrationShell",
+      "id": "urn:uuid:cps5-aas-001",
+      "idShort": "CPS5_AAS",
+      "description": [
+        {
+          "language": "pt-BR",
+          "text": "AAS do CPS-5 real integrado ÃƒÂ  ACSM, BaSyx, Node-RED, dashboard local e broker MQTT HiveMQ."
+        }
+      ],
+      "assetInformation": {
+        "assetKind": "Instance",
+        "globalAssetId": "urn:asset:cps5:sistemavisao_qualit",
+        "specificAssetIds": [
+          { "name": "cpsId", "value": "CPS-005" },
+          { "name": "assetName", "value": "SistemaVisao_Qualit" },
+          { "name": "manufacturer", "value": "Custom/UFSC" },
+          { "name": "assetType", "value": "VisionInspectionSystem" },
+          { "name": "serialNumber", "value": "SN-VIS-005" },
+          { "name": "baseTopic", "value": "cps5" }
+        ]
+      },
+      "submodels": [
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:digitalnameplate" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:technicaldata" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:operationaldata" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:statusandhealth" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:documents" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:assetinterfaces" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:lifecycleintegration" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:acsmintegration" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:oeemonitoring" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:learning" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps5:functions" }
+          ]
+        }
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:digitalnameplate",
+      "idShort": "DigitalNameplate",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "ManufacturerName",
+          "valueType": "xs:string",
+          "value": "Custom/UFSC"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ManufacturerProductDesignation",
+          "valueType": "xs:string",
+          "value": "SistemaVisao_Qualit"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "SerialNumber",
+          "valueType": "xs:string",
+          "value": "SN-VIS-005"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CPSId",
+          "valueType": "xs:string",
+          "value": "CPS-005"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:technicaldata",
+      "idShort": "TechnicalData",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "ConveyorType",
+          "valueType": "xs:string",
+          "value": "VisionInspectionSystem"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "InspectionTechnology",
+          "valueType": "xs:string",
+          "value": "CameraBasedVisualInspection"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "SensorConfiguration",
+          "valueType": "xs:string",
+          "value": "Luminosity, RPM, Torque, Temperature, CycleTime"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OperatingVoltage",
+          "valueType": "xs:string",
+          "value": "24V DC"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:operationaldata",
+      "idShort": "OperationalData",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "CurrentTemperature",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CurrentRPM",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CurrentTorque",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "PieceCounter",
+          "valueType": "xs:int",
+          "value": "0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CycleTimeMs",
+          "valueType": "xs:int",
+          "value": "0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OperationMode",
+          "valueType": "xs:string",
+          "value": "play"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Luminosity",
+          "valueType": "xs:decimal",
+          "value": "850.0"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:statusandhealth",
+      "idShort": "StatusAndHealth",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "OperationalState",
+          "valueType": "xs:string",
+          "value": "Running"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Availability",
+          "valueType": "xs:string",
+          "value": "Available"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "HealthState",
+          "valueType": "xs:string",
+          "value": "Healthy"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LastHeartbeat",
+          "valueType": "xs:dateTime",
+          "value": "2026-03-23T08:00:00Z"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:documents",
+      "idShort": "Documents",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "DashboardURL",
+          "valueType": "xs:string",
+          "value": "http://localhost:1881/ui"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "DatasheetPDF",
+          "valueType": "xs:string",
+              "value": "/api/cps5/datasheet/pdf"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ScientificReportPDF",
+          "valueType": "xs:string",
+          "value": "http://localhost:1881/files/cps5/scientific-report.pdf"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:assetinterfaces",
+      "idShort": "AssetInterfacesDescription",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "BrokerHost",
+          "valueType": "xs:string",
+          "value": "localhost"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BrokerPort",
+          "valueType": "xs:string",
+          "value": "1883"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BaseTopic",
+          "valueType": "xs:string",
+          "value": "cps5"
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "OEEInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps5/oee"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ACSMOEEInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps5/oee"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Producer",
+              "valueType": "xs:string",
+              "value": "CPS-5 / Node-RED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Consumer",
+              "valueType": "xs:string",
+              "value": "ACSM"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ACSMLearningInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps5/learning"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Producer",
+              "valueType": "xs:string",
+              "value": "CPS-5 / Node-RED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Consumer",
+              "valueType": "xs:string",
+              "value": "ACSM"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "WebSocketInterfaces",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "MQTTWS",
+              "valueType": "xs:string",
+              "value": "ws://localhost:9001/mqtt"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "MQTTWSS",
+              "valueType": "xs:string",
+              "value": "wss://localhost:9001/mqtt"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "RESTEndpoints",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "DescriptionEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps5/description"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "SummaryEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps5/summary"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "IndicatorsEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps5/indicators"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "HistoryEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps5/history"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "HealthEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps5/health"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:lifecycleintegration",
+      "idShort": "LifecycleIntegration",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "SupportedPhases",
+          "valueType": "xs:string",
+          "value": "plug, play, stop, maintenance, return, unplug"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CurrentPhase",
+          "valueType": "xs:string",
+          "value": "play"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:acsmintegration",
+      "idShort": "ACSMIntegration",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "DashboardURL",
+          "valueType": "xs:string",
+          "value": "http://localhost:1881/ui"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "IntegrationMode",
+          "valueType": "xs:string",
+          "value": "MQTT + REST"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LifecycleOrchestration",
+          "valueType": "xs:string",
+          "value": "ACSM-driven"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "AnalyticsIntegrationMode",
+          "valueType": "xs:string",
+          "value": "MQTT + AAS"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEEPublishTopic",
+          "valueType": "xs:string",
+          "value": "acsm/cps5/oee"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LearningPublishTopic",
+          "valueType": "xs:string",
+          "value": "acsm/cps5/learning"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEESubmodelRef",
+          "valueType": "xs:string",
+          "value": "urn:uuid:submodel:cps5:oeemonitoring"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LearningSubmodelRef",
+          "valueType": "xs:string",
+          "value": "urn:uuid:submodel:cps5:learning"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:oeemonitoring",
+      "idShort": "OEEMonitoring",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "Availability",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Performance",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Quality",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEEOverall",
+          "valueType": "xs:decimal",
+          "value": "0.0"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:learning",
+      "idShort": "Learning",
+      "submodelElements": [
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Reasoning",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "DominantLoss",
+              "valueType": "xs:string",
+              "value": "quality"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Explanation",
+              "valueType": "xs:string",
+              "value": "A principal perda do OEE tende a estar associada ÃƒÂ  qualidade da inspeÃƒÂ§ÃƒÂ£o e ÃƒÂ  estabilidade do sistema de visÃƒÂ£o."
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Recommendation",
+              "valueType": "xs:string",
+              "value": "Verificar iluminaÃƒÂ§ÃƒÂ£o, calibraÃƒÂ§ÃƒÂ£o da cÃƒÂ¢mera, confianÃƒÂ§a da inspeÃƒÂ§ÃƒÂ£o e consistÃƒÂªncia da captura."
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "LearningModel",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "ModelName",
+              "valueType": "xs:string",
+              "value": "local_statistical_learning_v1"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "ModelType",
+              "valueType": "xs:string",
+              "value": "statistical_pattern_learning"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Confidence",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "LearnedPattern",
+              "valueType": "xs:string",
+              "value": "Nenhum padrÃƒÂ£o relevante aprendido atÃƒÂ© o momento."
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Evidence",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "CycleDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "RPMDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "TorqueDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "TemperatureDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OEEDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Publishing",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps5/learning"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Protocol",
+              "valueType": "xs:string",
+              "value": "MQTT"
+            }
+          ]
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LastLearningUpdate",
+          "valueType": "xs:dateTime",
+          "value": "2026-03-21T00:00:00Z"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps5:functions",
+      "idShort": "Functions",
+      "submodelElements": [
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "inspect_part_quality",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Name",
+              "valueType": "xs:string",
+              "value": "Inspect Part Quality"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Description",
+              "valueType": "xs:string",
+              "value": "InspeÃƒÂ§ÃƒÂ£o visual da qualidade da peÃƒÂ§a com base em luminosidade, estabilidade operacional e desempenho do sistema de visÃƒÂ£o."
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AllowedStatuses",
+              "valueType": "xs:string",
+              "value": "active|maintenance|awaiting_replacement|failure"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "conceptDescriptions": [
+    {
+      "modelType": "ConceptDescription",
+      "id": "urn:cd:cps5:currentTemperature",
+      "idShort": "CD_CurrentTemperature"
+    },
+    {
+      "modelType": "ConceptDescription",
+      "id": "urn:cd:cps5:currentRPM",
+      "idShort": "CD_CurrentRPM"
+    },
+    {
+      "modelType": "ConceptDescription",
+      "id": "urn:cd:cps5:currentTorque",
+      "idShort": "CD_CurrentTorque"
+    },
+    {
+      "modelType": "ConceptDescription",
+      "id": "urn:cd:cps5:luminosity",
+      "idShort": "CD_Luminosity"
+    },
+    {
+      "modelType": "ConceptDescription",
+      "id": "urn:cd:cps5:oeeoverall",
+      "idShort": "CD_OEEOverall"
+    }
+  ]
+}
+

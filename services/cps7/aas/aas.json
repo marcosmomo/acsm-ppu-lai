@@ -1,0 +1,1634 @@
+{
+  "assetAdministrationShells": [
+    {
+      "modelType": "AssetAdministrationShell",
+      "id": "urn:uuid:cps7-aas-001",
+      "idShort": "CPS7_AAS",
+      "description": [
+        {
+          "language": "pt-BR",
+          "text": "AAS do CPS-7 real integrado ÃƒÂ  ACSM, BaSyx, Node-RED, dashboard local e broker MQTT HiveMQ."
+        }
+      ],
+      "assetInformation": {
+        "assetKind": "Instance",
+        "globalAssetId": "urn:asset:cps7:transportband_50464",
+        "specificAssetIds": [
+          { "name": "cpsId", "value": "CPS-007" },
+          { "name": "assetName", "value": "Transportband_50464" },
+          { "name": "manufacturer", "value": "fischertechnik GmbH" },
+          { "name": "assetType", "value": "Conveyor Belt 24V" },
+          { "name": "serialNumber", "value": "SN12345" },
+          { "name": "baseTopic", "value": "cps7" }
+        ]
+      },
+      "submodels": [
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps7:digitalnameplate" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps7:technicaldata" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps7:operationaldata" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps7:statusandhealth" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps7:documents" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps7:assetinterfaces" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps7:lifecycleintegration" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps7:acsmintegration" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps7:oee" }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            { "type": "Submodel", "value": "urn:uuid:submodel:cps7:learning" }
+          ]
+        }
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps7:digitalnameplate",
+      "idShort": "DigitalNameplate",
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          { "type": "GlobalReference", "value": "urn:semantic:cps7:digitalnameplate:1:0" }
+        ]
+      },
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "ManufacturerName",
+          "valueType": "xs:string",
+          "value": "fischertechnik GmbH",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:manufacturerName" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ManufacturerProductDesignation",
+          "valueType": "xs:string",
+          "value": "Transportband_50464",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:manufacturerProductDesignation" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "SerialNumber",
+          "valueType": "xs:string",
+          "value": "SN12345",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:serialNumber" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CPSId",
+          "valueType": "xs:string",
+          "value": "CPS-007",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:cpsId" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps7:technicaldata",
+      "idShort": "TechnicalData",
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          { "type": "GlobalReference", "value": "urn:semantic:cps7:technicaldata:1:0" }
+        ]
+      },
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "RatedVoltage",
+          "valueType": "xs:string",
+          "value": "24V DC",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:ratedVoltage" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "MotorType",
+          "valueType": "xs:string",
+          "value": "DC motor",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:motorType" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ConveyorType",
+          "valueType": "xs:string",
+          "value": "Belt conveyor",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:conveyorType" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "NominalSpeed",
+          "valueType": "xs:decimal",
+          "value": "1.2",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:nominalSpeed" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps7:operationaldata",
+      "idShort": "OperationalData",
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          { "type": "GlobalReference", "value": "urn:semantic:cps7:operationaldata:1:0" }
+        ]
+      },
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "CurrentTemperature",
+          "valueType": "xs:decimal",
+          "value": "31.5",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:currentTemperature" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CurrentRPM",
+          "valueType": "xs:decimal",
+          "value": "1480",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:currentRPM" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CurrentTorque",
+          "valueType": "xs:decimal",
+          "value": "2.1",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:currentTorque" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "PieceCounter",
+          "valueType": "xs:int",
+          "value": "120",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:pieceCounter" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CycleTimeMs",
+          "valueType": "xs:int",
+          "value": "4300",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:cycleTimeMs" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OperationMode",
+          "valueType": "xs:string",
+          "value": "play",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:operationMode" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps7:statusandhealth",
+      "idShort": "StatusAndHealth",
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          { "type": "GlobalReference", "value": "urn:semantic:cps7:statusandhealth:1:0" }
+        ]
+      },
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "OperationalState",
+          "valueType": "xs:string",
+          "value": "Active",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:operationalState" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Availability",
+          "valueType": "xs:string",
+          "value": "Available",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:availability" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "HealthState",
+          "valueType": "xs:string",
+          "value": "Healthy",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:healthState" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LastHeartbeat",
+          "valueType": "xs:dateTime",
+          "value": "2026-03-17T11:00:00Z",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:lastHeartbeat" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps7:documents",
+      "idShort": "Documents",
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          { "type": "GlobalReference", "value": "urn:semantic:cps7:documents:1:0" }
+        ]
+      },
+      "submodelElements": [
+        {
+          "modelType": "File",
+          "idShort": "DatasheetPDF",
+          "contentType": "application/pdf",
+          "value": "/api/cps7/datasheet/pdf",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:datasheetPdf" }
+            ]
+          }
+        },
+        {
+          "modelType": "File",
+          "idShort": "ScientificReportPDF",
+          "contentType": "application/pdf",
+          "value": "/api/cps7/report/scientific/pdf",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:scientificReportPdf" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "DashboardURL",
+          "valueType": "xs:string",
+          "value": "http://localhost:1881/ui/#!/2",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:dashboardUrl" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps7:assetinterfaces",
+      "idShort": "AssetInterfacesDescription",
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "value": "https://admin-shell.io/idta/AssetInterfacesDescription/1/0/Submodel"
+          }
+        ]
+      },
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "PrimaryProtocol",
+          "valueType": "xs:string",
+          "value": "MQTT",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:primaryProtocol" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BrokerHost",
+          "valueType": "xs:string",
+          "value": "localhost",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:brokerHost" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BrokerPort",
+          "valueType": "xs:int",
+          "value": "1883",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:brokerPort" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BrokerWebSocketPort",
+          "valueType": "xs:int",
+          "value": "8000",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:brokerWebSocketPort" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BrokerSecureWebSocketPort",
+          "valueType": "xs:int",
+          "value": "8884",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:brokerSecureWebSocketPort" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "QoSDefault",
+          "valueType": "xs:int",
+          "value": "1",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:qosDefault" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "RetainDefault",
+          "valueType": "xs:boolean",
+          "value": "false",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:retainDefault" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "PayloadFormat",
+          "valueType": "xs:string",
+          "value": "JSON",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:payloadFormat" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BaseTopic",
+          "valueType": "xs:string",
+          "value": "cps7",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:baseTopic" }
+            ]
+          }
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "CommandInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps7/cmd"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Inbound"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Producer",
+              "valueType": "xs:string",
+              "value": "ACSM"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Consumer",
+              "valueType": "xs:string",
+              "value": "CPS-7"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "StatusInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps7/status"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Producer",
+              "valueType": "xs:string",
+              "value": "CPS-7 / Node-RED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Consumer",
+              "valueType": "xs:string",
+              "value": "ACSM / Dashboard"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "AckInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps7/ack"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "HealthInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps7/health"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Direction",
+          "valueType": "xs:string",
+          "value": "Outbound"
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "DataInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps7/data"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "OEEInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps7/oee"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ACSMOEEInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps7/oee"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Producer",
+              "valueType": "xs:string",
+              "value": "CPS-7 / Node-RED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Consumer",
+              "valueType": "xs:string",
+              "value": "ACSM"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ACSMLearningInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps7/learning"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Producer",
+              "valueType": "xs:string",
+              "value": "CPS-7 / Node-RED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Consumer",
+              "valueType": "xs:string",
+              "value": "ACSM"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "AlarmInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cps7/alarm"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "RESTEndpoints",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "DescriptionEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps7/description"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "SummaryEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps7/summary"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "IndicatorsEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps7/indicators"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "HistoryEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps7/history"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "HealthEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/api/cps7/health"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "WebSocketInterfaces",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "MQTTWS",
+              "valueType": "xs:string",
+              "value": "ws://localhost:9001/mqtt"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "MQTTWSS",
+              "valueType": "xs:string",
+              "value": "wss://localhost:9001/mqtt"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps7:lifecycleintegration",
+      "idShort": "LifecycleIntegration",
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          { "type": "GlobalReference", "value": "urn:semantic:cps7:lifecycleintegration:1:0" }
+        ]
+      },
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "SupportedPhases",
+          "valueType": "xs:string",
+          "value": "plug, play, stop, maintenance, return, unplug",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:supportedPhases" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CurrentPhase",
+          "valueType": "xs:string",
+          "value": "play",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:currentPhase" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps7:acsmintegration",
+      "idShort": "ACSMIntegration",
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          { "type": "GlobalReference", "value": "urn:semantic:cps7:acsmintegration:1:0" }
+        ]
+      },
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "ACSMAssetId",
+          "valueType": "xs:string",
+          "value": "ACSM-CPS7-001"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OrchestrationRole",
+          "valueType": "xs:string",
+          "value": "Lifecycle-managed CPS"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "NodeRedFlowReference",
+          "valueType": "xs:string",
+          "value": "flow:cps7-dashboard-and-api"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "AASServerReference",
+          "valueType": "xs:string",
+          "value": "basyx-aas-environment"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "RegistryReference",
+          "valueType": "xs:string",
+          "value": "basyx-aas-registry"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "DashboardURL",
+          "valueType": "xs:string",
+          "value": "http://localhost:3007/cps7"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "AnalyticsIntegrationMode",
+          "valueType": "xs:string",
+          "value": "MQTT + AAS"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEEPublishTopic",
+          "valueType": "xs:string",
+          "value": "acsm/cps7/oee"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LearningPublishTopic",
+          "valueType": "xs:string",
+          "value": "acsm/cps7/learning"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEESubmodelRef",
+          "valueType": "xs:string",
+          "value": "urn:uuid:submodel:cps7:oee"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LearningSubmodelRef",
+          "valueType": "xs:string",
+          "value": "urn:uuid:submodel:cps7:learning"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps7:oee",
+      "idShort": "OEE",
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          { "type": "GlobalReference", "value": "urn:semantic:cps7:oee:1:0" }
+        ]
+      },
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "Availability",
+          "valueType": "xs:decimal",
+          "value": "0.0",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:oee:availability" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Performance",
+          "valueType": "xs:decimal",
+          "value": "0.0",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:oee:performance" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Quality",
+          "valueType": "xs:decimal",
+          "value": "0.0",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:oee:quality" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEECurrent",
+          "valueType": "xs:decimal",
+          "value": "0.0",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:oee:current" }
+            ]
+          }
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEEGlobal",
+          "valueType": "xs:decimal",
+          "value": "0.0",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:oee:global" }
+            ]
+          }
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Statistics",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "AvailabilityMean",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:availabilityMean" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AvailabilityMedian",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:availabilityMedian" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PerformanceMean",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:performanceMean" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PerformanceMedian",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:performanceMedian" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "QualityMean",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:qualityMean" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "QualityMedian",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:qualityMedian" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OEEMean",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:mean" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OEEMedian",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:median" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Window",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Samples",
+              "valueType": "xs:int",
+              "value": "0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:samples" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "StartTime",
+              "valueType": "xs:dateTime",
+              "value": "2026-03-21T00:00:00Z",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:startTime" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "EndTime",
+              "valueType": "xs:dateTime",
+              "value": "2026-03-21T00:00:00Z",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:endTime" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Totals",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PlannedProductionTime",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:plannedProductionTime" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "RunTime",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:runTime" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "StopTime",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:stopTime" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "TotalCount",
+              "valueType": "xs:int",
+              "value": "0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:totalCount" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "GoodCount",
+              "valueType": "xs:int",
+              "value": "0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:goodCount" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "RejectCount",
+              "valueType": "xs:int",
+              "value": "0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:rejectCount" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Features",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "AvgCycleTimeMs",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:avgCycleTimeMs" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AvgRPM",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:avgRPM" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AvgTorque",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:avgTorque" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AvgTemperature",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:avgTemperature" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Publishing",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps7/oee",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:topic" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Protocol",
+              "valueType": "xs:string",
+              "value": "MQTT",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:oee:protocol" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LastUpdate",
+          "valueType": "xs:dateTime",
+          "value": "2026-03-21T00:00:00Z",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:oee:lastUpdate" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:uuid:submodel:cps7:learning",
+      "idShort": "Learning",
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          { "type": "GlobalReference", "value": "urn:semantic:cps7:learning:1:0" }
+        ]
+      },
+      "submodelElements": [
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Reasoning",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "DominantLoss",
+              "valueType": "xs:string",
+              "value": "availability",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:dominantLoss" }
+                ]
+              }
+            },
+            {
+              "modelType": "MultiLanguageProperty",
+              "idShort": "Explanation",
+              "value": {
+                "langString": [
+                  {
+                    "language": "pt-BR",
+                    "text": "A principal perda do OEE estÃƒÂ¡ associada ÃƒÂ  disponibilidade."
+                  }
+                ]
+              },
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:explanation" }
+                ]
+              }
+            },
+            {
+              "modelType": "MultiLanguageProperty",
+              "idShort": "Recommendation",
+              "value": {
+                "langString": [
+                  {
+                    "language": "pt-BR",
+                    "text": "Verificar causas de paradas, microparadas e interrupÃƒÂ§ÃƒÂµes do processo."
+                  }
+                ]
+              },
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:recommendation" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "LearningModel",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "ModelName",
+              "valueType": "xs:string",
+              "value": "local_statistical_learning_v1",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:modelName" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "ModelType",
+              "valueType": "xs:string",
+              "value": "statistical_pattern_learning",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:modelType" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Confidence",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:confidence" }
+                ]
+              }
+            },
+            {
+              "modelType": "MultiLanguageProperty",
+              "idShort": "LearnedPattern",
+              "value": {
+                "langString": [
+                  {
+                    "language": "pt-BR",
+                    "text": "Nenhum padrÃƒÂ£o relevante aprendido atÃƒÂ© o momento."
+                  }
+                ]
+              },
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:learnedPattern" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Evidence",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "CycleDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:cycleDeltaPct" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "RPMDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:rpmDeltaPct" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "TorqueDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:torqueDeltaPct" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "TemperatureDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:temperatureDeltaPct" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OEEDeltaPct",
+              "valueType": "xs:decimal",
+              "value": "0.0",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:oeeDeltaPct" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Publishing",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "acsm/cps7/learning",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:topic" }
+                ]
+              }
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Protocol",
+              "valueType": "xs:string",
+              "value": "MQTT",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  { "type": "GlobalReference", "value": "urn:cd:cps7:learning:protocol" }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LastLearningUpdate",
+          "valueType": "xs:dateTime",
+          "value": "2026-03-21T00:00:00Z",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              { "type": "GlobalReference", "value": "urn:cd:cps7:learning:lastLearningUpdate" }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "conceptDescriptions": [
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:manufacturerName", "idShort": "CD_ManufacturerName" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:manufacturerProductDesignation", "idShort": "CD_ManufacturerProductDesignation" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:serialNumber", "idShort": "CD_SerialNumber" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:cpsId", "idShort": "CD_CPSId" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:ratedVoltage", "idShort": "CD_RatedVoltage" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:motorType", "idShort": "CD_MotorType" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:conveyorType", "idShort": "CD_ConveyorType" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:nominalSpeed", "idShort": "CD_NominalSpeed" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:currentTemperature", "idShort": "CD_CurrentTemperature" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:currentRPM", "idShort": "CD_CurrentRPM" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:currentTorque", "idShort": "CD_CurrentTorque" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:pieceCounter", "idShort": "CD_PieceCounter" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:cycleTimeMs", "idShort": "CD_CycleTimeMs" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:operationMode", "idShort": "CD_OperationMode" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:operationalState", "idShort": "CD_OperationalState" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:availability", "idShort": "CD_Availability" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:healthState", "idShort": "CD_HealthState" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:lastHeartbeat", "idShort": "CD_LastHeartbeat" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:datasheetPdf", "idShort": "CD_DatasheetPDF" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:scientificReportPdf", "idShort": "CD_ScientificReportPDF" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:dashboardUrl", "idShort": "CD_DashboardURL" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:primaryProtocol", "idShort": "CD_PrimaryProtocol" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:brokerHost", "idShort": "CD_BrokerHost" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:brokerPort", "idShort": "CD_BrokerPort" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:brokerWebSocketPort", "idShort": "CD_BrokerWebSocketPort" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:brokerSecureWebSocketPort", "idShort": "CD_BrokerSecureWebSocketPort" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:qosDefault", "idShort": "CD_QoSDefault" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:retainDefault", "idShort": "CD_RetainDefault" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:payloadFormat", "idShort": "CD_PayloadFormat" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:baseTopic", "idShort": "CD_BaseTopic" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:supportedPhases", "idShort": "CD_SupportedPhases" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:currentPhase", "idShort": "CD_CurrentPhase" },
+
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:availability", "idShort": "CD_OEE_Availability" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:performance", "idShort": "CD_OEE_Performance" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:quality", "idShort": "CD_OEE_Quality" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:current", "idShort": "CD_OEE_Current" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:global", "idShort": "CD_OEE_Global" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:availabilityMean", "idShort": "CD_OEE_AvailabilityMean" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:availabilityMedian", "idShort": "CD_OEE_AvailabilityMedian" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:performanceMean", "idShort": "CD_OEE_PerformanceMean" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:performanceMedian", "idShort": "CD_OEE_PerformanceMedian" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:qualityMean", "idShort": "CD_OEE_QualityMean" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:qualityMedian", "idShort": "CD_OEE_QualityMedian" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:mean", "idShort": "CD_OEE_Mean" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:median", "idShort": "CD_OEE_Median" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:samples", "idShort": "CD_OEE_Samples" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:startTime", "idShort": "CD_OEE_StartTime" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:endTime", "idShort": "CD_OEE_EndTime" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:plannedProductionTime", "idShort": "CD_OEE_PlannedProductionTime" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:runTime", "idShort": "CD_OEE_RunTime" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:stopTime", "idShort": "CD_OEE_StopTime" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:totalCount", "idShort": "CD_OEE_TotalCount" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:goodCount", "idShort": "CD_OEE_GoodCount" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:rejectCount", "idShort": "CD_OEE_RejectCount" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:avgCycleTimeMs", "idShort": "CD_OEE_AvgCycleTimeMs" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:avgRPM", "idShort": "CD_OEE_AvgRPM" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:avgTorque", "idShort": "CD_OEE_AvgTorque" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:avgTemperature", "idShort": "CD_OEE_AvgTemperature" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:topic", "idShort": "CD_OEE_Topic" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:protocol", "idShort": "CD_OEE_Protocol" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:oee:lastUpdate", "idShort": "CD_OEE_LastUpdate" },
+
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:dominantLoss", "idShort": "CD_Learning_DominantLoss" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:explanation", "idShort": "CD_Learning_Explanation" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:recommendation", "idShort": "CD_Learning_Recommendation" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:modelName", "idShort": "CD_Learning_ModelName" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:modelType", "idShort": "CD_Learning_ModelType" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:confidence", "idShort": "CD_Learning_Confidence" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:learnedPattern", "idShort": "CD_Learning_LearnedPattern" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:cycleDeltaPct", "idShort": "CD_Learning_CycleDeltaPct" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:rpmDeltaPct", "idShort": "CD_Learning_RPMDeltaPct" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:torqueDeltaPct", "idShort": "CD_Learning_TorqueDeltaPct" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:temperatureDeltaPct", "idShort": "CD_Learning_TemperatureDeltaPct" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:oeeDeltaPct", "idShort": "CD_Learning_OEEDeltaPct" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:topic", "idShort": "CD_Learning_Topic" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:protocol", "idShort": "CD_Learning_Protocol" },
+    { "modelType": "ConceptDescription", "id": "urn:cd:cps7:learning:lastLearningUpdate", "idShort": "CD_Learning_LastLearningUpdate" }
+  ]
+}

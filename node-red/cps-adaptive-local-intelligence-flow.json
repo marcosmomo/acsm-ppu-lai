@@ -1,0 +1,124 @@
+[
+    {
+        "id":  "cps_adaptive_local_tab",
+        "type":  "tab",
+        "label":  "CPS Adaptive Local Intelligence",
+        "disabled":  false,
+        "info":  "Builds simplified Level 1 adaptive local intelligence for CPS assets from OEE telemetry."
+    },
+    {
+        "id":  "cps_adaptive_local_broker",
+        "type":  "mqtt-broker",
+        "name":  "HiveMQ CPS Adaptive",
+        "broker":  "localhost",
+        "port":  "1883",
+        "clientid":  "",
+        "autoConnect":  true,
+        "usetls":  false,
+        "protocolVersion":  "4",
+        "keepalive":  "60",
+        "cleansession":  true,
+        "autoUnsubscribe":  true,
+        "birthTopic":  "",
+        "birthQos":  "0",
+        "birthPayload":  "",
+        "birthMsg":  {
+
+                     },
+        "closeTopic":  "",
+        "closeQos":  "0",
+        "closePayload":  "",
+        "closeMsg":  {
+
+                     },
+        "willTopic":  "",
+        "willQos":  "0",
+        "willPayload":  "",
+        "willMsg":  {
+
+                    }
+    },
+    {
+        "id":  "cps_adaptive_oee_in",
+        "type":  "mqtt in",
+        "z":  "cps_adaptive_local_tab",
+        "name":  "CPS OEE telemetry",
+        "topic":  "+/oee",
+        "qos":  "0",
+        "datatype":  "auto",
+        "broker":  "cps_adaptive_local_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  180,
+        "y":  120,
+        "wires":  [
+                      [
+                          "build_adaptive_cps_intelligence"
+                      ]
+                  ]
+    },
+    {
+        "id":  "build_adaptive_cps_intelligence",
+        "type":  "function",
+        "z":  "cps_adaptive_local_tab",
+        "name":  "Build Adaptive CPS Intelligence",
+        "func":  "function toObject(value) {\n    return value \u0026\u0026 typeof value === \"object\" \u0026\u0026 !Array.isArray(value) ? value : {};\n}\n\nfunction parsePayload(payload) {\n    if (!payload) return {};\n    if (typeof payload === \"string\") {\n        try { return JSON.parse(payload); } catch (err) { return {}; }\n    }\n    if (Buffer.isBuffer(payload)) {\n        try { return JSON.parse(payload.toString()); } catch (err) { return {}; }\n    }\n    return toObject(payload);\n}\n\nfunction toNumber(value, fallback) {\n    const n = Number(value);\n    return Number.isFinite(n) ? n : fallback;\n}\n\nfunction normalizeCpsId(value) {\n    return String(value || \"\").trim().toLowerCase().replace(/[^a-z0-9]/g, \"\").replace(/(cps)0+/, \"$1\");\n}\n\nfunction mean(values) {\n    const clean = values.filter((value) =\u003e Number.isFinite(value));\n    return clean.length ? clean.reduce((sum, value) =\u003e sum + value, 0) / clean.length : 0;\n}\n\nfunction slope(values) {\n    const clean = values.filter((value) =\u003e Number.isFinite(value));\n    const n = clean.length;\n    if (n \u003c 2) return 0;\n    const meanX = (n - 1) / 2;\n    const meanY = mean(clean);\n    let numerator = 0;\n    let denominator = 0;\n    for (let i = 0; i \u003c n; i += 1) {\n        numerator += (i - meanX) * (clean[i] - meanY);\n        denominator += Math.pow(i - meanX, 2);\n    }\n    return denominator ? numerator / denominator : 0;\n}\n\nfunction round(value, decimals) {\n    const numeric = Number(value);\n    if (!Number.isFinite(numeric)) return 0;\n    const factor = Math.pow(10, decimals || 4);\n    return Math.round(numeric * factor) / factor;\n}\n\nfunction countTrailing(history, predicate) {\n    let count = 0;\n    for (let i = history.length - 1; i \u003e= 0; i -= 1) {\n        if (!predicate(history[i])) break;\n        count += 1;\n    }\n    return count;\n}\n\nfunction dominantLossFromMetrics(availability, performance, quality, explicitLoss) {\n    const direct = String(explicitLoss || \"\").trim().toLowerCase();\n    if (direct) return direct;\n    const losses = {\n        availability: 1 - toNumber(availability, 1),\n        performance: 1 - toNumber(performance, 1),\n        quality: 1 - toNumber(quality, 1)\n    };\n    return Object.entries(losses).sort((a, b) =\u003e b[1] - a[1])[0]?.[0] || \"unknown\";\n}\n\nfunction hasLocalAction(entry) {\n    const action = String(entry?.localAction || \"\").toLowerCase();\n    return action \u0026\u0026 ![\"maintain\", \"maintain_operation\", \"preserve_local_recovery\"].includes(action);\n}\n\nfunction classifyInterventionEffectiveness(history, recentMeanOEE, oeeSlope) {\n    const recent = history.slice(-4);\n    const actions = recent.filter(hasLocalAction);\n    if (!actions.length) return \"neutral\";\n    const delta = recentMeanOEE - Number(actions[0].oee || 0);\n    if (delta \u003e= 0.012 || oeeSlope \u003e 0.003) return \"improving\";\n    if (delta \u003c= 0.002 \u0026\u0026 oeeSlope \u003c= 0.001) return \"low_response\";\n    return \"neutral\";\n}\n\nfunction strategyForState(temporalState, dominantLoss) {\n    const loss = dominantLoss || \"loss\";\n    const map = {\n        stable_asset: { adaptiveAction: \"maintain_operation\", strategyClass: \"reactive\" },\n        degrading_asset: { adaptiveAction: \"stabilize_local_\" + loss, strategyClass: \"adaptive\" },\n        recovering_asset: { adaptiveAction: \"preserve_local_recovery\", strategyClass: \"adaptive\" },\n        persistent_local_loss: { adaptiveAction: \"contain_local_loss\", strategyClass: \"adaptive\" },\n        low_response_to_local_action: { adaptiveAction: \"structural_local_check\", strategyClass: \"escalated\" }\n    };\n    return map[temporalState] || map.stable_asset;\n}\n\nfunction buildSignals(history, windowSize) {\n    const values = history.map((entry) =\u003e Number(entry.oee)).filter((value) =\u003e Number.isFinite(value));\n    const current = history[history.length - 1] || {};\n    const currentLoss = String(current.dominantLoss || \"\").toLowerCase();\n    const recentMeanOEE = mean(values.slice(-4));\n    const oeeSlope = slope(values.slice(-5));\n    const dominantLossPersistence = currentLoss\n        ? countTrailing(history, (entry) =\u003e String(entry.dominantLoss || \"\").toLowerCase() === currentLoss)\n        : 0;\n    const interventionEffectiveness = classifyInterventionEffectiveness(history, recentMeanOEE, oeeSlope);\n\n    let temporalState = \"stable_asset\";\n    let adaptiveReason = \"No persistent CPS adaptive pattern detected in the short local window.\";\n\n    if (interventionEffectiveness === \"low_response\") {\n        temporalState = \"low_response_to_local_action\";\n        adaptiveReason = \"Recent local actions did not produce measurable OEE recovery.\";\n    } else if (dominantLossPersistence \u003e= 3) {\n        temporalState = \"persistent_local_loss\";\n        adaptiveReason = \"The same local OEE loss repeated across at least three recent CPS events.\";\n    } else if (oeeSlope \u003c -0.003) {\n        temporalState = \"degrading_asset\";\n        adaptiveReason = \"CPS OEE is decreasing in the short adaptive window.\";\n    } else if (oeeSlope \u003e 0.003) {\n        temporalState = \"recovering_asset\";\n        adaptiveReason = \"CPS OEE is improving in the short adaptive window.\";\n    }\n\n    const strategy = strategyForState(temporalState, currentLoss);\n    return {\n        temporalState,\n        adaptiveAction: strategy.adaptiveAction,\n        strategyClass: strategy.strategyClass,\n        interventionEffectiveness,\n        adaptiveReason,\n        historyWindow: windowSize,\n        recentMeanOEE: round(recentMeanOEE, 4),\n        oeeSlope: round(oeeSlope, 5),\n        dominantLossPersistence\n    };\n}\n\nfunction buildTimeline(history, limit) {\n    return history.slice(-limit).reverse().map((entry) =\u003e ({\n        ts: entry.ts || null,\n        timestamp: entry.timestamp || \"\",\n        temporalState: entry.temporalState || \"\",\n        adaptiveAction: entry.adaptiveAction || \"\",\n        strategyClass: entry.strategyClass || \"\",\n        interventionEffectiveness: entry.interventionEffectiveness || \"\"\n    }));\n}\n\nconst inputTopic = String(msg.topic || \"\");\nconst payload = parsePayload(msg.payload);\nconst topicBase = inputTopic.split(\"/\")[0] || \"cps\";\nconst cpsId = normalizeCpsId(payload.cpsId || payload.source || topicBase);\nconst windowSize = 8;\nconst now = Date.now();\nconst timestamp = payload.timestamp || new Date(now).toISOString();\nconst sourceTs = toNumber(payload.ts || Date.parse(timestamp), now);\nconst oeeBlock = toObject(payload.oee || payload.globalOEE);\nconst availability = toNumber(oeeBlock.availability ?? payload.availability, null);\nconst performance = toNumber(oeeBlock.performance ?? oeeBlock.performanceDisplay ?? oeeBlock.performanceAccumulated ?? payload.performance, null);\nconst quality = toNumber(oeeBlock.quality ?? payload.quality, null);\nconst oee = toNumber(oeeBlock.oee ?? oeeBlock.current ?? oeeBlock.value ?? payload.oee ?? payload.value, 0);\nconst dominantLoss = dominantLossFromMetrics(availability, performance, quality, payload.dominantLoss);\nconst localAction = String(payload.localAction || payload.recommendation || (oee \u003c 0.6 ? \"stabilize_local_\" + dominantLoss : \"maintain_operation\"));\nconst localState = oee \u003c 0.6 ? \"critical\" : oee \u003c 0.75 ? \"attention\" : \"stable\";\nconst historyKey = cpsId + \"_adaptive_history\";\nconst previousHistory = Array.isArray(global.get(historyKey)) ? global.get(historyKey) : [];\nlet history = previousHistory.concat({\n    ts: sourceTs,\n    timestamp,\n    oee,\n    availability,\n    performance,\n    quality,\n    dominantLoss,\n    localAction,\n    localState\n}).slice(-windowSize);\n\nconst adaptiveLearningCps = buildSignals(history, windowSize);\nhistory = history.map((entry, index) =\u003e {\n    if (index !== history.length - 1) return entry;\n    return Object.assign({}, entry, {\n        temporalState: adaptiveLearningCps.temporalState,\n        adaptiveAction: adaptiveLearningCps.adaptiveAction,\n        strategyClass: adaptiveLearningCps.strategyClass,\n        interventionEffectiveness: adaptiveLearningCps.interventionEffectiveness\n    });\n});\nglobal.set(historyKey, history);\nconst adaptiveTimelineCps = buildTimeline(history, 8);\n\nmsg.topic = cpsId + \"/local/adaptive\";\nmsg.payload = {\n    schemaVersion: \"1.0\",\n    messageType: \"cps_adaptive_local_intelligence\",\n    source: cpsId,\n    cpsId,\n    level: \"level1\",\n    ts: now,\n    timestamp: new Date(now).toISOString(),\n    basedOn: {\n        topic: inputTopic,\n        sourceTs\n    },\n    localAssessment: {\n        oee: round(oee, 4),\n        availability: round(availability, 4),\n        performance: round(performance, 4),\n        quality: round(quality, 4),\n        dominantLoss,\n        localAction,\n        localState\n    },\n    adaptiveLearningCps,\n    adaptiveTimelineCps\n};\n\nnode.status({ fill: adaptiveLearningCps.strategyClass === \"escalated\" ? \"red\" : adaptiveLearningCps.strategyClass === \"adaptive\" ? \"yellow\" : \"green\", shape: \"dot\", text: cpsId + \" | \" + adaptiveLearningCps.temporalState + \" | n=\" + history.length });\nreturn msg;",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  510,
+        "y":  120,
+        "wires":  [
+                      [
+                          "cps_adaptive_local_out",
+                          "cps_adaptive_local_debug"
+                      ]
+                  ]
+    },
+    {
+        "id":  "cps_adaptive_local_out",
+        "type":  "mqtt out",
+        "z":  "cps_adaptive_local_tab",
+        "name":  "Publish cpsX/local/adaptive",
+        "topic":  "",
+        "qos":  "0",
+        "retain":  "false",
+        "respTopic":  "",
+        "contentType":  "",
+        "userProps":  "",
+        "correl":  "",
+        "expiry":  "",
+        "broker":  "cps_adaptive_local_broker",
+        "x":  810,
+        "y":  100,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "cps_adaptive_local_debug",
+        "type":  "debug",
+        "z":  "cps_adaptive_local_tab",
+        "name":  "CPS adaptive payload",
+        "active":  true,
+        "tosidebar":  true,
+        "console":  false,
+        "tostatus":  false,
+        "complete":  "payload",
+        "targetType":  "msg",
+        "statusVal":  "",
+        "statusType":  "auto",
+        "x":  800,
+        "y":  150,
+        "wires":  [
+
+                  ]
+    }
+]

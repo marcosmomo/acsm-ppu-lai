@@ -1,0 +1,128 @@
+[
+    {
+        "id":  "hcm_local_bridge_tab",
+        "type":  "tab",
+        "label":  "HCM Local Integration",
+        "disabled":  false,
+        "info":  "Local HCM bridge for CPS1, CPS5, CPS7 and ACSM1 cognitive/lifecycle events only."
+    },
+    {
+        "id":  "hcm_bridge_broker",
+        "type":  "mqtt-broker",
+        "name":  "HiveMQ HCM Bridge",
+        "broker":  "localhost",
+        "port":  "1883",
+        "clientid":  "",
+        "autoConnect":  true,
+        "usetls":  false,
+        "protocolVersion":  "4",
+        "keepalive":  "60",
+        "cleansession":  true,
+        "autoUnsubscribe":  true,
+        "birthTopic":  "",
+        "birthQos":  "0",
+        "birthPayload":  "",
+        "closeTopic":  "",
+        "closeQos":  "0",
+        "closePayload":  "",
+        "willTopic":  "",
+        "willQos":  "0",
+        "willPayload":  ""
+    },
+    {
+        "id":  "hcm_in_cps1",
+        "type":  "mqtt in",
+        "z":  "hcm_local_bridge_tab",
+        "name":  "CPS1 cognitive/lifecycle",
+        "topic":  "cps1/#",
+        "qos":  "1",
+        "datatype":  "auto",
+        "broker":  "hcm_bridge_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  160,
+        "y":  100,
+        "wires":  [
+                      "hcm_filter_publish"
+                  ]
+    },
+    {
+        "id":  "hcm_in_cps5",
+        "type":  "mqtt in",
+        "z":  "hcm_local_bridge_tab",
+        "name":  "CPS5 cognitive/lifecycle",
+        "topic":  "cps5/#",
+        "qos":  "1",
+        "datatype":  "auto",
+        "broker":  "hcm_bridge_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  160,
+        "y":  160,
+        "wires":  [
+                      "hcm_filter_publish"
+                  ]
+    },
+    {
+        "id":  "hcm_in_cps7",
+        "type":  "mqtt in",
+        "z":  "hcm_local_bridge_tab",
+        "name":  "CPS7 cognitive/lifecycle",
+        "topic":  "cps7/#",
+        "qos":  "1",
+        "datatype":  "auto",
+        "broker":  "hcm_bridge_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  160,
+        "y":  220,
+        "wires":  [
+                      "hcm_filter_publish"
+                  ]
+    },
+    {
+        "id":  "hcm_in_acsm1",
+        "type":  "mqtt in",
+        "z":  "hcm_local_bridge_tab",
+        "name":  "ACSM1 cognition",
+        "topic":  "acsm1/#",
+        "qos":  "1",
+        "datatype":  "auto",
+        "broker":  "hcm_bridge_broker",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  160,
+        "y":  280,
+        "wires":  [
+                      "hcm_filter_publish"
+                  ]
+    },
+    {
+        "id":  "hcm_filter_publish",
+        "type":  "function",
+        "z":  "hcm_local_bridge_tab",
+        "name":  "Filter and register HCM episode",
+        "func":  "const raw = msg.payload;\nfunction parse(value) {\n    if (!value) return {};\n    if (typeof value === \"string\") {\n        try { return JSON.parse(value); } catch (err) { return { raw: value }; }\n    }\n    if (Buffer.isBuffer(value)) {\n        try { return JSON.parse(value.toString()); } catch (err) { return { raw: value.toString() }; }\n    }\n    return typeof value === \"object\" ? value : { raw: value };\n}\nfunction num(value, fallback = null) {\n    const n = Number(value);\n    return Number.isFinite(n) ? n : fallback;\n}\nfunction text(value) {\n    return String(value || \"\").trim().toLowerCase();\n}\nfunction metric(payload, key) {\n    const candidates = [payload[key], payload.oeeBlock?.[key], payload.oeeData?.[key], payload.oee?.[key]];\n    for (const candidate of candidates) {\n        const n = num(candidate, null);\n        if (n !== null) return n;\n    }\n    return null;\n}\nconst payload = parse(raw);\nconst topic = String(msg.topic || \"\");\nconst cpsId = payload.cpsId || payload.targetCPS || payload.cps || (topic.match(/^(cps\\d+)/i) || [])[1] || \"ACSM1\";\nconst assetName = payload.cpsName || payload.assetName || payload.asset || cpsId;\nconst risk = text(payload.riskLevel || payload.risk || payload.forecast?.risk || payload.reasoning?.riskLevel);\nconst state = text(payload.state || payload.status || payload.operationalState || payload.reasoning?.operationalState || payload.process?.featureStatus);\nconst pattern = text(payload.learningPattern || payload.learning?.pattern || payload.learning?.state);\nconst eventType = topic.includes(\"learning\") ? \"learning\" : topic.includes(\"reasoning\") ? \"reasoning\" : topic.includes(\"prediction\") ? \"prediction\" : topic.includes(\"recommendation\") ? \"recommendation\" : topic.includes(\"cmd\") || topic.includes(\"ack\") ? \"action\" : topic.includes(\"status\") || topic.includes(\"$state\") ? \"lifecycle\" : topic.includes(\"adaptive\") ? \"learning\" : \"observation\";\nconst hasRecommendation = !!(payload.recommendation || payload.reasoning?.recommendation || payload.learning?.recommendation || payload.forecast?.nextState);\nconst relevant = risk === \"high\" || risk === \"critical\" || state === \"maintenance\" || state === \"failure\" || state === \"awaiting_replacement\" || pattern.includes(\"degrad\") || pattern.includes(\"critical\") || eventType === \"recommendation\" || hasRecommendation;\nif (!relevant) return null;\nconst baseUrl = (env.get(\"HCM_API_BASE_URL\") || \"http://localhost:3000/api/hcm\").replace(/\\/$/, \"\");\nconst problemType = state || pattern || risk || eventType;\nconst episodeKey = cpsId + \"|\" + problemType;\nconst contextData = {\n    cpsId,\n    assetName,\n    oee: metric(payload, \"current\") ?? num(payload.oee, null),\n    availability: metric(payload, \"availability\"),\n    performance: metric(payload, \"performance\"),\n    quality: metric(payload, \"quality\"),\n    health: payload.healthLabel || payload.health || payload.status?.healthLabel || null,\n    risk: risk || null,\n    dominantLoss: payload.dominantLoss || payload.reasoning?.dominantLoss || null,\n    probableCause: payload.probableCause || payload.reasoning?.probableCause || payload.causality?.probableCause || null,\n    operationalState: state || null,\n    lifecycleState: payload.lifecycleState || state || null\n};\nconst action = text(payload.action || payload.command || payload.cmd || payload.recommendationAction);\nfunction post(path, body) {\n    return fetch(baseUrl + path, {\n        method: \"POST\",\n        headers: { \"Content-Type\": \"application/json\" },\n        body: JSON.stringify(body)\n    }).then((res) =\u003e res.json().catch(() =\u003e ({ ok: res.ok }))).catch((err) =\u003e {\n        node.warn(\"HCM POST failed \" + path + \": \" + err.message);\n        return null;\n    });\n}\nconst openEpisodes = flow.get(\"hcm_open_episodes\") || {};\nconst decisions = flow.get(\"hcm_decisions\") || {};\nconst before = flow.get(\"hcm_before_metrics\") || {};\nconst openBody = {\n    source: \"Node-RED\",\n    cpsId,\n    assetName,\n    problemType,\n    context: contextData,\n    timestamp: new Date().toISOString()\n};\nconst existingEpisodeId = openEpisodes[episodeKey];\nconst openPromise = existingEpisodeId ? Promise.resolve({ episodeId: existingEpisodeId, id: existingEpisodeId }) : post(\"/episode/open\", openBody);\nopenPromise.then((episode) =\u003e {\n    const episodeId = episode?.episodeId || episode?.id || existingEpisodeId;\n    if (!episodeId) return;\n    openEpisodes[episodeKey] = episodeId;\n    flow.set(\"hcm_open_episodes\", openEpisodes);\n    if (!before[episodeId]) {\n        before[episodeId] = contextData;\n        flow.set(\"hcm_before_metrics\", before);\n    }\n    post(\"/event\", {\n        episodeId,\n        eventType,\n        source: topic.startsWith(\"acsm1/\") ? \"ACSM\" : \"CPS\",\n        timestamp: new Date().toISOString(),\n        topic,\n        content: { context: contextData, learning: payload.learning || null, reasoning: payload.reasoning || null, prediction: payload.prediction || payload.forecast || null, recommendation: payload.recommendation || payload.reasoning?.recommendation || payload.learning?.recommendation || null }\n    });\n    if ([\"play\", \"stop\", \"unplug\", \"maintenance\", \"restart\", \"inspection\", \"stabilization\", \"recovery\"].includes(action)) {\n        decisions[episodeId] = { action, before: contextData, ts: Date.now() };\n        flow.set(\"hcm_decisions\", decisions);\n        post(\"/decision\", { episodeId, targetCps: cpsId, action, recommendation: payload.recommendation || null, rationale: payload.reasoning?.explanation || payload.reasoning?.recommendation || null, timestamp: new Date().toISOString() });\n    } else if (decisions[episodeId]) {\n        const b = decisions[episodeId].before || before[episodeId] || {};\n        const oeeGain = contextData.oee !== null \u0026\u0026 b.oee !== null ? contextData.oee - b.oee : null;\n        const availabilityGain = contextData.availability !== null \u0026\u0026 b.availability !== null ? contextData.availability - b.availability : null;\n        const performanceGain = contextData.performance !== null \u0026\u0026 b.performance !== null ? contextData.performance - b.performance : null;\n        const qualityGain = contextData.quality !== null \u0026\u0026 b.quality !== null ? contextData.quality - b.quality : null;\n        const anyGain = [oeeGain, availabilityGain, performanceGain, qualityGain].some((v) =\u003e typeof v === \"number\" \u0026\u0026 Math.abs(v) \u003e 0.0001);\n        const classification = oeeGain === null ? \"unknown\" : oeeGain \u003e 0.02 ? \"effective\" : anyGain ? \"partially_effective\" : \"ineffective\";\n        const experienceLearned = oeeGain === null ? \"No posterior OEE evidence was available yet.\" : oeeGain \u003e 0 ? \"The intervention improved OEE by \" + (oeeGain * 100).toFixed(2) + \" percentage points.\" : \"The action did not produce measurable OEE recovery.\";\n        post(\"/event\", { episodeId, eventType: \"feedback\", source: \"node-red\", timestamp: new Date().toISOString(), content: { before: b, after: contextData } });\n        post(\"/effectiveness\", { episodeId, beforeMetrics: { oee: b.oee, availability: b.availability, performance: b.performance, quality: b.quality }, afterMetrics: { oee: contextData.oee, availability: contextData.availability, performance: contextData.performance, quality: contextData.quality }, afterGlobalOEE: contextData.oee, feedbackSource: \"node-red\", feedback: { before: b, after: contextData }, result: classification, experienceLearned, timestamp: new Date().toISOString() });\n    }\n});\nnode.status({ fill: \"blue\", shape: \"dot\", text: \"HCM \" + eventType + \" \" + cpsId });\nreturn null;",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  470,
+        "y":  190,
+        "wires":  [
+
+                  ]
+    }
+]

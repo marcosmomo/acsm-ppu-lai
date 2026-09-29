@@ -1,0 +1,58 @@
+# Dependências
+/node_modules
+/.pnp
+.pnp.js
+
+# Build e Saída
+/dist
+/.next/
+/out/
+/build
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variáveis de Ambiente (Segurança)
+.env*.local
+.env
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# IDEs (VS Code, IntelliJ, etc)
+.vscode/
+.idea/
+# ==================================================
+# Backups locais do desenvolvimento
+# ==================================================
+*.bak
+*.bak-*
+/backups/
+/tmp/
+/cps-defs-backup-1880/
+
+# ==================================================
+# Dados de execu��o / experimentos
+# ==================================================
+/data/cps1-runtime-state.json
+/data/governance-store.json
+/data/hcm-store.json
+/data/plug-phase-log.json
+/data/*.history-*.json
+
+# ==================================================
+# Cache / arquivos locais do Windows
+# ==================================================
+**/ModuleAnalysisCache
+*.tmp
+
+
+# Estados locais dos CPS
+/services/*/data/*.json
+
+# Backups internos dos CPS
+/services/*/backups/
+

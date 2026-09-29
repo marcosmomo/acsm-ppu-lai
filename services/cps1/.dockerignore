@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log*
+.env
+.env.*
+.git
+Dockerfile*
+backups
+data/runtime-state.json
+data/logs
+*.tmp
+*.log
