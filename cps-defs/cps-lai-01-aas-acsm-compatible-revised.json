@@ -13,12 +13,12 @@
       "description": [
         {
           "language": "pt-BR",
-          "text": "AAS operacional do CPS-LAI-01 alinhado ao contrato de descoberta e visualização da ACSM-Main."
+          "text": "AAS operacional revisado do CPS-LAI-01, alinhado ao contrato de descoberta, visualização, ciclo de vida PPU e governança da ACSM-PPU-LAI."
         }
       ],
       "administration": {
         "version": "1",
-        "revision": "0"
+        "revision": "1"
       },
       "assetInformation": {
         "assetKind": "Instance",
@@ -43,7 +43,7 @@
           },
           {
             "name": "manufacturer",
-            "value": "FIELD_CONFIRMATION_REQUIRED"
+            "value": "Siemens"
           },
           {
             "name": "assetType",
@@ -198,7 +198,19 @@
           "value": [
             {
               "language": "pt-BR",
-              "text": "FIELD_CONFIRMATION_REQUIRED"
+              "text": "Siemens"
+            }
+          ],
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "INTERNAL_AAS_EVIDENCE"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "Harmonized with TechnicalData.ControllerManufacturer."
             }
           ]
         },
@@ -345,9 +357,16 @@
         },
         {
           "modelType": "Property",
-          "idShort": "MagazineEmpty",
+          "idShort": "MagazineFeedSensor",
           "valueType": "xs:boolean",
-          "value": "false"
+          "value": "false",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ]
         },
         {
           "modelType": "Property",
@@ -453,6 +472,19 @@
           "idShort": "SourceDocumentation",
           "valueType": "xs:string",
           "value": "Automação_de_Processos_260917_142646.pdf"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "AASRevisionNote",
+          "valueType": "xs:string",
+          "value": "Revision 1: harmonized lifecycle phases, manufacturer identification and governable action; physical command bindings remain pending LAI validation.",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "MODEL_DEFINED"
+            }
+          ]
         }
       ]
     },
@@ -620,13 +652,13 @@
               "modelType": "Property",
               "idShort": "DescriptionEndpoint",
               "valueType": "xs:string",
-               "value": "http://localhost:1881/cpslai1/description"
+              "value": "http://localhost:1881/cpslai1/description"
             },
             {
               "modelType": "Property",
               "idShort": "SummaryEndpoint",
               "valueType": "xs:string",
-               "value": "http://localhost:1881/cpslai1/summary"
+              "value": "http://localhost:1881/cpslai1/summary"
             },
             {
               "modelType": "Property",
@@ -702,7 +734,19 @@
           "modelType": "Property",
           "idShort": "SupportedPhases",
           "valueType": "xs:string",
-          "value": "plug, play, stop, maintenance, return, unplug"
+          "value": "plug, play, stop, maintenance, return, unplug",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "MODEL_DEFINED"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "Harmonized with LifecycleServices declared in Services."
+            }
+          ]
         },
         {
           "modelType": "Property",
@@ -927,13 +971,37 @@
           "modelType": "Property",
           "idShort": "GovernableActionDefined",
           "valueType": "xs:boolean",
-          "value": "false"
+          "value": "true",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "MODEL_DEFINED"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "Aligned with ACSM-PPU-LAI governance policy."
+            }
+          ]
         },
         {
           "modelType": "Property",
           "idShort": "GovernableAction",
           "valueType": "xs:string",
-          "value": "FIELD_CONFIRMATION_REQUIRED"
+          "value": "ADJUST_TRANSPORT_SPEED",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "MODEL_DEFINED"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "Physical OPC UA write binding remains pending LAI validation."
+            }
+          ]
         }
       ]
     },
@@ -1069,6 +1137,18 @@
               "valueType": "xs:string",
               "value": "READ"
             }
+          ],
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "MAPPING_DEFINED"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "PLC tag/address/NodeId is present in the current AAS; runtime read validation should be repeated in LAI."
+            }
           ]
         },
         {
@@ -1098,6 +1178,18 @@
               "idShort": "AccessMode",
               "valueType": "xs:string",
               "value": "READ"
+            }
+          ],
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "MAPPING_DEFINED"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "PLC tag/address/NodeId is present in the current AAS; runtime read validation should be repeated in LAI."
             }
           ]
         },
@@ -1134,6 +1226,18 @@
               "idShort": "AccessMode",
               "valueType": "xs:string",
               "value": "READ"
+            }
+          ],
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "MAPPING_DEFINED"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "PLC tag/address/NodeId is present in the current AAS; runtime read validation should be repeated in LAI."
             }
           ]
         },
@@ -1219,6 +1323,18 @@
               "valueType": "xs:string",
               "value": "MOMENTARY_PULSE"
             }
+          ],
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "Do not enable OPC UA writes until Play/Stop/Reset NodeIds, datatypes and access rights are validated in LAI."
+            }
           ]
         },
         {
@@ -1248,6 +1364,18 @@
               "idShort": "AccessMode",
               "valueType": "xs:string",
               "value": "READ"
+            }
+          ],
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "MAPPING_DEFINED"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "PLC tag/address/NodeId is present in the current AAS; runtime read validation should be repeated in LAI."
             }
           ]
         },
@@ -1279,11 +1407,30 @@
               "valueType": "xs:string",
               "value": "READ"
             }
+          ],
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "MAPPING_DEFINED"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "PLC tag/address/NodeId is present in the current AAS; runtime read validation should be repeated in LAI."
+            }
           ]
         },
         {
           "modelType": "SubmodelElementCollection",
-          "idShort": "MagazineEmpty",
+          "idShort": "MagazineFeedSensor",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ],
           "value": [
             {
               "modelType": "Property",
@@ -1314,6 +1461,13 @@
         {
           "modelType": "SubmodelElementCollection",
           "idShort": "EmergencyStopInput",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ],
           "value": [
             {
               "modelType": "Property",
@@ -1344,6 +1498,13 @@
         {
           "modelType": "SubmodelElementCollection",
           "idShort": "AutoEnabled",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ],
           "value": [
             {
               "modelType": "Property",
@@ -1374,6 +1535,13 @@
         {
           "modelType": "SubmodelElementCollection",
           "idShort": "StartProcess",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ],
           "value": [
             {
               "modelType": "Property",
@@ -1404,6 +1572,13 @@
         {
           "modelType": "SubmodelElementCollection",
           "idShort": "ProcessBusy",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ],
           "value": [
             {
               "modelType": "Property",
@@ -1458,6 +1633,18 @@
               "idShort": "AccessMode",
               "valueType": "xs:string",
               "value": "READ"
+            }
+          ],
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "MAPPING_DEFINED"
+            },
+            {
+              "type": "EvidenceNote",
+              "valueType": "xs:string",
+              "value": "PLC tag/address/NodeId is present in the current AAS; runtime read validation should be repeated in LAI."
             }
           ]
         }

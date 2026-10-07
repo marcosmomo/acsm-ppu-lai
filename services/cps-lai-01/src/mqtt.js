@@ -53,7 +53,6 @@ class MqttAdapter {
 
   publishTechnicalState() {
     this.publish(this.config.topics.status, this.payloads.status(), { retain: true });
-    this.publish(this.config.topics.health, this.payloads.health(), { retain: true });
   }
 
   close() {

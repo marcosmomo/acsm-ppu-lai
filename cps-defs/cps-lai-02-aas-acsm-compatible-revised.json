@@ -1,0 +1,267 @@
+{
+  "assetAdministrationShells": [
+    {
+      "modelType": "AssetAdministrationShell",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:aas",
+      "idShort": "CPSLAI02_AAS",
+      "displayName": [
+        { "language": "en", "text": "CPS-LAI-02 – Joining Station" }
+      ],
+      "description": [
+        {
+          "language": "en",
+          "text": "AAS operacional revisado do CPS-LAI-02, preparado para descoberta, visualização, ciclo de vida PPU e governança da ACSM-PPU-LAI. Bindings físicos internos aguardam confirmação no LAI."
+        }
+      ],
+      "assetInformation": {
+        "assetKind": "Instance",
+        "globalAssetId": "urn:ufsc:lai:asset:cps-lai-02:joining-station",
+        "assetType": "Joining Station",
+        "specificAssetIds": [
+          { "name": "formalCpsId", "value": "CPS-LAI-02" },
+          { "name": "cpsId", "value": "cpslai2" },
+          { "name": "assetName", "value": "JoiningStationLAI" },
+          { "name": "displayName", "value": "CPS-LAI-02 – Joining Station" },
+          { "name": "manufacturer", "value": "Siemens AG" },
+          { "name": "assetType", "value": "Joining Station" },
+          { "name": "baseTopic", "value": "cpslai2" }
+        ]
+      },
+      "submodels": [
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:digital-nameplate" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:technical-data" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:operational-data" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:status-health" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:documents" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:interfaces" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:lifecycle" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:acsm-integration" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:oee" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:capabilities" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:cognitive-capabilities" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:governance" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:services" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-02:submodel:field-io-mapping" }] }
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:digital-nameplate",
+      "idShort": "DigitalNameplate",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "ManufacturerName", "valueType": "xs:string", "value": "Siemens AG" },
+        { "modelType": "Property", "idShort": "ManufacturerProductDesignation", "valueType": "xs:string", "value": "JoiningStationLAI" },
+        { "modelType": "Property", "idShort": "CPSId", "valueType": "xs:string", "value": "cpslai2" },
+        { "modelType": "Property", "idShort": "FormalCPSId", "valueType": "xs:string", "value": "CPS-LAI-02" },
+        { "modelType": "Property", "idShort": "Station", "valueType": "xs:string", "value": "Joining Station" },
+        { "modelType": "Property", "idShort": "OrderNumber", "valueType": "xs:string", "value": "6ES7 512-1CK01-0AB0" },
+        { "modelType": "Property", "idShort": "SerialNumber", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:technical-data",
+      "idShort": "TechnicalData",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "AssetType", "valueType": "xs:string", "value": "Joining Station" },
+        { "modelType": "Property", "idShort": "Description", "valueType": "xs:string", "value": "CPS-LAI-02 – Joining Station" },
+        { "modelType": "Property", "idShort": "PLC", "valueType": "xs:string", "value": "Siemens CPU 1512C-1 PN" },
+        { "modelType": "Property", "idShort": "PLCIPAddress", "valueType": "xs:string", "value": "192.168.1.20" },
+        { "modelType": "Property", "idShort": "OPCUAEndpoint", "valueType": "xs:anyURI", "value": "opc.tcp://192.168.1.20:4840" },
+        { "modelType": "Property", "idShort": "SoftwareRevision", "valueType": "xs:string", "value": "V02.09.04" },
+        { "modelType": "Property", "idShort": "EngineeringRevision", "valueType": "xs:string", "value": "V18.0 SP1" },
+        { "modelType": "Property", "idShort": "HardwareRevision", "valueType": "xs:string", "value": "5" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:operational-data",
+      "idShort": "OperationalData",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "OperationMode", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+        { "modelType": "Property", "idShort": "PieceAtEntry", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "PiecePositioned", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "PieceAtExit", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "JoiningReady", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "JoiningActive", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "JoiningCompleted", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "JoiningError", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "JoiningForce", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "JoiningPressure", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "GoodPieceCount", "valueType": "xs:unsignedLong", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "BadPieceCount", "valueType": "xs:unsignedLong", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "TotalPieceCount", "valueType": "xs:unsignedLong", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "ProcessingTimeMs", "valueType": "xs:unsignedLong", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:status-health",
+      "idShort": "StatusAndHealth",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "OperationalState", "valueType": "xs:string", "value": "Unknown" },
+        { "modelType": "Property", "idShort": "Availability", "valueType": "xs:string", "value": "Unknown" },
+        { "modelType": "Property", "idShort": "HealthState", "valueType": "xs:string", "value": "Unknown" },
+        { "modelType": "Property", "idShort": "LastHeartbeat", "valueType": "xs:dateTime", "value": "" },
+        { "modelType": "Property", "idShort": "Alarm", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "Fault", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:documents",
+      "idShort": "Documents",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "DashboardURL", "valueType": "xs:anyURI", "value": "http://localhost:3000/cps/cpslai2" },
+        { "modelType": "Property", "idShort": "DocumentationStatus", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:interfaces",
+      "idShort": "AssetInterfacesDescription",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "BaseTopic", "valueType": "xs:string", "value": "cpslai2" },
+        { "modelType": "Property", "idShort": "BrokerHost", "valueType": "xs:string", "value": "localhost" },
+        { "modelType": "Property", "idShort": "BrokerPort", "valueType": "xs:integer", "value": "1883" },
+        { "modelType": "Property", "idShort": "OPCUAEndpoint", "valueType": "xs:anyURI", "value": "opc.tcp://192.168.1.20:4840" },
+        { "modelType": "Property", "idShort": "OPCUAAccessMode", "valueType": "xs:string", "value": "READ_ONLY" },
+        { "modelType": "Property", "idShort": "OPCUAWriteEnabled", "valueType": "xs:boolean", "value": "false" },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "MQTTTopics",
+          "value": [
+            { "modelType": "Property", "idShort": "Command", "valueType": "xs:string", "value": "cpslai2/cmd" },
+            { "modelType": "Property", "idShort": "Acknowledgement", "valueType": "xs:string", "value": "cpslai2/ack" },
+            { "modelType": "Property", "idShort": "Status", "valueType": "xs:string", "value": "cpslai2/status" },
+            { "modelType": "Property", "idShort": "Health", "valueType": "xs:string", "value": "cpslai2/health" },
+            { "modelType": "Property", "idShort": "Data", "valueType": "xs:string", "value": "cpslai2/data" },
+            { "modelType": "Property", "idShort": "SensorData", "valueType": "xs:string", "value": "cpslai2/sensordata" },
+            { "modelType": "Property", "idShort": "OEE", "valueType": "xs:string", "value": "cpslai2/oee" },
+            { "modelType": "Property", "idShort": "Learning", "valueType": "xs:string", "value": "acsm/cpslai2/learning" },
+            { "modelType": "Property", "idShort": "Reasoning", "valueType": "xs:string", "value": "acsm/cpslai2/reasoning" },
+            { "modelType": "Property", "idShort": "Recommendation", "valueType": "xs:string", "value": "acsm/cpslai2/recommendation" }
+          ]
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:lifecycle",
+      "idShort": "LifecycleIntegration",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "CurrentPhase", "valueType": "xs:string", "value": "plug" },
+        { "modelType": "Property", "idShort": "SupportedPhases", "valueType": "xs:string", "value": "plug, play, stop, maintenance, return, unplug" },
+        { "modelType": "Property", "idShort": "PhysicalPlayEnabled", "valueType": "xs:boolean", "value": "false" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:acsm-integration",
+      "idShort": "ACSMIntegration",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "ACSMId", "valueType": "xs:string", "value": "acsm1" },
+        { "modelType": "Property", "idShort": "IntegrationStatus", "valueType": "xs:string", "value": "LOGICAL_INTEGRATION_READY" },
+        { "modelType": "Property", "idShort": "PhysicalAdapterStatus", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+        { "modelType": "Property", "idShort": "NodeRedAdapterConfigured", "valueType": "xs:boolean", "value": "false" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:oee",
+      "idShort": "OEEMonitoring",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "Availability", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "NO_PHYSICAL_DATA" }] },
+        { "modelType": "Property", "idShort": "Performance", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "NO_PHYSICAL_DATA" }] },
+        { "modelType": "Property", "idShort": "Quality", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "NO_PHYSICAL_DATA" }] },
+        { "modelType": "Property", "idShort": "OEE", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "NO_PHYSICAL_DATA" }] }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:capabilities",
+      "idShort": "Capabilities",
+      "submodelElements": [
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "Joining",
+          "value": [
+            { "modelType": "Property", "idShort": "Name", "valueType": "xs:string", "value": "Joining Station" },
+            { "modelType": "Property", "idShort": "Status", "valueType": "xs:string", "value": "PHYSICAL_VALIDATION_PENDING" },
+            { "modelType": "Property", "idShort": "OPCUABindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }
+          ]
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:cognitive-capabilities",
+      "idShort": "CognitiveCapabilities",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "LearningTopic", "valueType": "xs:string", "value": "acsm/cpslai2/learning" },
+        { "modelType": "Property", "idShort": "ReasoningTopic", "valueType": "xs:string", "value": "acsm/cpslai2/reasoning" },
+        { "modelType": "Property", "idShort": "RecommendationTopic", "valueType": "xs:string", "value": "acsm/cpslai2/recommendation" },
+        { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "NO_PHYSICAL_DATA" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:governance",
+      "idShort": "Governance",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "Template", "valueType": "xs:string", "value": "JOINING" },
+        { "modelType": "Property", "idShort": "Capability", "valueType": "xs:string", "value": "Joining Station" },
+        { "modelType": "Property", "idShort": "GovernableAction", "valueType": "xs:string", "value": "ADJUST_JOINING_FORCE" },
+        { "modelType": "Property", "idShort": "PhysicalBindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" },
+        { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "" },
+        { "modelType": "Property", "idShort": "ExecutionEnabled", "valueType": "xs:boolean", "value": "false" },
+        { "modelType": "Property", "idShort": "OPCUAWriteEnabled", "valueType": "xs:boolean", "value": "false" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:services",
+      "idShort": "Services",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "Discovery", "valueType": "xs:string", "value": "AVAILABLE" },
+        { "modelType": "Property", "idShort": "Representation", "valueType": "xs:string", "value": "AVAILABLE" },
+        { "modelType": "Property", "idShort": "PhysicalControl", "valueType": "xs:string", "value": "DISABLED_PENDING_FIELD_CONFIRMATION" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:field-io-mapping",
+      "idShort": "FieldIOMapping",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "MappingStatus", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+        { "modelType": "Property", "idShort": "WriteEnabled", "valueType": "xs:boolean", "value": "false" },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ConfirmedOPCUAStructures",
+          "value": [
+            { "modelType": "Property", "idShort": "PLC", "valueType": "xs:string", "value": "ns=3;s=PLC" },
+            { "modelType": "Property", "idShort": "Inputs", "valueType": "xs:string", "value": "ns=3;s=Inputs" },
+            { "modelType": "Property", "idShort": "Outputs", "valueType": "xs:string", "value": "ns=3;s=Outputs" },
+            { "modelType": "Property", "idShort": "Memory", "valueType": "xs:string", "value": "ns=3;s=Memory" },
+            { "modelType": "Property", "idShort": "Counters", "valueType": "xs:string", "value": "ns=3;s=Counters" },
+            { "modelType": "Property", "idShort": "Timers", "valueType": "xs:string", "value": "ns=3;s=Timers" },
+            { "modelType": "Property", "idShort": "DataBlocksGlobal", "valueType": "xs:string", "value": "ns=3;s=DataBlocksGlobal" },
+            { "modelType": "Property", "idShort": "DataBlocksInstance", "valueType": "xs:string", "value": "ns=3;s=DataBlocksInstance" },
+            { "modelType": "Property", "idShort": "OperatingMode", "valueType": "xs:string", "value": "ns=3;s=OperatingMode" }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "PendingOperationalBindings",
+          "value": [
+            { "modelType": "Property", "idShort": "Fields", "valueType": "xs:string", "value": "PieceAtEntry, PiecePositioned, PieceAtExit, JoiningReady, JoiningActive, JoiningCompleted, JoiningError, JoiningForce, JoiningPressure, GoodPieceCount, BadPieceCount, TotalPieceCount, ProcessingTimeMs, Alarm, Fault, Play, Stop, Reset" },
+            { "modelType": "Property", "idShort": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" },
+            { "modelType": "Property", "idShort": "NodeIds", "valueType": "xs:string", "value": "" }
+          ]
+        }
+      ]
+    }
+  ]
+}

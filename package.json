@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --test test/*.test.mjs",
+    "test:cps-lifecycle-mqtt": "node --test test/cps-lifecycle-mqtt.test.mjs",
     "test:play": "node --test test/play-service.test.mjs",
     "test:plug": "node --test test/plug-service.test.mjs",
     "test:api-catalog": "node --test test/api-catalog.test.mjs",

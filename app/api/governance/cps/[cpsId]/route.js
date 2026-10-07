@@ -1,5 +1,4 @@
 import {
-  createGovernanceProfileForPlug,
   ensureGovernanceProfile,
   getGovernanceProfile,
   updateGovernanceProfile,
@@ -28,10 +27,9 @@ export async function POST(request, { params }) {
         )
       );
     }
-    if (body?.createForPlug) {
-      return jsonOk(createGovernanceProfileForPlug(cpsId, body?.cps || body), 201);
-    }
-    return jsonOk(ensureGovernanceProfile(cpsId, body?.cps || body), 201);
+    // Legacy POST remains read-only; only an explicit lifecycle Plug event
+    // in /api/acsm/plug may create a governance profile.
+    return jsonOk(ensureGovernanceProfile(cpsId), 200);
   } catch (error) {
     return jsonError(error);
   }

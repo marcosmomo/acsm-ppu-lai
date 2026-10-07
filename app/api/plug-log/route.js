@@ -28,15 +28,19 @@ export async function POST(request) {
   try {
     const event = await request.json();
     const now = Date.now();
+    const eventType = event?.eventType || event?.type || 'lifecycle_event';
+    const cpsId = event?.cpsId || event?.details?.lifecycleCpsId || null;
     const entry = {
       id: event?.id || `evt-${now}-${Math.random().toString(16).slice(2, 8)}`,
       phase: event?.phase || 'plug',
-      eventType: event?.eventType || event?.type || 'lifecycle_event',
-      cpsId: event?.cpsId || event?.details?.lifecycleCpsId || null,
+      eventType,
+      cpsId,
       cpsName: event?.cpsName || event?.details?.lifecycleCpsName || null,
       topic: event?.topic || event?.baseTopic || event?.details?.lifecycleBaseTopic || null,
       message: event?.message || 'Lifecycle event recorded.',
-      details: event?.details || {},
+      details: {
+        ...(event?.details || {}),
+      },
       ts: event?.ts || now,
       isoDate: new Date(event?.ts || now).toISOString(),
     };

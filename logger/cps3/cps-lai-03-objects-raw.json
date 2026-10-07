@@ -1,0 +1,63 @@
+{
+  "collectedAt": "2026-10-03T22:38:15.740Z",
+  "cpsId": "cpslai3",
+  "station": "Sorting Station",
+  "endpoint": "opc.tcp://192.168.1.30:4840",
+  "browseRoot": "ns=0;i=85",
+  "payload": [
+    {
+      "item": {
+        "referenceTypeId": "ns=0;i=35",
+        "isForward": true,
+        "nodeId": "ns=0;i=2253",
+        "browseName": {
+          "namespaceIndex": 0,
+          "name": "Server"
+        },
+        "displayName": {
+          "text": "Server"
+        },
+        "nodeClass": 1,
+        "typeDefinition": "ns=0;i=2004",
+        "value": null,
+        "dataType": "Null"
+      }
+    },
+    {
+      "item": {
+        "referenceTypeId": "ns=0;i=35",
+        "isForward": true,
+        "nodeId": "ns=2;i=5001",
+        "browseName": {
+          "namespaceIndex": 2,
+          "name": "DeviceSet"
+        },
+        "displayName": {
+          "text": "DeviceSet"
+        },
+        "nodeClass": 1,
+        "typeDefinition": "ns=0;i=58",
+        "value": null,
+        "dataType": "Null"
+      }
+    },
+    {
+      "item": {
+        "referenceTypeId": "ns=0;i=35",
+        "isForward": true,
+        "nodeId": "ns=3;s=PLC",
+        "browseName": {
+          "namespaceIndex": 3,
+          "name": "03_Sorting_1512C"
+        },
+        "displayName": {
+          "text": "03_Sorting_1512C"
+        },
+        "nodeClass": 1,
+        "typeDefinition": "ns=3;i=1002",
+        "value": null,
+        "dataType": "Null"
+      }
+    }
+  ]
+}

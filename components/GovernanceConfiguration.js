@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { sanitizeTextEncoding } from '../lib/text/sanitizeTextEncoding';
+import { canApproveLifecycleGovernance } from '../lib/governance/uiState.mjs';
 
 const txt = (value, fallback = '-') => sanitizeTextEncoding(value, { fallback });
 
@@ -30,6 +31,10 @@ export default function GovernanceConfiguration({
   );
   const isPendingApproval = profile?.status === 'PENDING_APPROVAL';
   const isApproved = profile?.status === 'APPROVED';
+  const canApprove = canApproveLifecycleGovernance({
+    registered: Boolean(cps?.id),
+    profile,
+  });
   const [editableActions, setEditableActions] = useState([]);
   const [localError, setLocalError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -151,12 +156,8 @@ export default function GovernanceConfiguration({
           <span>Template</span>
           <strong>{txt(profile?.template)}</strong>
         </div>
-        {profile?.previousProfileVersion ? (
-          <div>
-            <span>Previous Governance Version</span>
-            <strong>{txt(profile.previousProfileVersion)}</strong>
-          </div>
-        ) : null}
+        {isApproved ? <div><span>Approved At</span><strong>{txt(profile?.approvedAt)}</strong></div> : null}
+        {isApproved ? <div><span>Approved By</span><strong>{txt(profile?.approvedBy)}</strong></div> : null}
       </div>
 
       {isOpen ? (
@@ -260,7 +261,7 @@ export default function GovernanceConfiguration({
               type="button"
               className="start-ops-btn"
               onClick={() => onApprove?.(cps?.id)}
-              disabled={isLoading || profile?.status === 'APPROVED'}
+              disabled={isLoading || !canApprove}
             >
               Approve Governance
             </button>
@@ -268,7 +269,7 @@ export default function GovernanceConfiguration({
               type="button"
               className="exit-btn"
               onClick={() => onReject?.(cps?.id)}
-              disabled={isLoading || profile?.status === 'REJECTED'}
+              disabled={isLoading || profile?.status === 'DENIED'}
             >
               Reject Governance
             </button>

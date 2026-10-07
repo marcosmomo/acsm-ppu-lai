@@ -2,10 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildAcsmApiCatalog } from '../lib/acsm/apiCatalog.mjs';
 
-test('catalog exposes exactly the supported read-only facades', () => {
+test('catalog exposes exactly the supported read-only services', () => {
   const catalog = buildAcsmApiCatalog();
   const endpoints = catalog.availableFacades.map((facade) => facade.endpoint);
-  assert.deepEqual(endpoints, ['/api/acsm/plug', '/api/acsm/play']);
+  assert.deepEqual(endpoints, [
+    '/api/acsm/plug',
+    '/api/acsm/play',
+  ]);
   assert.equal(catalog.availableFacades.every((facade) => facade.readOnly === true), true);
   assert.equal(catalog.availableFacades.every((facade) => facade.method === 'GET'), true);
   for (const absent of ['/api/acsm/stop', '/api/acsm/maintenance', '/api/acsm/return', '/api/acsm/unplug']) {

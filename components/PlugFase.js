@@ -2,6 +2,10 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCPSContext } from '../context/CPSContext';
+import {
+  canApproveLifecycleGovernance,
+  governancePermitsPlay,
+} from '../lib/governance/uiState.mjs';
 import { sanitizeTextEncoding } from '../lib/text/sanitizeTextEncoding';
 import GovernanceConfiguration from './GovernanceConfiguration';
 
@@ -28,7 +32,10 @@ const formatEventDate = (ts) => {
   }
 };
 
-const getLifecycleBadgeLabel = ({ inPlay, maintenanceInProgress }) => {
+const getLifecycleBadgeLabel = ({ inPlay, maintenanceInProgress, lifecyclePhase }) => {
+  if (lifecyclePhase === 'unplug') return 'Unplug';
+  if (lifecyclePhase === 'plug') return 'Plug';
+  if (lifecyclePhase === 'play') return 'Play';
   if (maintenanceInProgress) return 'Maintenance';
   if (inPlay) return 'Operational';
   return 'Ready';
@@ -40,97 +47,18 @@ const getLifecycleBadgeClass = ({ inPlay, maintenanceInProgress }) => {
   return 'plug-asset-state-ready';
 };
 
-const normalizeCapabilityLabel = (value) =>
+const normalizeSupportedPhaseLabel = (value) =>
   txt(value, '')
     .replace(/[_-]+/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase())
     .trim();
 
-const splitCapabilityList = (value) => {
-  if (Array.isArray(value)) return value.map(normalizeCapabilityLabel).filter(Boolean);
+const normalizeSupportedPhases = (value) => {
+  if (Array.isArray(value)) return value.map(normalizeSupportedPhaseLabel).filter(Boolean);
   return String(value || '')
     .split(/[|,;/]+/)
-    .map(normalizeCapabilityLabel)
+    .map(normalizeSupportedPhaseLabel)
     .filter(Boolean);
-};
-
-const hasAasSubmodel = (cps, pattern) => {
-  const normalizedPattern = String(pattern || '').toLowerCase();
-  const aasMetadata = cps?.aasMetadata || cps?.details?.aasMetadata || {};
-  const discoveredAasValues = [
-    aasMetadata.id,
-    aasMetadata.idShort,
-    ...(Array.isArray(aasMetadata.submodelRefs) ? aasMetadata.submodelRefs : []),
-    ...(Array.isArray(aasMetadata.submodelIdShorts) ? aasMetadata.submodelIdShorts : []),
-    ...(Array.isArray(aasMetadata.elementIdShorts) ? aasMetadata.elementIdShorts : []),
-    ...(cps?.aas?.submodels || []).flatMap((ref) => [
-      ref?.value,
-      ...(Array.isArray(ref?.keys) ? ref.keys.map((key) => key?.value) : []),
-    ]),
-    ...(cps?.aas?.submodelElements || []).map((el) => el?.idShort),
-  ];
-
-  return discoveredAasValues.some((value) =>
-    String(value || '').toLowerCase().includes(normalizedPattern)
-  );
-};
-
-const hasAasEvidence = (cps) => {
-  const aasMetadata = cps?.aasMetadata || cps?.details?.aasMetadata || {};
-  return Boolean(
-    cps?.aas ||
-      aasMetadata.id ||
-      aasMetadata.idShort ||
-      (Array.isArray(aasMetadata.submodelRefs) && aasMetadata.submodelRefs.length) ||
-      (Array.isArray(aasMetadata.submodelIdShorts) && aasMetadata.submodelIdShorts.length)
-  );
-};
-
-const inferProcessCapabilities = (cps) => {
-  const source = `${cps?.assetType || ''} ${(cps?.funcionalidades || [])
-    .map((item) => `${item?.nome || ''} ${item?.key || ''} ${item?.descricao || ''}`)
-    .join(' ')}`.toLowerCase();
-
-  if (source.includes('weld') || source.includes('sold')) return ['Welding'];
-  if (source.includes('vision') || source.includes('inspection') || source.includes('visao')) return ['Visual Inspection'];
-  if (source.includes('conveyor') || source.includes('transport')) return ['Transportation'];
-  return cps?.assetType ? [normalizeCapabilityLabel(cps.assetType)] : [];
-};
-
-const buildDiscoveredCapabilities = (cps) => {
-  const endpoints = cps?.endpoints || {};
-  const supportedPhases = splitCapabilityList(cps?.lifecycle?.supportedPhases);
-  const lifecycleServices = new Set(supportedPhases);
-
-  const monitoring = new Set();
-  if (endpoints.summary || endpoints.indicators || cps?.operationalData) monitoring.add('Telemetry');
-  if (endpoints.health || cps?.health || hasAasSubmodel(cps, 'statusandhealth')) monitoring.add('Health');
-  if (cps?.oee || hasAasSubmodel(cps, 'oee')) monitoring.add('OEE');
-
-  const cognitive = new Set();
-  if (
-    hasAasSubmodel(cps, 'learning') ||
-    hasAasSubmodel(cps, 'reasoning') ||
-    hasAasSubmodel(cps, 'recommendation') ||
-    hasAasSubmodel(cps, 'acsm')
-  ) {
-    cognitive.add('Learning');
-    cognitive.add('Reasoning');
-    cognitive.add('Recommendation');
-  }
-
-  const integration = new Set();
-  if (cps?.topic || cps?.brokerWs || cps?.brokerWss) integration.add('MQTT');
-  if (Object.values(endpoints).some(Boolean)) integration.add('REST');
-  if (hasAasEvidence(cps)) integration.add('AAS');
-
-  return [
-    { group: 'Process', items: inferProcessCapabilities(cps) },
-    { group: 'Lifecycle Services', items: Array.from(lifecycleServices) },
-    { group: 'Monitoring', items: Array.from(monitoring) },
-    { group: 'Cognitive', items: Array.from(cognitive) },
-    { group: 'Integration', items: Array.from(integration) },
-  ].filter((section) => section.items.length);
 };
 
 const normalizeCpsKey = (value) =>
@@ -153,14 +81,8 @@ const getEvidenceForCps = (events = [], cps) => {
     const type = String(event?.eventType || event?.type || '').toLowerCase();
     return type === 'maintenance_entered' || type === 'maintenance_started';
   });
-  const evolutionEvents = cpsEvents
-    .filter((event) => String(event?.eventType || event?.type || '').toLowerCase() === 'evolution')
-    .sort((a, b) => Number(b?.ts || Date.parse(b?.isoDate || '')) - Number(a?.ts || Date.parse(a?.isoDate || '')));
-
   return {
     maintenanceCount: maintenanceEvents.length,
-    lastEvolution: evolutionEvents[0] || null,
-    lastEvolutionTimestamp: evolutionEvents[0]?.ts || evolutionEvents[0]?.isoDate || null,
     events: cpsEvents,
   };
 };
@@ -172,6 +94,7 @@ export default function PlugFase() {
     availableCPS = [],
     registerCPS,
     addCPS,
+    plugCPS,
     addedCPS,
     playPhaseCPS,
     unplugCPS,
@@ -179,6 +102,7 @@ export default function PlugFase() {
     updateGovernanceProfile,
     approveGovernanceProfile,
     rejectGovernanceProfile,
+    governanceProfiles = {},
   } =
     useCPSContext();
 
@@ -190,12 +114,15 @@ export default function PlugFase() {
   const [selectedGovernanceCpsId, setSelectedGovernanceCpsId] = useState(null);
   const [governancePanelLoading, setGovernancePanelLoading] = useState(false);
   const [governancePanelError, setGovernancePanelError] = useState('');
+  const [unpluggingCpsId, setUnpluggingCpsId] = useState(null);
+  const [pluggingCpsId, setPluggingCpsId] = useState(null);
   const [plugLifecycleEvents, setPlugLifecycleEvents] = useState([]);
   const [plugApiModalOpen, setPlugApiModalOpen] = useState(false);
   const [plugApiInspection, setPlugApiInspection] = useState({
     state: 'idle', data: null, httpStatus: null, error: null,
   });
   const [plugApiCopyFeedback, setPlugApiCopyFeedback] = useState('');
+  const [plugProjectedAssets, setPlugProjectedAssets] = useState([]);
 
   const eligiblePlayCPS = Array.isArray(playPhaseCPS) ? playPhaseCPS : addedCPS;
   const cpsNamesInPlay = useMemo(
@@ -212,15 +139,34 @@ export default function PlugFase() {
   const selectedGovernanceCps = useMemo(
     () =>
       selectedGovernanceCpsId
-        ? (availableCPS || []).find((cps) => cps?.id === selectedGovernanceCpsId) || null
+        ? (() => {
+            const cps = (availableCPS || []).find((item) => item?.id === selectedGovernanceCpsId);
+            const projectedAsset = plugProjectedAssets.find(
+              (asset) => normalizeCpsKey(asset?.cps?.cpsId) === normalizeCpsKey(selectedGovernanceCpsId)
+            );
+            const projected = projectedAsset?.cps?.lifecyclePhase === 'plug'
+              ? projectedAsset?.governance?.activeProfile
+              : null;
+            const profile = projected || null;
+            return cps
+              ? {
+                  ...cps,
+                  governanceProfile: profile,
+                  governanceStatus: profile?.status || 'NOT_DEFINED',
+                }
+              : null;
+          })()
         : null,
-    [availableCPS, selectedGovernanceCpsId]
+    [availableCPS, plugProjectedAssets, selectedGovernanceCpsId]
   );
+  const projectedCapabilitiesByCps = useMemo(() => new Map(
+    plugProjectedAssets.map((asset) => [normalizeCpsKey(asset?.cps?.cpsId), asset.capabilities || []])
+  ), [plugProjectedAssets]);
 
   const plugApiAssets = useMemo(
     () => (availableCPS || []).map((cps) => {
       const lifecycleEvidence = getEvidenceForCps(plugLifecycleEvents, cps);
-      const profile = cps?.governanceProfile || {};
+      const profile = governanceProfiles[normalizeCpsKey(cps?.id)] || cps?.governanceProfile || {};
 
       return {
         cps: {
@@ -237,7 +183,6 @@ export default function PlugFase() {
           description: cps?.descricao || null,
         },
         aas: cps?.aasMetadata || null,
-        capabilities: buildDiscoveredCapabilities(cps),
         interfaces: {
           baseTopic: cps?.topic || null,
           brokerHost: cps?.server || null,
@@ -245,20 +190,19 @@ export default function PlugFase() {
           brokerWebSocket: cps?.brokerWs || null,
           endpoints: cps?.endpoints || null,
         },
-        supportedPhases: splitCapabilityList(cps?.lifecycle?.supportedPhases),
+        supportedPhases: normalizeSupportedPhases(cps?.lifecycle?.supportedPhases),
         governance: {
           profileId: profile?.profileId || null,
           profileVersion: profile?.profileVersion ?? null,
-          status: cps?.governanceStatus || profile?.status || 'NOT_AVAILABLE',
+          status: profile?.status || cps?.governanceStatus || 'NOT_AVAILABLE',
         },
         lifecycleEvidence: {
           maintenanceCount: lifecycleEvidence.maintenanceCount,
-          lastEvolutionTimestamp: lifecycleEvidence.lastEvolutionTimestamp,
           events: lifecycleEvidence.events,
         },
       };
     }),
-    [availableCPS, plugLifecycleEvents]
+    [availableCPS, governanceProfiles, plugLifecycleEvents]
   );
 
   useEffect(() => {
@@ -274,11 +218,35 @@ export default function PlugFase() {
         operationallyLinked: eligiblePlayCPS.length,
         assets: plugApiAssets,
       }),
-    }).catch((error) => {
-      if (error?.name !== 'AbortError') console.warn('[ACSM PLUG] API synchronization failed:', error?.message || error);
-    });
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+        setPlugProjectedAssets(Array.isArray(data?.assets) ? data.assets : []);
+        for (const asset of Array.isArray(data?.assets) ? data.assets : []) {
+          const cpsId = normalizeCpsKey(asset?.cps?.cpsId);
+          const projected = asset?.governance;
+          const current = governanceProfiles[cpsId];
+          if (
+            cpsId &&
+            projected?.profileId &&
+            (projected.profileId !== current?.profileId || projected.status !== current?.status)
+          ) {
+            await refreshGovernanceProfile?.(cpsId);
+          }
+        }
+      })
+      .catch((error) => {
+        if (error?.name !== 'AbortError') console.warn('[ACSM PLUG] API synchronization failed:', error?.message || error);
+      });
     return () => controller.abort();
-  }, [acsmConfig?.id, eligiblePlayCPS.length, plugApiAssets]);
+  }, [
+    acsmConfig?.id,
+    eligiblePlayCPS.length,
+    governanceProfiles,
+    plugApiAssets,
+    refreshGovernanceProfile,
+  ]);
 
   const loadPlugApiInspection = async () => {
     setPlugApiInspection((current) => ({ ...current, state: 'loading', error: null }));
@@ -359,12 +327,12 @@ export default function PlugFase() {
     setErrorMsg('');
 
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const parsed = JSON.parse(String(evt.target?.result || ''));
-        const ok = registerCPS(parsed);
-        if (ok) setStatusMsg('CPS loaded into Plug Phase successfully.');
-        else setErrorMsg('Failed to load CPS into Plug Phase. Check the lifecycle log.');
+        const ok = await registerCPS(parsed);
+        if (ok) setStatusMsg('CPS AAS registered. Execute Plug on its card to open a governance cycle.');
+        else setErrorMsg('Failed to register CPS AAS. Check the lifecycle log.');
       } catch {
         setErrorMsg('Invalid JSON or incompatible CPS AAS. Verify assetAdministrationShells, submodels and AssetInterfacesDescription.');
       } finally {
@@ -431,6 +399,13 @@ export default function PlugFase() {
     try {
       const profile = await refreshGovernanceProfile?.(cps.id);
       if (!profile) setGovernancePanelError('Unable to load Governance Profile.');
+      if (profile) {
+        setPlugProjectedAssets((prev) => prev.map((asset) =>
+          normalizeCpsKey(asset?.cps?.cpsId) === normalizeCpsKey(cps.id)
+            ? { ...asset, governance: { ...asset.governance, activeProfile: profile, profileId: profile.profileId, profileVersion: profile.profileVersion, status: profile.status, approvedAt: profile.approvedAt || null, approvedBy: profile.approvedBy || null, plugCycleStatus: profile.plugCycleStatus || null } }
+            : asset
+        ));
+      }
     } catch {
       setGovernancePanelError('Unable to load Governance Profile.');
     } finally {
@@ -449,11 +424,38 @@ export default function PlugFase() {
         setGovernancePanelError('Unable to approve Governance Profile.');
         return;
       }
-      await refreshGovernanceProfile?.(cpsId);
+      const activeProfile = await refreshGovernanceProfile?.(cpsId);
+      if (activeProfile) {
+        setPlugProjectedAssets((prev) => prev.map((asset) =>
+          normalizeCpsKey(asset?.cps?.cpsId) === normalizeCpsKey(cpsId)
+            ? { ...asset, governance: { ...asset.governance, activeProfile, profileId: activeProfile.profileId, profileVersion: activeProfile.profileVersion, status: activeProfile.status, approvedAt: activeProfile.approvedAt || null, approvedBy: activeProfile.approvedBy || null, plugCycleStatus: activeProfile.plugCycleStatus || null } }
+            : asset
+        ));
+      }
     } catch {
       setGovernancePanelError('Unable to approve Governance Profile.');
     } finally {
       setGovernancePanelLoading(false);
+    }
+  };
+
+  const handlePlug = async (cps) => {
+    if (!cps?.id || pluggingCpsId) return;
+    setPluggingCpsId(cps.id);
+    setErrorMsg('');
+    setStatusMsg('');
+    try {
+      const result = await plugCPS?.(cps.id);
+      if (!result?.ok || !result.activeProfile) {
+        throw new Error(result?.reason || 'Plug did not create an active Governance Profile.');
+      }
+      setPlugProjectedAssets(Array.isArray(result.state?.assets) ? result.state.assets : []);
+      await refreshGovernanceProfile?.(cps.id);
+      setStatusMsg(`${cps.displayName || cps.nome}: Plug completed; Governance is PENDING_APPROVAL.`);
+    } catch (error) {
+      setErrorMsg(error?.message || 'Unable to execute Plug for this CPS.');
+    } finally {
+      setPluggingCpsId(null);
     }
   };
 
@@ -473,6 +475,21 @@ export default function PlugFase() {
       setGovernancePanelError('Unable to reject Governance Profile.');
     } finally {
       setGovernancePanelLoading(false);
+    }
+  };
+
+  const handleUnplug = async (cps) => {
+    setErrorMsg('');
+    setStatusMsg('');
+    setUnpluggingCpsId(cps?.id || null);
+    try {
+      const ok = await unplugCPS(cps?.id || cps?.cpsId);
+      if (!ok) throw new Error('ACSM did not complete the Unplug transition.');
+      setStatusMsg(`${cps?.nome || cps?.id} was unplugged in the ACSM.`);
+    } catch (error) {
+      setErrorMsg(`Unable to unplug ${cps?.nome || cps?.id}: ${error?.message || error}`);
+    } finally {
+      setUnpluggingCpsId(null);
     }
   };
 
@@ -573,9 +590,33 @@ export default function PlugFase() {
               const inPlay = cpsNamesInPlay.has(name);
               const cps = cpsByName[name] || null;
               const maintenanceInProgress = !!cps?.maintenance?.inProgress;
+              const lifecyclePhase = String(
+                cps?.lifecyclePhase || cps?.lifecycle?.currentPhase || ''
+              ).toLowerCase();
 
-              const governanceStatus = txt(cps?.governanceStatus || cps?.governanceProfile?.status, 'NOT_DEFINED');
-              const capabilities = buildDiscoveredCapabilities(cps);
+              const projectedAsset = plugProjectedAssets.find(
+                (asset) => normalizeCpsKey(asset?.cps?.cpsId) === normalizeCpsKey(cps?.id)
+              );
+              const projectedProfile = lifecyclePhase === 'plug'
+                ? projectedAsset?.governance?.activeProfile
+                : null;
+              const governanceProfile = projectedProfile || null;
+              const governanceStatus = txt(governanceProfile?.status, 'NOT_DEFINED');
+              const governanceApproved = governancePermitsPlay({
+                registered: Boolean(cps?.id) && lifecyclePhase === 'plug',
+                profile: governanceProfile,
+              });
+              const governanceCanApprove = canApproveLifecycleGovernance({
+                registered: Boolean(cps?.id) && lifecyclePhase === 'plug',
+                profile: governanceProfile,
+              });
+              const cpsWithGovernance = {
+                ...cps,
+                governanceProfile,
+                governanceStatus: governanceProfile?.status || 'NOT_DEFINED',
+                governanceCanApprove,
+              };
+              const capabilities = projectedCapabilitiesByCps.get(normalizeCpsKey(cps?.id)) || [];
               const lifecycleEvidence = getEvidenceForCps(plugLifecycleEvents, cps);
 
               return (
@@ -585,7 +626,7 @@ export default function PlugFase() {
                       <div className="plug-asset-card-title-row">
                         <h4 className="plug-asset-card-title">{txt(name)}</h4>
                         <span className={`plug-asset-state-badge ${getLifecycleBadgeClass({ inPlay, maintenanceInProgress })}`}>
-                          {getLifecycleBadgeLabel({ inPlay, maintenanceInProgress })}
+                          {getLifecycleBadgeLabel({ inPlay, maintenanceInProgress, lifecyclePhase })}
                         </span>
                       </div>
 
@@ -598,22 +639,37 @@ export default function PlugFase() {
 
                     <div className="plug-asset-card-actions">
                       {inPlay ? (
-                        <button className="exit-btn" onClick={() => unplugCPS(name)}>Unplug</button>
-                      ) : (
+                        <button
+                          className="exit-btn"
+                          onClick={() => handleUnplug(cps)}
+                          disabled={unpluggingCpsId === cps?.id}
+                        >
+                          {unpluggingCpsId === cps?.id ? 'Unplugging…' : 'Unplug'}
+                        </button>
+                      ) : lifecyclePhase === 'plug' ? (
                         <button
                           className="start-ops-btn"
-                          onClick={() => {
-                            const ok = addCPS(name);
+                          onClick={async () => {
+                            const ok = await addCPS(name);
                             if (!ok) setErrorMsg('PLAY_NOT_ALLOWED: GOVERNANCE_NOT_APPROVED');
                           }}
-                          disabled={governanceStatus !== 'APPROVED'}
+                          disabled={!governanceApproved}
                           title={
-                            governanceStatus === 'APPROVED'
+                            governanceApproved
                               ? 'Start Play Phase'
-                              : 'Play blocked until governance is approved'
+                              : 'Governance approval required before Play'
                           }
                         >
                           Play
+                        </button>
+                      ) : (
+                        <button
+                          className="start-ops-btn"
+                          onClick={() => handlePlug(cps)}
+                          disabled={!cps?.id || pluggingCpsId === cps?.id || maintenanceInProgress}
+                          title="Start a new Plug lifecycle and governance approval cycle"
+                        >
+                          {pluggingCpsId === cps?.id ? 'Plugging…' : 'Plug'}
                         </button>
                       )}
                     </div>
@@ -629,7 +685,7 @@ export default function PlugFase() {
                       </div>
 
                       <GovernanceConfiguration
-                        cps={cps}
+                        cps={cpsWithGovernance}
                         onRefresh={refreshGovernanceProfile}
                         onReview={handleReviewGovernance}
                         isOpen={false}
@@ -660,14 +716,6 @@ export default function PlugFase() {
                       <div className="plug-asset-info-box">
                         <span className="plug-asset-info-label">Recorded Maintenance Events</span>
                         <strong className="plug-asset-info-value">{lifecycleEvidence.maintenanceCount}</strong>
-                      </div>
-                      <div className="plug-asset-info-box">
-                        <span className="plug-asset-info-label">Last Recorded Update</span>
-                        <strong className="plug-asset-info-value">
-                          {lifecycleEvidence.lastEvolution
-                            ? formatEventDate(lifecycleEvidence.lastEvolution.ts || lifecycleEvidence.lastEvolution.isoDate)
-                            : '-'}
-                        </strong>
                       </div>
                       </div>
                     </section>

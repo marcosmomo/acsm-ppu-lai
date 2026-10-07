@@ -23,7 +23,9 @@ export async function GET(request) {
 
     const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
 
-    const cpsList = files
+    const cpsById = new Map();
+
+    files
       .map((file) => {
         const fullPath = path.join(dir, file);
         const content = fs.readFileSync(fullPath, 'utf-8');
@@ -37,7 +39,20 @@ export async function GET(request) {
         };
       })
       .filter(({ cpsId }) => !cpsId || isCpsManagedByAcsm(acsmConfig, cpsId))
-      .map(({ parsed }) => parsed);
+      .forEach(({ file, cpsId, parsed }) => {
+        // Historical and revised definitions can coexist for the same CPS.
+        // Return one deterministic entry, preferring the revised contract.
+        const key = cpsId || file;
+        const current = cpsById.get(key);
+        const isRevised = file.toLowerCase().includes('revised');
+        const currentIsRevised = current?.file?.toLowerCase().includes('revised');
+
+        if (!current || (isRevised && !currentIsRevised)) {
+          cpsById.set(key, { file, parsed });
+        }
+      });
+
+    const cpsList = Array.from(cpsById.values(), ({ parsed }) => parsed);
 
     return NextResponse.json({
       acsm: {

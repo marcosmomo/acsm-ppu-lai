@@ -1,0 +1,218 @@
+{
+  "collectedAt": "2026-10-03T22:17:36.412Z",
+  "cpsId": "cpslai2",
+  "station": "Joining Station",
+  "endpoint": "opc.tcp://192.168.1.20:4840",
+  "browseRoot": "ns=3;s=PLC",
+  "nodes": [
+    {
+      "browseName": "DeviceManual",
+      "displayName": "DeviceManual",
+      "nodeId": "ns=3;s=DeviceManual",
+      "namespaceIndex": 2,
+      "nodeClass": 2,
+      "dataType": "String",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "DeviceRevision",
+      "displayName": "DeviceRevision",
+      "nodeId": "ns=3;s=DeviceRevision",
+      "namespaceIndex": 2,
+      "nodeClass": 2,
+      "dataType": "String",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "EngineeringRevision",
+      "displayName": "EngineeringRevision",
+      "nodeId": "ns=3;s=EngineeringRevision",
+      "namespaceIndex": 3,
+      "nodeClass": 2,
+      "dataType": "String",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "HardwareRevision",
+      "displayName": "HardwareRevision",
+      "nodeId": "ns=3;s=HardwareRevision",
+      "namespaceIndex": 2,
+      "nodeClass": 2,
+      "dataType": "String",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "Manufacturer",
+      "displayName": "Manufacturer",
+      "nodeId": "ns=3;s=Manufacturer",
+      "namespaceIndex": 2,
+      "nodeClass": 2,
+      "dataType": "LocalizedText",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "Model",
+      "displayName": "Model",
+      "nodeId": "ns=3;s=Model",
+      "namespaceIndex": 2,
+      "nodeClass": 2,
+      "dataType": "LocalizedText",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "OperatingMode",
+      "displayName": "OperatingMode",
+      "nodeId": "ns=3;s=OperatingMode",
+      "namespaceIndex": 3,
+      "nodeClass": 2,
+      "dataType": "Int32",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "OrderNumber",
+      "displayName": "OrderNumber",
+      "nodeId": "ns=3;s=OrderNumber",
+      "namespaceIndex": 3,
+      "nodeClass": 2,
+      "dataType": "String",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "RevisionCounter",
+      "displayName": "RevisionCounter",
+      "nodeId": "ns=3;s=RevisionCounter",
+      "namespaceIndex": 2,
+      "nodeClass": 2,
+      "dataType": "Int32",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "SerialNumber",
+      "displayName": "SerialNumber",
+      "nodeId": "ns=3;s=SerialNumber",
+      "namespaceIndex": 2,
+      "nodeClass": 2,
+      "dataType": "String",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "SoftwareRevision",
+      "displayName": "SoftwareRevision",
+      "nodeId": "ns=3;s=SoftwareRevision",
+      "namespaceIndex": 2,
+      "nodeClass": 2,
+      "dataType": "String",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "Icon",
+      "displayName": "Icon",
+      "nodeId": "ns=3;i=5201",
+      "namespaceIndex": 0,
+      "nodeClass": 2,
+      "dataType": "ByteString",
+      "typeDefinition": "ns=0;i=68",
+      "referenceTypeId": "ns=0;i=46",
+      "isForward": true
+    },
+    {
+      "browseName": "Counters",
+      "displayName": "Counters",
+      "nodeId": "ns=3;s=Counters",
+      "namespaceIndex": 3,
+      "nodeClass": 1,
+      "dataType": "Null",
+      "typeDefinition": "ns=2;i=1005",
+      "referenceTypeId": "ns=0;i=47",
+      "isForward": true
+    },
+    {
+      "browseName": "DataBlocksGlobal",
+      "displayName": "DataBlocksGlobal",
+      "nodeId": "ns=3;s=DataBlocksGlobal",
+      "namespaceIndex": 3,
+      "nodeClass": 1,
+      "dataType": "Null",
+      "typeDefinition": "ns=2;i=1005",
+      "referenceTypeId": "ns=0;i=47",
+      "isForward": true
+    },
+    {
+      "browseName": "DataBlocksInstance",
+      "displayName": "DataBlocksInstance",
+      "nodeId": "ns=3;s=DataBlocksInstance",
+      "namespaceIndex": 3,
+      "nodeClass": 1,
+      "dataType": "Null",
+      "typeDefinition": "ns=2;i=1005",
+      "referenceTypeId": "ns=0;i=47",
+      "isForward": true
+    },
+    {
+      "browseName": "Inputs",
+      "displayName": "Inputs",
+      "nodeId": "ns=3;s=Inputs",
+      "namespaceIndex": 3,
+      "nodeClass": 1,
+      "dataType": "Null",
+      "typeDefinition": "ns=2;i=1005",
+      "referenceTypeId": "ns=0;i=47",
+      "isForward": true
+    },
+    {
+      "browseName": "Memory",
+      "displayName": "Memory",
+      "nodeId": "ns=3;s=Memory",
+      "namespaceIndex": 3,
+      "nodeClass": 1,
+      "dataType": "Null",
+      "typeDefinition": "ns=2;i=1005",
+      "referenceTypeId": "ns=0;i=47",
+      "isForward": true
+    },
+    {
+      "browseName": "Outputs",
+      "displayName": "Outputs",
+      "nodeId": "ns=3;s=Outputs",
+      "namespaceIndex": 3,
+      "nodeClass": 1,
+      "dataType": "Null",
+      "typeDefinition": "ns=2;i=1005",
+      "referenceTypeId": "ns=0;i=47",
+      "isForward": true
+    },
+    {
+      "browseName": "Timers",
+      "displayName": "Timers",
+      "nodeId": "ns=3;s=Timers",
+      "namespaceIndex": 3,
+      "nodeClass": 1,
+      "dataType": "Null",
+      "typeDefinition": "ns=2;i=1005",
+      "referenceTypeId": "ns=0;i=47",
+      "isForward": true
+    }
+  ]
+}

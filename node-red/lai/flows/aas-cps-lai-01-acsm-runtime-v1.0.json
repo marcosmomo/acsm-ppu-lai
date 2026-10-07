@@ -1,0 +1,1509 @@
+{
+  "assetAdministrationShells": [
+    {
+      "modelType": "AssetAdministrationShell",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+      "idShort": "CPSLAI01_AAS",
+      "displayName": [
+        {
+          "language": "en",
+          "text": "CPS-LAI-01 – Distribution/Conveyor Station"
+        }
+      ],
+      "description": [
+        {
+          "language": "pt-BR",
+          "text": "AAS operacional do CPS-LAI-01 alinhado ao contrato de descoberta e visualização da ACSM-Main."
+        }
+      ],
+      "administration": {
+        "version": "1",
+        "revision": "0"
+      },
+      "assetInformation": {
+        "assetKind": "Instance",
+        "globalAssetId": "urn:ufsc:lai:asset:cps-lai-01:distribution-conveyor",
+        "assetType": "Distribution/Conveyor Station",
+        "specificAssetIds": [
+          {
+            "name": "cpsId",
+            "value": "CPS-LAI-01"
+          },
+          {
+            "name": "runtimeId",
+            "value": "cpslai1"
+          },
+          {
+            "name": "assetName",
+            "value": "DistributionConveyorStationLAI"
+          },
+          {
+            "name": "displayName",
+            "value": "CPS-LAI-01 – Distribution/Conveyor Station"
+          },
+          {
+            "name": "manufacturer",
+            "value": "FIELD_CONFIRMATION_REQUIRED"
+          },
+          {
+            "name": "assetType",
+            "value": "Distribution/Conveyor Station"
+          },
+          {
+            "name": "baseTopic",
+            "value": "cpslai1"
+          }
+        ]
+      },
+      "submodels": [
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:digital-nameplate"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:technical-data"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:operational-data"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:status-health"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:documents"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:interfaces"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:lifecycle"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:acsm-integration"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:oee"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:cognitive-capabilities"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:governance"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:services"
+            }
+          ]
+        },
+        {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:ufsc:lai:ppu:cps-lai-01:submodel:field-io-mapping"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:digital-nameplate",
+      "idShort": "DigitalNameplate",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "MultiLanguageProperty",
+          "idShort": "ManufacturerName",
+          "value": [
+            {
+              "language": "pt-BR",
+              "text": "FIELD_CONFIRMATION_REQUIRED"
+            }
+          ]
+        },
+        {
+          "modelType": "MultiLanguageProperty",
+          "idShort": "ManufacturerProductDesignation",
+          "value": [
+            {
+              "language": "en",
+              "text": "Distribution/Conveyor Station"
+            }
+          ]
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CPSId",
+          "valueType": "xs:string",
+          "value": "CPS-LAI-01"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "RuntimeId",
+          "valueType": "xs:string",
+          "value": "cpslai1"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "SerialNumber",
+          "valueType": "xs:string",
+          "value": "FIELD_CONFIRMATION_REQUIRED"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ECLASSReleaseTarget",
+          "valueType": "xs:string",
+          "value": "16.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ECLASSClassificationClassIRDI",
+          "valueType": "xs:string",
+          "value": "FIELD_CONFIRMATION_REQUIRED"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:technical-data",
+      "idShort": "TechnicalData",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "ControllerManufacturer",
+          "valueType": "xs:string",
+          "value": "Siemens"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ControllerFamily",
+          "valueType": "xs:string",
+          "value": "SIMATIC S7-1500"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ControllerModel",
+          "valueType": "xs:string",
+          "value": "CPU 1512C-1 PN"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ControllerOrderNumber",
+          "valueType": "xs:string",
+          "value": "6ES7 512-1CK01-0AB0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "IPAddress",
+          "valueType": "xs:string",
+          "value": "192.168.1.10"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "SubnetMask",
+          "valueType": "xs:string",
+          "value": "255.255.255.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "NominalCycleTimeMs",
+          "valueType": "xs:unsignedInt",
+          "value": "0",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "FIELD_CONFIRMATION_REQUIRED"
+            }
+          ]
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OPCUAServerLicenseStatus",
+          "valueType": "xs:string",
+          "value": "FIELD_CONFIRMATION_REQUIRED"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:operational-data",
+      "idShort": "OperationalData",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "PieceAtEntry",
+          "valueType": "xs:boolean",
+          "value": "false"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "PieceAtMiddle",
+          "valueType": "xs:boolean",
+          "value": "false"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "PieceAtExit",
+          "valueType": "xs:boolean",
+          "value": "false"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "SlideRetracted",
+          "valueType": "xs:boolean",
+          "value": "false"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "SlideExtended",
+          "valueType": "xs:boolean",
+          "value": "false"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "MagazineFeedSensor",
+          "valueType": "xs:boolean",
+          "value": "false",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ]
+        },
+        {
+          "modelType": "Property",
+          "idShort": "GoodPieceCount",
+          "valueType": "xs:unsignedShort",
+          "value": "0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BadPieceCount",
+          "valueType": "xs:unsignedShort",
+          "value": "0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "TotalPieceCount",
+          "valueType": "xs:unsignedShort",
+          "value": "0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ProcessingTimeMs",
+          "valueType": "xs:unsignedInt",
+          "value": "0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OperationMode",
+          "valueType": "xs:string",
+          "value": "unknown"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:status-health",
+      "idShort": "StatusAndHealth",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "LifecycleState",
+          "valueType": "xs:string",
+          "value": "unplugged"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OperationalState",
+          "valueType": "xs:string",
+          "value": "offline"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Availability",
+          "valueType": "xs:string",
+          "value": "Unavailable"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "HealthState",
+          "valueType": "xs:string",
+          "value": "Unknown"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Health",
+          "valueType": "xs:double",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "TimeoutAlarm",
+          "valueType": "xs:boolean",
+          "value": "false"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LastHeartbeat",
+          "valueType": "xs:dateTime"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:documents",
+      "idShort": "Documents",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "DashboardURL",
+          "valueType": "xs:string",
+          "value": "http://localhost:3000/cps/cpslai1"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "DatasheetPDF",
+          "valueType": "xs:string",
+          "value": "FIELD_CONFIRMATION_REQUIRED"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "SourceDocumentation",
+          "valueType": "xs:string",
+          "value": "Automação_de_Processos_260917_142646.pdf"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:interfaces",
+      "idShort": "AssetInterfacesDescription",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "PrimaryProtocol",
+          "valueType": "xs:string",
+          "value": "MQTT"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BrokerHost",
+          "valueType": "xs:string",
+          "value": "localhost"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BrokerPort",
+          "valueType": "xs:unsignedShort",
+          "value": "1883"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "BaseTopic",
+          "valueType": "xs:string",
+          "value": "cpslai1"
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "CommandInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cpslai1/cmd"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Inbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "AckInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cpslai1/ack"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "StatusInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cpslai1/status"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Direction",
+              "valueType": "xs:string",
+              "value": "Outbound"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "HealthInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cpslai1/health"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "DataInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cpslai1/data"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "SensorDataInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cpslai1/sensordata"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "OEEInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Topic",
+              "valueType": "xs:string",
+              "value": "cpslai1/oee"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "CognitiveInterfaces",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "LearningTopic",
+              "valueType": "xs:string",
+              "value": "acsm/cpslai1/learning"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "ReasoningTopic",
+              "valueType": "xs:string",
+              "value": "acsm/cpslai1/reasoning"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "RecommendationTopic",
+              "valueType": "xs:string",
+              "value": "acsm/cpslai1/recommendation"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "RESTEndpoints",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "DescriptionEndpoint",
+              "valueType": "xs:string",
+               "value": "http://localhost:1881/cpslai1/description"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "SummaryEndpoint",
+              "valueType": "xs:string",
+               "value": "http://localhost:1881/cpslai1/summary"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "HistoryEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/cpslai1/history"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "HealthEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/cpslai1/health"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "IndicatorsEndpoint",
+              "valueType": "xs:string",
+              "value": "http://localhost:1881/cpslai1/data"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "OPCUAInterface",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Protocol",
+              "valueType": "xs:string",
+              "value": "OPC UA"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Endpoint",
+              "valueType": "xs:string",
+              "value": "opc.tcp://192.168.1.10:4840"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Adapter",
+              "valueType": "xs:string",
+              "value": "Node-RED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "SecurityPolicy",
+              "valueType": "xs:string",
+              "value": "None"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "MessageSecurityMode",
+              "valueType": "xs:string",
+              "value": "None"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "UserIdentity",
+              "valueType": "xs:string",
+              "value": "Anonymous"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:lifecycle",
+      "idShort": "LifecycleIntegration",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "SupportedPhases",
+          "valueType": "xs:string",
+          "value": "plug, play, unplug"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CurrentPhase",
+          "valueType": "xs:string",
+          "value": "unplugged"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "MaintenanceCount",
+          "valueType": "xs:unsignedInt",
+          "value": "0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LastEvolutionTimestamp",
+          "valueType": "xs:dateTime"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LifecycleLogEndpoint",
+          "valueType": "xs:string",
+          "value": "/api/plug-log"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:acsm-integration",
+      "idShort": "ACSMIntegration",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "ACSMId",
+          "valueType": "xs:string",
+          "value": "acsm1"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "DiscoveryEndpoint",
+          "valueType": "xs:string",
+          "value": "/api/cps?acsmId=acsm1"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "RegistrationStatus",
+          "valueType": "xs:string",
+          "value": "PENDING_RUNTIME_REGISTRATION"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "NodeRedAdapterId",
+          "valueType": "xs:string",
+          "value": "cps-lai-01-opcua-mqtt-adapter"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "RuntimeServiceName",
+          "valueType": "xs:string",
+          "value": "cps-lai-01-opcua-mqtt-adapter"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "RuntimePort",
+          "valueType": "xs:string",
+          "value": "FIELD_CONFIRMATION_REQUIRED"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:oee",
+      "idShort": "OEEMonitoring",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "Availability",
+          "valueType": "xs:double",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Performance",
+          "valueType": "xs:double",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Quality",
+          "valueType": "xs:double",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "OEEOverall",
+          "valueType": "xs:double",
+          "value": "0.0"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CalculationMode",
+          "valueType": "xs:string",
+          "value": "PPU_RUNTIME"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "CalculationState",
+          "valueType": "xs:string",
+          "value": "NOT_INITIALIZED"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities",
+      "idShort": "Capabilities",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "PrimaryCapability",
+          "valueType": "xs:string",
+          "value": "MaterialTransport"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ConveyorForward",
+          "valueType": "xs:boolean",
+          "value": "true"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ConveyorReverse",
+          "valueType": "xs:boolean",
+          "value": "true"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "PieceSeparation",
+          "valueType": "xs:boolean",
+          "value": "true"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "SlideActuation",
+          "valueType": "xs:boolean",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:cognitive-capabilities",
+      "idShort": "CognitiveCapabilities",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "Learning",
+          "valueType": "xs:boolean",
+          "value": "true"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Reasoning",
+          "valueType": "xs:boolean",
+          "value": "true"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Prediction",
+          "valueType": "xs:boolean",
+          "value": "true"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "Recommendation",
+          "valueType": "xs:boolean",
+          "value": "true"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "LearningState",
+          "valueType": "xs:string",
+          "value": "NOT_INITIALIZED"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ReasoningState",
+          "valueType": "xs:string",
+          "value": "NOT_INITIALIZED"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:governance",
+      "idShort": "Governance",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "Property",
+          "idShort": "GovernanceStatus",
+          "valueType": "xs:string",
+          "value": "PENDING_APPROVAL"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ProfileId",
+          "valueType": "xs:string",
+          "value": "GOV-CPSLAI01-001"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "ProfileVersion",
+          "valueType": "xs:unsignedInt",
+          "value": "1"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "GovernableActionDefined",
+          "valueType": "xs:boolean",
+          "value": "false"
+        },
+        {
+          "modelType": "Property",
+          "idShort": "GovernableAction",
+          "valueType": "xs:string",
+          "value": "FIELD_CONFIRMATION_REQUIRED"
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:services",
+      "idShort": "Services",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "LifecycleServices",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Service_1",
+              "valueType": "xs:string",
+              "value": "plug"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_2",
+              "valueType": "xs:string",
+              "value": "play"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_3",
+              "valueType": "xs:string",
+              "value": "stop"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_4",
+              "valueType": "xs:string",
+              "value": "maintenance"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_5",
+              "valueType": "xs:string",
+              "value": "return"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_6",
+              "valueType": "xs:string",
+              "value": "unplug"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_7",
+              "valueType": "xs:string",
+              "value": "getAAS"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_8",
+              "valueType": "xs:string",
+              "value": "getStatus"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_9",
+              "valueType": "xs:string",
+              "value": "getHealth"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_10",
+              "valueType": "xs:string",
+              "value": "getOEE"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ProcessServices",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "Service_1",
+              "valueType": "xs:string",
+              "value": "transportMaterial"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_2",
+              "valueType": "xs:string",
+              "value": "separatePiece"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "Service_3",
+              "valueType": "xs:string",
+              "value": "actuateSlide"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-01:submodel:field-io-mapping",
+      "idShort": "FieldIOMapping",
+      "kind": "Instance",
+      "submodelElements": [
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "PieceAtEntry",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "G1BG1"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%I0.0"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"G1BG1\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "PieceAtMiddle",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "G1BG2"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%I0.1"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"G1BG2\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "PieceAtExit",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "G1BG3"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%I0.2"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "SignalLogic",
+              "valueType": "xs:string",
+              "value": "REVERSE_LOGIC"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"G1BG3\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ProductionCounters",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "GoodPieceCountAddress",
+              "valueType": "xs:string",
+              "value": "%MW14"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "BadPieceCountAddress",
+              "valueType": "xs:string",
+              "value": "%MW16"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "TotalPieceCountAddress",
+              "valueType": "xs:string",
+              "value": "%MW50"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "ProcessingTimeAddress",
+              "valueType": "xs:string",
+              "value": "%MD20"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "StateAndAlarm",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "OperationalStateAddress",
+              "valueType": "xs:string",
+              "value": "%MW18"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "TimeoutAlarmAddress",
+              "valueType": "xs:string",
+              "value": "%M24.1"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "ResetAlarmAddress",
+              "valueType": "xs:string",
+              "value": "%M24.2"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "CommandBindings",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PlayNodeId",
+              "valueType": "xs:string",
+              "value": "FIELD_CONFIRMATION_REQUIRED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "StopNodeId",
+              "valueType": "xs:string",
+              "value": "FIELD_CONFIRMATION_REQUIRED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "ResetNodeId",
+              "valueType": "xs:string",
+              "value": "FIELD_CONFIRMATION_REQUIRED"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "CommandMode",
+              "valueType": "xs:string",
+              "value": "MOMENTARY_PULSE"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "SlideRetracted",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "C2BG1"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%I0.4"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"C2BG1\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "SlideExtended",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "C2BG2"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%I0.5"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"C2BG2\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "MagazineFeedSensor",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ],
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "C2BG3"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%I0.6"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"C2BG3\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "EmergencyStopInput",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ],
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "SF5"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%I1.5"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"SF5\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "AutoEnabled",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ],
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "xMEnAuto"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%M400.7"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"xMEnAuto\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "StartProcess",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ],
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "xMStartProcess"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%M300.2"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"xMStartProcess\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ProcessBusy",
+          "qualifiers": [
+            {
+              "type": "EvidenceStatus",
+              "valueType": "xs:string",
+              "value": "SEMANTIC_VALIDATION_PENDING"
+            }
+          ],
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "xMProcessBusy"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%M300.1"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"xMProcessBusy\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "AlarmSignal",
+          "value": [
+            {
+              "modelType": "Property",
+              "idShort": "PLCTag",
+              "valueType": "xs:string",
+              "value": "ALARMS"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "PLCAddress",
+              "valueType": "xs:string",
+              "value": "%M75.4"
+            },
+            {
+              "modelType": "Property",
+              "idShort": "OPCUANodeId",
+              "valueType": "xs:string",
+              "value": "ns=3;s=\"ALARMS\""
+            },
+            {
+              "modelType": "Property",
+              "idShort": "AccessMode",
+              "valueType": "xs:string",
+              "value": "READ"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

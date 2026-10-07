@@ -1,0 +1,45 @@
+warning: in the working copy of 'app/api/acsm/plug/route.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/api/cps/route.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/api/governance/cps/[cpsId]/route.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/api/plug-log/route.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/globals.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/GovernanceConfiguration.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/PlayFase.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/PlugFase.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'context/CPSContext.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/acsm/apiCatalog.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/acsm/config.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/acsm/plugService.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/acsm/plugStore.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/governance/policies.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/reports/plugPhaseExperimentLog.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'services/cps-lai-01/src/mqtt.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'services/governance/governanceStore.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test/api-catalog.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test/governance-policies.test.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test/plug-service.test.mjs', LF will be replaced by CRLF the next time Git touches it
+ app/api/acsm/plug/route.js                     |   80 [32m+[m[31m-[m
+ app/api/cps/route.js                           |   19 [32m+[m[31m-[m
+ app/api/governance/cps/[cpsId]/route.js        |    8 [32m+[m[31m-[m
+ app/api/plug-log/route.js                      |   10 [32m+[m[31m-[m
+ app/globals.css                                |  146 [32m+++[m
+ components/GovernanceConfiguration.js          |   17 [32m+[m[31m-[m
+ components/PlayFase.js                         |  107 [32m+[m[31m-[m
+ components/PlugFase.js                         |  300 [32m+++[m[31m--[m
+ context/CPSContext.js                          |  930 [32m+++++++++++[m[31m----[m
+ cps-defs/aas-cps-lai-01-acsm-runtime-v1.0.json | 1467 [31m------------------------[m
+ lib/acsm/apiCatalog.mjs                        |    7 [32m+[m[31m-[m
+ lib/acsm/config.js                             |    8 [32m+[m[31m-[m
+ lib/acsm/plugService.mjs                       |   68 [32m+[m[31m-[m
+ lib/acsm/plugStore.mjs                         |   72 [32m+[m[31m-[m
+ lib/governance/policies.js                     |   28 [32m+[m[31m-[m
+ lib/reports/plugPhaseExperimentLog.js          |    1 [31m-[m
+ next-env.d.ts                                  |    2 [32m+[m[31m-[m
+ package.json                                   |    2 [32m+[m
+ services/cps-lai-01/src/mqtt.js                |    1 [31m-[m
+ services/governance/governanceStore.js         |  325 [32m+++[m[31m---[m
+ test/api-catalog.test.mjs                      |    7 [32m+[m[31m-[m
+ test/governance-policies.test.mjs              |  286 [32m++++[m[31m-[m
+ test/plug-service.test.mjs                     |   57 [32m+[m[31m-[m
+ 23 files changed, 1857 insertions(+), 2091 deletions(-)

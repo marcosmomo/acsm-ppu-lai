@@ -1,0 +1,370 @@
+{
+  "assetAdministrationShells": [
+    {
+      "modelType": "AssetAdministrationShell",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:aas",
+      "idShort": "CPSLAI03_AAS",
+      "displayName": [{ "language": "en", "text": "CPS-LAI-03 – Sorting Station" }],
+      "description": [{ "language": "en", "text": "AAS V3.2 do CPS-LAI-03 – Sorting Station, preparado para descoberta futura, representação, ciclo de vida PPU e governança conceitual na ACSM-PPU-LAI. Bindings físicos de processo aguardam confirmação no LAI." }],
+      "assetInformation": {
+        "assetKind": "Instance",
+        "globalAssetId": "urn:ufsc:lai:asset:cps-lai-03:sorting",
+        "assetType": "Sorting Station",
+        "specificAssetIds": [
+          { "name": "formalCpsId", "value": "CPS-LAI-03" },
+          { "name": "cpsId", "value": "cpslai3" },
+          { "name": "runtimeId", "value": "cpslai3" },
+          { "name": "assetName", "value": "SortingStationLAI" },
+          { "name": "displayName", "value": "CPS-LAI-03 – Sorting Station" },
+          { "name": "manufacturer", "value": "FIELD_CONFIRMATION_REQUIRED" },
+          { "name": "assetType", "value": "Sorting Station" },
+          { "name": "baseTopic", "value": "cpslai3" }
+        ]
+      },
+      "submodels": [
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:digital-nameplate" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:technical-data" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:operational-data" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:status-health" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:documents" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:interfaces" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:lifecycle" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:acsm-integration" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:oee" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:capabilities" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:cognitive-capabilities" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:governance" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:services" }] },
+        { "type": "ModelReference", "keys": [{ "type": "Submodel", "value": "urn:ufsc:lai:ppu:cps-lai-03:submodel:field-io-mapping" }] }
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:digital-nameplate",
+      "idShort": "DigitalNameplate",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "ManufacturerName", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "ASSET_MANUFACTURER_NOT_CONFIRMED" }] },
+        { "modelType": "Property", "idShort": "ManufacturerProductDesignation", "valueType": "xs:string", "value": "SortingStationLAI" },
+        { "modelType": "Property", "idShort": "CPSId", "valueType": "xs:string", "value": "CPS-LAI-03" },
+        { "modelType": "Property", "idShort": "RuntimeId", "valueType": "xs:string", "value": "cpslai3" },
+        { "modelType": "Property", "idShort": "SerialNumber", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "ASSET_SERIAL_NUMBER_NOT_CONFIRMED" }] },
+        { "modelType": "Property", "idShort": "ECLASSReleaseTarget", "valueType": "xs:string", "value": "16.0" },
+        { "modelType": "Property", "idShort": "ECLASSClassificationClassIRDI", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:technical-data",
+      "idShort": "TechnicalData",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "AssetType", "valueType": "xs:string", "value": "Sorting Station" },
+        { "modelType": "Property", "idShort": "Station", "valueType": "xs:string", "value": "Sorting Station" },
+        { "modelType": "Property", "idShort": "ControllerManufacturer", "valueType": "xs:string", "value": "Siemens AG", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "CONFIRMED" }] },
+        { "modelType": "Property", "idShort": "ControllerFamily", "valueType": "xs:string", "value": "SIMATIC S7-1500" },
+        { "modelType": "Property", "idShort": "ControllerModel", "valueType": "xs:string", "value": "CPU 1512C-1 PN" },
+        { "modelType": "Property", "idShort": "ControllerOrderNumber", "valueType": "xs:string", "value": "6ES7 512-1CK01-0AB0" },
+        { "modelType": "Property", "idShort": "ControllerSerialNumber", "valueType": "xs:string", "value": "S V-R7A0A3372023" },
+        { "modelType": "Property", "idShort": "ControllerHardwareRevision", "valueType": "xs:string", "value": "5" },
+        { "modelType": "Property", "idShort": "ControllerSoftwareRevision", "valueType": "xs:string", "value": "V02.09.04" },
+        { "modelType": "Property", "idShort": "EngineeringRevision", "valueType": "xs:string", "value": "V18.0 SP1" },
+        { "modelType": "Property", "idShort": "DeviceRevision", "valueType": "xs:string", "value": "6ES7 512-1CK01-0AB0 V02.09.04" },
+        { "modelType": "Property", "idShort": "ControllerBrowseName", "valueType": "xs:string", "value": "03_Sorting_1512C" },
+        { "modelType": "Property", "idShort": "IPAddress", "valueType": "xs:string", "value": "192.168.1.30" },
+        { "modelType": "Property", "idShort": "SubnetMask", "valueType": "xs:string", "value": "255.255.255.0" },
+        { "modelType": "Property", "idShort": "OPCUAEndpoint", "valueType": "xs:anyURI", "value": "opc.tcp://192.168.1.30:4840" },
+        { "modelType": "Property", "idShort": "DeviceManual", "valueType": "xs:anyURI", "value": "https://support.industry.siemens.com/cs/ww/en/view/86140384" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:operational-data",
+      "idShort": "OperationalData",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "OperatingModeRaw", "valueType": "xs:integer", "value": "8", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "TECHNICALLY_CONFIRMED_OBSERVATION" }, { "type": "SemanticMappingStatus", "valueType": "xs:string", "value": "PENDING" }] },
+        { "modelType": "Property", "idShort": "OperationMode", "valueType": "xs:string", "value": "UNKNOWN", "qualifiers": [{ "type": "SemanticMappingStatus", "valueType": "xs:string", "value": "PENDING" }] },
+        { "modelType": "Property", "idShort": "PieceAtEntry", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "PieceDetected", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "PieceClassified", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "PieceAtExit", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "SortingReady", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "SortingActive", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "SortingCompleted", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "SortingError", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "ClassificationResult", "valueType": "xs:string", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "SortingDestination", "valueType": "xs:string", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "SortingThreshold", "valueType": "xs:string", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "GoodPieceCount", "valueType": "xs:unsignedLong", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "RejectedPieceCount", "valueType": "xs:unsignedLong", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "TotalPieceCount", "valueType": "xs:unsignedLong", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "ProcessingTimeMs", "valueType": "xs:unsignedLong", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:status-health",
+      "idShort": "StatusAndHealth",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "LifecycleState", "valueType": "xs:string", "value": "unplugged" },
+        { "modelType": "Property", "idShort": "OperationalState", "valueType": "xs:string", "value": "UNKNOWN" },
+        { "modelType": "Property", "idShort": "Availability", "valueType": "xs:string", "value": "Unavailable" },
+        { "modelType": "Property", "idShort": "HealthState", "valueType": "xs:string", "value": "Unknown" },
+        { "modelType": "Property", "idShort": "Health", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "NO_PHYSICAL_MEASUREMENT" }] },
+        { "modelType": "Property", "idShort": "LastHeartbeat", "valueType": "xs:dateTime", "value": "" },
+        { "modelType": "Property", "idShort": "AlarmActive", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "FaultActive", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "Property", "idShort": "FaultCode", "valueType": "xs:string", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:documents",
+      "idShort": "Documents",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "DashboardURL", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+        { "modelType": "Property", "idShort": "DatasheetPDF", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+        { "modelType": "Property", "idShort": "SourceDocumentation", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+        { "modelType": "Property", "idShort": "AASRevisionNote", "valueType": "xs:string", "value": "AAS V3.2 preparado com evidências técnicas do controlador e placeholders explícitos para bindings físicos ainda não descobertos." }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:interfaces",
+      "idShort": "AssetInterfacesDescription",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "PrimaryProtocol", "valueType": "xs:string", "value": "MQTT" },
+        { "modelType": "Property", "idShort": "BrokerHost", "valueType": "xs:string", "value": "localhost" },
+        { "modelType": "Property", "idShort": "BrokerPort", "valueType": "xs:integer", "value": "1883" },
+        { "modelType": "Property", "idShort": "BaseTopic", "valueType": "xs:string", "value": "cpslai3" },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "MQTTTopics",
+          "value": [
+            { "modelType": "Property", "idShort": "Command", "valueType": "xs:string", "value": "cpslai3/cmd" },
+            { "modelType": "Property", "idShort": "Acknowledgement", "valueType": "xs:string", "value": "cpslai3/ack" },
+            { "modelType": "Property", "idShort": "Status", "valueType": "xs:string", "value": "cpslai3/status" },
+            { "modelType": "Property", "idShort": "Health", "valueType": "xs:string", "value": "cpslai3/health" },
+            { "modelType": "Property", "idShort": "Data", "valueType": "xs:string", "value": "cpslai3/data" },
+            { "modelType": "Property", "idShort": "SensorData", "valueType": "xs:string", "value": "cpslai3/sensordata" },
+            { "modelType": "Property", "idShort": "OEE", "valueType": "xs:string", "value": "cpslai3/oee" },
+            { "modelType": "Property", "idShort": "Learning", "valueType": "xs:string", "value": "acsm/cpslai3/learning" },
+            { "modelType": "Property", "idShort": "Reasoning", "valueType": "xs:string", "value": "acsm/cpslai3/reasoning" },
+            { "modelType": "Property", "idShort": "Recommendation", "valueType": "xs:string", "value": "acsm/cpslai3/recommendation" }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "RESTEndpoints",
+          "value": [
+            { "modelType": "Property", "idShort": "DescriptionEndpoint", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+            { "modelType": "Property", "idShort": "SummaryEndpoint", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+            { "modelType": "Property", "idShort": "HistoryEndpoint", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+            { "modelType": "Property", "idShort": "HealthEndpoint", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+            { "modelType": "Property", "idShort": "DataEndpoint", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "OPCUAInterface",
+          "value": [
+            { "modelType": "Property", "idShort": "Protocol", "valueType": "xs:string", "value": "OPC UA" },
+            { "modelType": "Property", "idShort": "Endpoint", "valueType": "xs:anyURI", "value": "opc.tcp://192.168.1.30:4840" },
+            { "modelType": "Property", "idShort": "Adapter", "valueType": "xs:string", "value": "Node-RED" },
+            { "modelType": "Property", "idShort": "SecurityPolicy", "valueType": "xs:string", "value": "None" },
+            { "modelType": "Property", "idShort": "MessageSecurityMode", "valueType": "xs:string", "value": "None" },
+            { "modelType": "Property", "idShort": "UserIdentity", "valueType": "xs:string", "value": "Anonymous" },
+            { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "READ_ONLY" },
+            { "modelType": "Property", "idShort": "WriteEnabled", "valueType": "xs:boolean", "value": "false" },
+            { "modelType": "Property", "idShort": "ApplicationTagDiscoveryStatus", "valueType": "xs:string", "value": "APPLICATION_TAGS_NOT_EXPOSED_BY_CURRENT_BROWSE" }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ConfirmedStructuralRoots",
+          "value": [
+            { "modelType": "Property", "idShort": "PLC", "valueType": "xs:string", "value": "ns=3;s=PLC" },
+            { "modelType": "Property", "idShort": "Inputs", "valueType": "xs:string", "value": "ns=3;s=Inputs" },
+            { "modelType": "Property", "idShort": "Outputs", "valueType": "xs:string", "value": "ns=3;s=Outputs" },
+            { "modelType": "Property", "idShort": "Memory", "valueType": "xs:string", "value": "ns=3;s=Memory" },
+            { "modelType": "Property", "idShort": "Counters", "valueType": "xs:string", "value": "ns=3;s=Counters" },
+            { "modelType": "Property", "idShort": "Timers", "valueType": "xs:string", "value": "ns=3;s=Timers" },
+            { "modelType": "Property", "idShort": "DataBlocksGlobal", "valueType": "xs:string", "value": "ns=3;s=DataBlocksGlobal" },
+            { "modelType": "Property", "idShort": "DataBlocksInstance", "valueType": "xs:string", "value": "ns=3;s=DataBlocksInstance" }
+          ]
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:lifecycle",
+      "idShort": "LifecycleIntegration",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "SupportedPhases", "valueType": "xs:string", "value": "plug, play, stop, maintenance, return, unplug" },
+        { "modelType": "Property", "idShort": "CurrentPhase", "valueType": "xs:string", "value": "unplugged" },
+        { "modelType": "Property", "idShort": "MaintenanceCount", "valueType": "xs:unsignedLong", "value": "0" },
+        { "modelType": "Property", "idShort": "LastEvolutionTimestamp", "valueType": "xs:dateTime", "value": "" },
+        { "modelType": "Property", "idShort": "LifecycleLogEndpoint", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:acsm-integration",
+      "idShort": "ACSMIntegration",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "ACSMId", "valueType": "xs:string", "value": "acsm1" },
+        { "modelType": "Property", "idShort": "DiscoveryEndpoint", "valueType": "xs:string", "value": "/api/cps?acsmId=acsm1" },
+        { "modelType": "Property", "idShort": "RegistrationStatus", "valueType": "xs:string", "value": "PENDING_RUNTIME_REGISTRATION" },
+        { "modelType": "Property", "idShort": "NodeRedAdapterId", "valueType": "xs:string", "value": "cps-lai-03-opcua-mqtt-adapter" },
+        { "modelType": "Property", "idShort": "RuntimeServiceName", "valueType": "xs:string", "value": "cps-lai-03-opcua-mqtt-adapter" },
+        { "modelType": "Property", "idShort": "RuntimePort", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:oee",
+      "idShort": "OEEMonitoring",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "Availability", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "NO_PHYSICAL_MEASUREMENT" }] },
+        { "modelType": "Property", "idShort": "Performance", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "NO_PHYSICAL_MEASUREMENT" }] },
+        { "modelType": "Property", "idShort": "Quality", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "NO_PHYSICAL_MEASUREMENT" }] },
+        { "modelType": "Property", "idShort": "OEEOverall", "valueType": "xs:double", "value": "", "qualifiers": [{ "type": "EvidenceStatus", "valueType": "xs:string", "value": "NO_PHYSICAL_MEASUREMENT" }] },
+        { "modelType": "Property", "idShort": "CalculationMode", "valueType": "xs:string", "value": "PPU_RUNTIME" },
+        { "modelType": "Property", "idShort": "CalculationState", "valueType": "xs:string", "value": "NOT_INITIALIZED" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:capabilities",
+      "idShort": "Capabilities",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "PrimaryCapability", "valueType": "xs:string", "value": "Sorting" },
+        { "modelType": "Property", "idShort": "PieceDetection", "valueType": "xs:boolean", "value": "true", "qualifiers": [{ "type": "CapabilityType", "valueType": "xs:string", "value": "ARCHITECTURAL" }] },
+        { "modelType": "Property", "idShort": "PieceClassification", "valueType": "xs:boolean", "value": "true", "qualifiers": [{ "type": "CapabilityType", "valueType": "xs:string", "value": "ARCHITECTURAL" }] },
+        { "modelType": "Property", "idShort": "PieceRouting", "valueType": "xs:boolean", "value": "true", "qualifiers": [{ "type": "CapabilityType", "valueType": "xs:string", "value": "ARCHITECTURAL" }] },
+        { "modelType": "Property", "idShort": "ProcessMonitoring", "valueType": "xs:boolean", "value": "true", "qualifiers": [{ "type": "CapabilityType", "valueType": "xs:string", "value": "ARCHITECTURAL" }] },
+        { "modelType": "Property", "idShort": "StateMonitoring", "valueType": "xs:boolean", "value": "true", "qualifiers": [{ "type": "CapabilityType", "valueType": "xs:string", "value": "ARCHITECTURAL" }] }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:cognitive-capabilities",
+      "idShort": "CognitiveCapabilities",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "Learning", "valueType": "xs:boolean", "value": "true" },
+        { "modelType": "Property", "idShort": "Reasoning", "valueType": "xs:boolean", "value": "true" },
+        { "modelType": "Property", "idShort": "Prediction", "valueType": "xs:boolean", "value": "true" },
+        { "modelType": "Property", "idShort": "Recommendation", "valueType": "xs:boolean", "value": "true" },
+        { "modelType": "Property", "idShort": "LearningState", "valueType": "xs:string", "value": "NOT_INITIALIZED" },
+        { "modelType": "Property", "idShort": "ReasoningState", "valueType": "xs:string", "value": "NOT_INITIALIZED" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:governance",
+      "idShort": "Governance",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "GovernanceStatus", "valueType": "xs:string", "value": "PENDING_APPROVAL" },
+        { "modelType": "Property", "idShort": "ProfileId", "valueType": "xs:string", "value": "GOV-CPSLAI03-001" },
+        { "modelType": "Property", "idShort": "ProfileVersion", "valueType": "xs:integer", "value": "1" },
+        { "modelType": "Property", "idShort": "Template", "valueType": "xs:string", "value": "SORTING" },
+        { "modelType": "Property", "idShort": "Capability", "valueType": "xs:string", "value": "Sorting Station" },
+        { "modelType": "Property", "idShort": "GovernableActionDefined", "valueType": "xs:boolean", "value": "true" },
+        { "modelType": "Property", "idShort": "GovernableAction", "valueType": "xs:string", "value": "ADJUST_SORTING_THRESHOLD" },
+        { "modelType": "Property", "idShort": "PhysicalBindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" },
+        { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "" },
+        { "modelType": "Property", "idShort": "ExecutionEnabled", "valueType": "xs:boolean", "value": "false" },
+        { "modelType": "Property", "idShort": "OPCUAWriteEnabled", "valueType": "xs:boolean", "value": "false" }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:services",
+      "idShort": "Services",
+      "submodelElements": [
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "LifecycleServices",
+          "value": [
+            { "modelType": "Property", "idShort": "plug", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "play", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "stop", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "maintenance", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "return", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "unplug", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "getAAS", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "getStatus", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "getHealth", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "getOEE", "valueType": "xs:boolean", "value": "true" }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ProcessServices",
+          "value": [
+            { "modelType": "Property", "idShort": "detectWorkpiece", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "classifyWorkpiece", "valueType": "xs:boolean", "value": "true" },
+            { "modelType": "Property", "idShort": "routeWorkpiece", "valueType": "xs:boolean", "value": "true" }
+          ]
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ufsc:lai:ppu:cps-lai-03:submodel:field-io-mapping",
+      "idShort": "FieldIOMapping",
+      "submodelElements": [
+        { "modelType": "Property", "idShort": "MappingStatus", "valueType": "xs:string", "value": "PARTIAL_TECHNICAL_CONFIRMATION" },
+        { "modelType": "Property", "idShort": "WriteEnabled", "valueType": "xs:boolean", "value": "false" },
+        { "modelType": "Property", "idShort": "ApplicationTagDiscoveryStatus", "valueType": "xs:string", "value": "APPLICATION_TAGS_NOT_EXPOSED_BY_CURRENT_BROWSE" },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "OperatingMode",
+          "value": [
+            { "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "OperatingMode" },
+            { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+            { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "ns=3;s=OperatingMode" },
+            { "modelType": "Property", "idShort": "DataType", "valueType": "xs:string", "value": "Int32" },
+            { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "READ" },
+            { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "CONFIRMED" },
+            { "modelType": "Property", "idShort": "SemanticMappingStatus", "valueType": "xs:string", "value": "PENDING" }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ConfirmedStructuralRoots",
+          "value": [
+            { "modelType": "Property", "idShort": "PLC", "valueType": "xs:string", "value": "ns=3;s=PLC" },
+            { "modelType": "Property", "idShort": "Inputs", "valueType": "xs:string", "value": "ns=3;s=Inputs" },
+            { "modelType": "Property", "idShort": "Outputs", "valueType": "xs:string", "value": "ns=3;s=Outputs" },
+            { "modelType": "Property", "idShort": "Memory", "valueType": "xs:string", "value": "ns=3;s=Memory" },
+            { "modelType": "Property", "idShort": "Counters", "valueType": "xs:string", "value": "ns=3;s=Counters" },
+            { "modelType": "Property", "idShort": "Timers", "valueType": "xs:string", "value": "ns=3;s=Timers" },
+            { "modelType": "Property", "idShort": "DataBlocksGlobal", "valueType": "xs:string", "value": "ns=3;s=DataBlocksGlobal" },
+            { "modelType": "Property", "idShort": "DataBlocksInstance", "valueType": "xs:string", "value": "ns=3;s=DataBlocksInstance" }
+          ]
+        },
+        { "modelType": "SubmodelElementCollection", "idShort": "PieceAtEntry", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "PieceDetected", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "PieceClassified", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "PieceAtExit", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "SortingReady", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "SortingActive", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "SortingCompleted", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "SortingError", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "ClassificationResult", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "SortingDestination", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "SortingThreshold", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "GoodPieceCount", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "RejectedPieceCount", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "TotalPieceCount", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "ProcessingTimeMs", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "Alarm", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "Fault", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "Play", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "Stop", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
+        { "modelType": "SubmodelElementCollection", "idShort": "Reset", "value": [{ "modelType": "Property", "idShort": "PLCTag", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "PLCAddress", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" }, { "modelType": "Property", "idShort": "AccessMode", "valueType": "xs:string", "value": "UNBOUND" }, { "modelType": "Property", "idShort": "EvidenceStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] }
+      ]
+    }
+  ]
+}

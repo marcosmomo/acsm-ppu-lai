@@ -28,6 +28,24 @@ import {
   extractGovernableRecommendation,
   normalizeGovernanceStatus,
 } from '../lib/governance/policies';
+import {
+  applyPhysicalStatus,
+  applyRememberedRuntimeMode,
+  isPhysicalCps,
+  mergeNonStatusOperationalData,
+} from '../lib/acsm/cpsOperationMode.mjs';
+import { publishUnplugNotificationIfAvailable } from '../lib/acsm/unplugNotification.mjs';
+import {
+  buildCpsLai1OperationalHealth,
+  publishCpsLai1OperationalHealth,
+} from '../lib/acsm/cpsOperationalHealth.mjs';
+import {
+  CPSLAI1_LIFECYCLE_TOPIC,
+  buildCpsLai1LifecyclePayload,
+  canTransitionCpsLai1Lifecycle,
+  normalizeRegisteredCpsLifecycle,
+  shouldPublishCpsLai1Lifecycle,
+} from '../lib/acsm/cpsLifecycleMqtt.mjs';
 const CPSContext = createContext(undefined);
 const ACTIVE_ACSM = getActiveAcsmConfig();
 const ACSM_TOPICS = ACTIVE_ACSM.topics;
@@ -919,6 +937,7 @@ const clampArray = (arr, max) => {
 const nowTs = () => Date.now();
 
 const toNumber = (v, fallback = null) => {
+  if (v === null || v === undefined || v === '') return fallback;
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 };
@@ -990,7 +1009,7 @@ const normalizeLocalAnalyticsPayload = (payload, topic) => {
     cpsName: source?.cpsName || raw?.cpsName || cpsId,
     ts: source?.ts || raw?.ts || Date.now(),
     timestamp: source?.timestamp || raw?.timestamp || null,
-    sourceStatus: source?.sourceStatus || raw?.sourceStatus || null,
+    sourceStatus: source?.sourceStatus || source?.status || raw?.sourceStatus || raw?.status || null,
     oee: canonicalizeOeeBlock(
       source?.oee && typeof source.oee === 'object'
         ? {
@@ -1138,6 +1157,15 @@ const mean = (arr) => {
   const nums = arr.map((x) => Number(x)).filter((x) => Number.isFinite(x));
   if (!nums.length) return 0;
   return nums.reduce((a, b) => a + b, 0) / nums.length;
+};
+
+const nullableMean = (arr) => {
+  const nums = (Array.isArray(arr) ? arr : [])
+    .map((value) => toNumber(value, null))
+    .filter((value) => Number.isFinite(value));
+  return nums.length
+    ? Number((nums.reduce((sum, value) => sum + value, 0) / nums.length).toFixed(4))
+    : null;
 };
 
 const stddev = (arr) => {
@@ -1479,13 +1507,20 @@ const getExplicitOperationMode = (payload) =>
   payload?.OperationMode ??
   payload?.operationMode ??
   payload?.operationalMode ??
+  payload?.operationalState ??
   payload?.mode ??
   null;
 
-const operationalDataWithMode = (cps, mode) => ({
-  ...(cps?.operationalData || {}),
-  operationMode: mode ?? cps?.operationalData?.operationMode ?? 'play',
-});
+const getStatusOperationalState = (payload) =>
+  payload?.operationalState ?? payload?.state ?? payload?.status ?? null;
+
+const operationalDataWithMode = (cps, mode) =>
+  isPhysicalCps(cps)
+    ? { ...(cps?.operationalData || {}) }
+    : {
+        ...(cps?.operationalData || {}),
+        operationMode: mode ?? cps?.operationalData?.operationMode ?? null,
+      };
 
 const canonicalOperationMode = (mode) => {
   const value = String(mode ?? '').trim().toLowerCase();
@@ -1515,7 +1550,14 @@ const normalizeOperationMode = (cps) =>
       ''
   );
 
-const getCanonicalOperationalState = (cps) => normalizeOperationMode(cps);
+const getCanonicalOperationalState = (cps) =>
+  canonicalOperationMode(
+    cps?.operationalState ??
+      cps?.globalState?.state ??
+      cps?.globalState?.status ??
+      cps?.status ??
+      ''
+  );
 
 const mapOperationalStateToDisplayStatus = (operationalState) => {
   const state = canonicalOperationMode(operationalState);
@@ -1565,9 +1607,6 @@ const lifecycleWithPhase = (cps, phase) => ({
 
 const getGovernanceStatus = (cps) =>
   normalizeGovernanceStatus(cps?.governanceStatus || cps?.governanceProfile?.status);
-
-const isGovernanceApproved = (cps) =>
-  getGovernanceStatus(cps) === GOVERNANCE_STATUS.APPROVED;
 
 const governanceWithProfile = (cps, profile) => ({
   ...(cps || {}),
@@ -1802,7 +1841,7 @@ const parseAASCps = (parsed) => {
     getPropertyValueFromElements(smLifecycle?.submodelElements, 'SupportedPhases') || '';
 
   const operationMode =
-    getPropertyValueFromElements(smOperational?.submodelElements, 'OperationMode') || 'play';
+    getPropertyValueFromElements(smOperational?.submodelElements, 'OperationMode') || null;
 
   const operationalState =
     getPropertyValueFromElements(smHealth?.submodelElements, 'OperationalState') || 'Unknown';
@@ -1911,7 +1950,7 @@ const parseAASCps = (parsed) => {
       globalState: {
         state: initialGlobalState,
         status: initialGlobalState,
-        playEnabled: String(operationMode || '').toLowerCase() === 'play',
+        playEnabled: String(currentPhase || '').toLowerCase() === 'play',
         healthScore: null,
         healthLabel: healthState || null,
         featureCount: funcionalidades.length,
@@ -2031,10 +2070,10 @@ const emptySystemAnalytics = () => ({
   ts: null,
   cpsCount: 0,
   globalOEE: {
-    availability: 0,
-    performance: 0,
-    quality: 0,
-    oee: 0,
+    availability: null,
+    performance: null,
+    quality: null,
+    oee: null,
   },
   criticalCPS: null,
   criticalityRanking: [],
@@ -2089,9 +2128,9 @@ const emptySystemAnalytics = () => ({
   timestamp: null,
   criticalCps: null,
   oee: {
-    oee: 0,
-    current: 0,
-    average: 0,
+    oee: null,
+    current: null,
+    average: null,
   },
 });
 
@@ -3039,7 +3078,64 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   const [addedCPS, setAddedCPS] = useState([]);
   const [log, setLog] = useState([]);
   const [mqttClient, setMqttClient] = useState(null);
+  const [mqttConnectionEpoch, setMqttConnectionEpoch] = useState(0);
   const mqttClientRef = useRef(null);
+  const lifecyclePublicationRef = useRef({ client: null, phase: null });
+  const cpsLai1CanonicalLifecycleRef = useRef(null);
+  const publishCpsLai1LifecyclePhase = useCallback(
+    (cps, lifecyclePhase) => {
+      if (!isPhysicalCps(cps)) return false;
+
+      const payload = buildCpsLai1LifecyclePayload(lifecyclePhase);
+      if (!payload) return false;
+      if (!canTransitionCpsLai1Lifecycle(
+        cpsLai1CanonicalLifecycleRef.current,
+        payload.lifecyclePhase
+      )) return false;
+
+      cpsLai1CanonicalLifecycleRef.current = payload.lifecyclePhase;
+      if (!mqttClient?.connected) return false;
+
+      const previous = lifecyclePublicationRef.current;
+      const previousPhase = previous.client === mqttClient ? previous.phase : null;
+      if (!shouldPublishCpsLai1Lifecycle(previousPhase, lifecyclePhase)) return false;
+
+      try {
+        mqttClient.publish(CPSLAI1_LIFECYCLE_TOPIC, JSON.stringify(payload), {
+          qos: 1,
+          retain: true,
+        });
+        lifecyclePublicationRef.current = {
+          client: mqttClient,
+          phase: payload.lifecyclePhase,
+        };
+        setLog((prev) => [
+          ...prev,
+          {
+            time: new Date().toLocaleTimeString(),
+            message:
+              `[LIFECYCLE_PUBLISH] cpslai1 -> ${payload.lifecyclePhase} ` +
+              `on ${CPSLAI1_LIFECYCLE_TOPIC}`,
+          },
+        ]);
+        return true;
+      } catch (error) {
+        setLog((prev) => [
+          ...prev,
+          {
+            time: new Date().toLocaleTimeString(),
+            message: `[LIFECYCLE_PUBLISH_ERROR] ${error?.message || error}`,
+          },
+        ]);
+        return false;
+      }
+    },
+    [mqttClient]
+  );
+  const publishCpsLai1LifecyclePhaseRef = useRef(publishCpsLai1LifecyclePhase);
+  useEffect(() => {
+    publishCpsLai1LifecyclePhaseRef.current = publishCpsLai1LifecyclePhase;
+  }, [publishCpsLai1LifecyclePhase]);
   const lastLevel2IntelligencePublishRef = useRef('');
   const [mqttData, setMqttData] = useState({});
   const [alerts, setAlerts] = useState([]);
@@ -3163,11 +3259,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   }, []);
   const withRememberedOperationMode = useCallback((cps) => {
     const remembered = cps?.id ? operationModeByCpsRef.current[cps.id] : null;
-    if (!cps || !remembered) return cps;
-    return {
-      ...cps,
-      operationalData: operationalDataWithMode(cps, remembered),
-    };
+    return applyRememberedRuntimeMode(cps, remembered);
   }, []);
 
   const mergeCoordinatorSnapshotState = useCallback((acsmId, patch) => {
@@ -3346,6 +3438,12 @@ export const CPSProvider = ({ children, acsmId, config }) => {
     availableCPSRef.current = availableCPS;
   }, [availableCPS]);
 
+  useEffect(() => {
+    const cpsLai1 = availableCPS.find((cps) => normalizeCpsId(cps?.id) === 'cpslai1');
+    if (!cpsLai1) return;
+    publishCpsLai1LifecyclePhase(cpsLai1, getCpsLifecyclePhase(cpsLai1));
+  }, [availableCPS, mqttConnectionEpoch, publishCpsLai1LifecyclePhase]);
+
   const availableCPSNames = useMemo(
     () =>
       Array.from(
@@ -3413,16 +3511,16 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   const applyGovernanceProfileToState = useCallback(
     (cpsId, profile) => {
       const normalizedCpsId = normalizeCpsId(cpsId || profile?.cpsId);
-      if (!normalizedCpsId || !profile) return;
+      if (!normalizedCpsId) return;
 
       setGovernanceProfiles((prev) => ({
         ...prev,
-        [normalizedCpsId]: profile,
+        [normalizedCpsId]: profile || null,
       }));
 
       const patch = {
-        governanceProfile: profile,
-        governanceStatus: profile.status || GOVERNANCE_STATUS.NOT_DEFINED,
+        governanceProfile: profile || null,
+        governanceStatus: profile?.status || GOVERNANCE_STATUS.NOT_DEFINED,
       };
 
       setAddedCPS((prev) =>
@@ -3457,45 +3555,33 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   );
 
   const ensureGovernanceProfileForCps = useCallback(
-    async (cps, options = {}) => {
+    async (cps) => {
       if (!cps?.id) return null;
-
-      const previousProfile = options.previousProfile || cps.governanceProfile || null;
-      const previousProfileVersion = Number(previousProfile?.profileVersion) || null;
-      const localProfile = buildGovernanceProfile(cps.id, cps, previousProfile, {
-        profileVersion: options.createForPlug && previousProfileVersion
-          ? previousProfileVersion + 1
-          : previousProfileVersion || 1,
-        previousProfileId: options.createForPlug ? previousProfile?.profileId || null : null,
-        previousProfileVersion: options.createForPlug ? previousProfileVersion : null,
-        status: options.createForPlug
-          ? GOVERNANCE_STATUS.PENDING_APPROVAL
-          : previousProfile?.status,
-      });
-      applyGovernanceProfileToState(cps.id, localProfile);
+      applyGovernanceProfileToState(cps.id, null);
 
       try {
-        const response = await fetch(`${GOVERNANCE_API_BASE}/cps/${encodeURIComponent(cps.id)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cps, createForPlug: !!options.createForPlug }),
-        });
+        const response = await fetch(
+          `${GOVERNANCE_API_BASE}/cps/${encodeURIComponent(cps.id)}`,
+          { method: 'GET', cache: 'no-store' }
+        );
         const data = await response.json();
-        if (response.ok && data?.profile) {
-          applyGovernanceProfileToState(cps.id, data.profile);
-          return data.profile;
+        if (response.ok) {
+          const activeProfile = data?.activeProfile || data?.profile || null;
+          applyGovernanceProfileToState(cps.id, activeProfile);
+          return activeProfile;
         }
+        throw new Error(data?.error || `Governance profile request failed (HTTP ${response.status}).`);
       } catch (error) {
         setLog((prev) => [
           ...prev,
           {
             time: new Date().toLocaleTimeString(),
-            message: `[GOVERNANCE_WARN] Profile persisted locally only for ${cps.id}: ${error?.message || error}`,
+            message: `[GOVERNANCE_WARN] Could not load active profile for ${cps.id}: ${error?.message || error}`,
           },
         ]);
       }
 
-      return localProfile;
+      return null;
     },
     [applyGovernanceProfileToState]
   );
@@ -3511,9 +3597,10 @@ export const CPSProvider = ({ children, acsmId, config }) => {
           { method: 'GET', cache: 'no-store' }
         );
         const data = await response.json();
-        if (response.ok && data?.profile) {
-          applyGovernanceProfileToState(normalizedCpsId, data.profile);
-          return data.profile;
+        if (response.ok) {
+          const activeProfile = data?.activeProfile || data?.profile || null;
+          applyGovernanceProfileToState(normalizedCpsId, activeProfile);
+          return activeProfile;
         }
       } catch (error) {
         setLog((prev) => [
@@ -3546,7 +3633,10 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         );
         const data = await response.json();
         if (!response.ok) throw new Error(data?.error || 'Governance approval failed.');
-        applyGovernanceProfileToState(normalizedCpsId, data.profile);
+        const activeProfile = await refreshGovernanceProfile(normalizedCpsId);
+        if (activeProfile?.status !== GOVERNANCE_STATUS.APPROVED) {
+          throw new Error('Approval saved, but the active profile could not be refreshed.');
+        }
         setLog((prev) => [
           ...prev,
           {
@@ -3566,7 +3656,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         return false;
       }
     },
-    [applyGovernanceProfileToState]
+    [refreshGovernanceProfile]
   );
 
   const updateGovernanceProfile = useCallback(
@@ -3807,17 +3897,6 @@ export const CPSProvider = ({ children, acsmId, config }) => {
       if (!response.ok) throw new Error(data?.error || 'Governance check failed.');
       if (data?.pendingActions) setPendingGovernanceActions(data.pendingActions);
       if (data?.profile) applyGovernanceProfileToState(data.profile.cpsId, data.profile);
-      if (data?.execution?.executionStatus === 'EXECUTED' && typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('plug-lifecycle-evidence-updated', {
-            detail: {
-              cpsId: data.execution?.cpsId || request.cpsId || null,
-              eventType: 'EVOLUTION',
-              action: data.execution?.action || request.action || null,
-            },
-          })
-        );
-      }
       setLog((prev) => [
         ...prev,
         {
@@ -3857,17 +3936,6 @@ export const CPSProvider = ({ children, acsmId, config }) => {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || 'Governance action decision failed.');
       if (data?.pendingActions) setPendingGovernanceActions(data.pendingActions);
-      if (data?.action?.executionStatus === 'EXECUTED' && typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('plug-lifecycle-evidence-updated', {
-            detail: {
-              cpsId: data.action?.cpsId || null,
-              eventType: 'EVOLUTION',
-              action: data.action?.action || null,
-            },
-          })
-        );
-      }
       setLog((prev) => [
         ...prev,
         {
@@ -3888,23 +3956,42 @@ export const CPSProvider = ({ children, acsmId, config }) => {
     }
   }, []);
 
-  const blockPlayForGovernance = useCallback((cps) => {
-    const status = getGovernanceStatus(cps);
-    setLog((prev) => [
-      ...prev,
-      {
-        time: new Date().toLocaleTimeString(),
-        message:
-          `[PLAY_NOT_ALLOWED] ${cps?.nome || cps?.id || 'CPS'} blocked: ` +
-          `GOVERNANCE_NOT_APPROVED (governanceStatus=${status}).`,
-      },
-    ]);
-    return {
-      ok: false,
-      error: 'PLAY_NOT_ALLOWED',
-      reason: 'GOVERNANCE_NOT_APPROVED',
-      governanceStatus: status,
-    };
+  const requestLifecyclePlayGate = useCallback(async (cps) => {
+    const cpsId = normalizeCpsId(cps?.id || cps?.cpsId);
+    try {
+      const response = await fetch(
+        `${GOVERNANCE_API_BASE}/cps/${encodeURIComponent(cpsId)}/play-gate`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' } }
+      );
+      const result = await response.json();
+      if (!response.ok || result?.ok !== true) {
+        setLog((prev) => [
+          ...prev,
+          {
+            time: new Date().toLocaleTimeString(),
+            message:
+              `[PLAY_NOT_ALLOWED] ${cps?.nome || cpsId} blocked by backend: ` +
+              `${result?.reason || 'GOVERNANCE_APPROVAL_REQUIRED'} ` +
+              `(governanceStatus=${result?.governanceStatus || 'NOT_DEFINED'}).`,
+          },
+        ]);
+        return result || {
+          ok: false,
+          reason: 'GOVERNANCE_APPROVAL_REQUIRED',
+          governanceStatus: getGovernanceStatus(cps),
+        };
+      }
+      return result;
+    } catch (error) {
+      setLog((prev) => [
+        ...prev,
+        {
+          time: new Date().toLocaleTimeString(),
+          message: `[PLAY_NOT_ALLOWED] Backend governance gate unavailable: ${error?.message || error}.`,
+        },
+      ]);
+      return { ok: false, reason: 'GOVERNANCE_GATE_UNAVAILABLE' };
+    }
   }, []);
 
   const updateKnowledgeStoreFromAnalytics = useCallback((cpsId, payload) => {
@@ -4043,10 +4130,12 @@ export const CPSProvider = ({ children, acsmId, config }) => {
     }
 
     const globalOEE = {
-      availability: Number(mean(latest.map((x) => x?.oee?.availability)).toFixed(4)),
-      performance: Number(mean(latest.map((x) => x?.oee?.performance)).toFixed(4)),
-      quality: Number(mean(latest.map((x) => x?.oee?.quality)).toFixed(4)),
-      oee: Number(mean(latest.map((x) => x?.oee?.oee ?? x?.oee?.value ?? x?.oee?.current ?? x?.oee)).toFixed(4)),
+      availability: nullableMean(latest.map((x) => x?.oee?.availability)),
+      performance: nullableMean(latest.map((x) => x?.oee?.performance)),
+      quality: nullableMean(latest.map((x) => x?.oee?.quality)),
+      oee: nullableMean(
+        latest.map((x) => x?.oee?.oee ?? x?.oee?.value ?? x?.oee?.current ?? x?.oee)
+      ),
     };
     const eligibleCpsIds = latest.map((snap) => snap.cpsId).filter(Boolean).sort();
     const sameEligiblePopulation = (snapshot) => {
@@ -4134,6 +4223,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
       recentSnapshots.length >= 1
         ? (() => {
             const last = toNumber(recentSnapshots.at(-1)?.globalOEE?.oee, globalOEE.oee);
+            if (last === null) return null;
             const prev = toNumber(recentSnapshots.at(-2)?.globalOEE?.oee, last);
             return Number(Math.max(0, Math.min(1, last + (last - prev))).toFixed(4));
           })()
@@ -4950,55 +5040,74 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         next[String(cpsRef.topic || '').toLowerCase()] ||
         cpsRef;
 
+      const isCpsLai1 = isPhysicalCps(baseObj || cpsRef);
+      const canonicalPhase = isCpsLai1 ? cpsLai1CanonicalLifecycleRef.current : null;
+      const requestedPhase = getCpsLifecyclePhase(patch) || getCpsLifecyclePhase(baseObj);
+      const protectedPhase =
+        canonicalPhase && !canTransitionCpsLai1Lifecycle(canonicalPhase, requestedPhase)
+          ? canonicalPhase
+          : requestedPhase;
+      const protectedPatch =
+        isCpsLai1 && protectedPhase
+          ? {
+              ...patch,
+              lifecyclePhase: protectedPhase,
+              lifecycle: lifecycleWithPhase(
+                { ...baseObj, lifecycle: { ...(baseObj.lifecycle || {}), ...(patch?.lifecycle || {}) } },
+                protectedPhase
+              ),
+            }
+          : patch;
+
       const updated = {
         ...baseObj,
-        ...patch,
+        ...protectedPatch,
         lifecycle: {
           ...(baseObj.lifecycle || {}),
-          ...(patch?.lifecycle || {}),
+          ...(protectedPatch?.lifecycle || {}),
         },
         maintenance: {
           ...(baseObj.maintenance || {}),
-          ...(patch?.maintenance || {}),
+          ...(protectedPatch?.maintenance || {}),
         },
         updates: {
           ...(baseObj.updates || {}),
-          ...(patch?.updates || {}),
-          history: Array.isArray(patch?.updates?.history)
-            ? patch.updates.history
+          ...(protectedPatch?.updates || {}),
+          history: Array.isArray(protectedPatch?.updates?.history)
+            ? protectedPatch.updates.history
             : baseObj.updates?.history || [],
         },
         globalState: {
           ...(baseObj.globalState || {}),
-          ...(patch?.globalState || {}),
+          ...(protectedPatch?.globalState || {}),
         },
         health: {
           ...(baseObj.health || {}),
-          ...(patch?.health || {}),
+          ...(protectedPatch?.health || {}),
         },
         oee: {
           ...(baseObj.oee || {}),
-          ...(patch?.oee || {}),
+          ...(protectedPatch?.oee || {}),
         },
         operationalData: {
           ...(baseObj.operationalData || {}),
-          ...(patch?.operationalData || {}),
+          ...(protectedPatch?.operationalData || {}),
         },
         endpoints: {
           ...(baseObj.endpoints || {}),
-          ...(patch?.endpoints || {}),
+          ...(protectedPatch?.endpoints || {}),
         },
         documents: {
           ...(baseObj.documents || {}),
-          ...(patch?.documents || {}),
+          ...(protectedPatch?.documents || {}),
         },
         governanceProfile:
-          patch?.governanceProfile !== undefined
-            ? patch.governanceProfile
+          protectedPatch?.governanceProfile !== undefined
+            ? protectedPatch.governanceProfile
             : baseObj.governanceProfile || null,
         governanceStatus:
-          patch?.governanceStatus ||
-          patch?.governanceProfile?.status ||
+          protectedPatch?.governanceStatus ||
+          protectedPatch?.governanceProfile?.status ||
           baseObj.governanceStatus ||
           baseObj.governanceProfile?.status ||
           GOVERNANCE_STATUS.NOT_DEFINED,
@@ -5111,7 +5220,6 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         cpsName: cpsRef.nome,
         message: entry.message,
       });
-
       return true;
     },
     [appendRegistryHistory, persistPlugEvent, pushSystemEvent]
@@ -5584,7 +5692,8 @@ export const CPSProvider = ({ children, acsmId, config }) => {
       );
       const ownerInPlay = isCpsInPlay(owner);
       const explicitAnalyticsOperationMode = getExplicitOperationMode(parsed);
-      const runtimeAnalyticsOperationMode = isRuntimeOperationMode(explicitAnalyticsOperationMode)
+      const runtimeAnalyticsOperationMode =
+        !isPhysicalCps(owner) && isRuntimeOperationMode(explicitAnalyticsOperationMode)
         ? canonicalOperationMode(explicitAnalyticsOperationMode)
         : null;
       const ownerForOperationalCheck =
@@ -5636,23 +5745,46 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         }));
 
         if (owner) {
+          const isCpsLai1Owner = normalizeCpsId(owner?.id) === 'cpslai1';
+          const oeeNotComputed =
+            String(normalized?.sourceStatus || normalized?.oee?.status || '').toUpperCase() ===
+            'NOT_COMPUTED';
+          const productionPatch =
+            isCpsLai1Owner &&
+            Object.prototype.hasOwnProperty.call(normalized, 'production')
+              ? { production: normalized.production }
+              : {};
           const nextOwnerOee = {
-            availability: normalized?.oee?.availability ?? owner?.oee?.availability ?? null,
-            performance: normalized?.oee?.performance ?? owner?.oee?.performance ?? null,
-            quality: normalized?.oee?.quality ?? owner?.oee?.quality ?? null,
-            value:
-              normalized?.oee?.oee ??
-              normalized?.oee?.value ??
-              normalized?.oee?.current ??
-              owner?.oee?.value ??
-              null,
+            availability: oeeNotComputed
+              ? null
+              : isCpsLai1Owner
+                ? normalized?.oee?.availability ?? null
+                : normalized?.oee?.availability ?? owner?.oee?.availability ?? null,
+            performance: oeeNotComputed
+              ? null
+              : isCpsLai1Owner
+                ? normalized?.oee?.performance ?? null
+                : normalized?.oee?.performance ?? owner?.oee?.performance ?? null,
+            quality: oeeNotComputed
+              ? null
+              : isCpsLai1Owner
+                ? normalized?.oee?.quality ?? null
+                : normalized?.oee?.quality ?? owner?.oee?.quality ?? null,
+            value: oeeNotComputed
+              ? null
+              : isCpsLai1Owner
+                ? normalized?.oee?.oee ?? normalized?.oee?.value ?? normalized?.oee?.current ?? null
+                : normalized?.oee?.oee ??
+                  normalized?.oee?.value ??
+                  normalized?.oee?.current ??
+                  owner?.oee?.value ??
+                  null,
             totals: normalized?.totals ?? owner?.oee?.totals ?? null,
             sourceStatus: normalized?.sourceStatus ?? owner?.oee?.sourceStatus ?? null,
             lastUpdate: normalized?.ts ?? owner?.oee?.lastUpdate ?? Date.now(),
           };
 
-          const nextOperationalData = {
-            ...(owner?.operationalData || {}),
+          const operationalDataPatch = {
             pieceCounter:
               normalized?.telemetry?.pieceCounter ??
               owner?.operationalData?.pieceCounter ??
@@ -5673,7 +5805,11 @@ export const CPSProvider = ({ children, acsmId, config }) => {
               normalized?.telemetry?.torque ??
               owner?.operationalData?.currentTorque ??
               null,
-            operationMode: owner?.operationalData?.operationMode ?? 'play',
+          };
+          const nextOperationalData = {
+            ...(owner?.operationalData || {}),
+            ...operationalDataPatch,
+            operationMode: owner?.operationalData?.operationMode ?? null,
           };
 
           setAddedCPS((prev) =>
@@ -5681,16 +5817,20 @@ export const CPSProvider = ({ children, acsmId, config }) => {
               c.id === owner.id
                 ? {
                     ...c,
+                    ...productionPatch,
                     oee: nextOwnerOee,
-                    operationalData: nextOperationalData,
+                    operationalData: isCpsLai1Owner
+                      ? mergeNonStatusOperationalData(c, operationalDataPatch)
+                      : nextOperationalData,
                   }
                 : c
             )
           );
 
           patchRegistryCps(owner, {
+            ...productionPatch,
             oee: nextOwnerOee,
-            operationalData: nextOperationalData,
+            operationalData: isCpsLai1Owner ? operationalDataPatch : nextOperationalData,
           });
 
           setLog((prev) => [
@@ -5727,9 +5867,8 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 
         const existingAnalytics = cpsAnalyticsRef.current?.[normalized.cpsId] || {};
         const baselineEvidence = extractLocalBaselineEvidence(normalized);
-        const nextOperationalData = owner
+        const operationalDataPatch = owner
           ? {
-              ...(owner?.operationalData || {}),
               pieceCounter:
                 normalized?.totals?.totalCount ??
                 normalized?.production?.totalPieces ??
@@ -5756,7 +5895,13 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                 normalized?.features?.avgPressaoGas ??
                 owner?.operationalData?.currentTorque ??
                 null,
-              operationMode: owner?.operationalData?.operationMode ?? 'play',
+            }
+          : null;
+        const nextOperationalData = owner && operationalDataPatch
+          ? {
+              ...(owner?.operationalData || {}),
+              ...operationalDataPatch,
+              operationMode: owner?.operationalData?.operationMode ?? null,
             }
           : null;
 
@@ -5877,14 +6022,16 @@ export const CPSProvider = ({ children, acsmId, config }) => {
               c.id === owner.id
                 ? {
                     ...c,
-                    operationalData: nextOperationalData,
+                    operationalData: isPhysicalCps(c)
+                      ? mergeNonStatusOperationalData(c, operationalDataPatch)
+                      : nextOperationalData,
                   }
                 : c
             )
           );
 
           patchRegistryCps(owner, {
-            operationalData: nextOperationalData,
+            operationalData: isPhysicalCps(owner) ? operationalDataPatch : nextOperationalData,
           });
         }
 
@@ -5937,32 +6084,30 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   ]);
 
   const registerCPS = useCallback(
-    (parsed) => {
+    async (parsed) => {
       try {
         const { cps: parsedCps } = parseAASCps(parsed);
         const normalizedCpsId = normalizeCpsId(parsedCps.id);
+        const governanceProfile = await ensureGovernanceProfileForCps(parsedCps);
         const previousCps =
           Object.values(registryRef.current || {}).find(
             (item) => normalizeCpsId(item?.id) === normalizedCpsId
           ) || null;
-        const previousGovernanceProfile =
-          governanceProfilesRef.current[normalizedCpsId] ||
-          governanceProfilesRef.current[parsedCps.id] ||
-          previousCps?.governanceProfile ||
-          null;
-        const previousProfileVersion = Number(previousGovernanceProfile?.profileVersion) || null;
-        const governanceProfile = buildGovernanceProfile(
-          parsedCps.id,
-          parsedCps,
-          previousGovernanceProfile,
-          {
-            profileVersion: previousProfileVersion ? previousProfileVersion + 1 : 1,
-            previousProfileId: previousGovernanceProfile?.profileId || null,
-            previousProfileVersion,
-            status: GOVERNANCE_STATUS.PENDING_APPROVAL,
-          }
-        );
-        const cps = governanceWithProfile(parsedCps, governanceProfile);
+        const lifecyclePhase = previousCps
+          ? getCpsLifecyclePhase(previousCps) || 'registered'
+          : 'registered';
+        const cpsWithGovernance = {
+          ...parsedCps,
+          lifecyclePhase,
+          lifecycle: {
+            ...(parsedCps.lifecycle || {}),
+            currentPhase: lifecyclePhase,
+            phase: lifecyclePhase,
+          },
+          governanceProfile,
+          governanceStatus: governanceProfile?.status || GOVERNANCE_STATUS.NOT_DEFINED,
+        };
+        const cps = cpsWithGovernance;
 
         setRegistry((prev) => ({
           ...prev,
@@ -5977,11 +6122,6 @@ export const CPSProvider = ({ children, acsmId, config }) => {
           ...prev,
           [cps.id]: governanceProfile,
         }));
-        ensureGovernanceProfileForCps(cps, {
-          createForPlug: true,
-          previousProfile: previousGovernanceProfile,
-        });
-
         if (!knowledgeStoreRef.current.cps[cps.id]) {
           knowledgeStoreRef.current.cps[cps.id] = {
             cpsId: cps.id,
@@ -6039,9 +6179,9 @@ export const CPSProvider = ({ children, acsmId, config }) => {
           {
             time: new Date().toLocaleTimeString(),
             message:
-              `[GOVERNANCE] ${cps.nome} profile ${governanceProfile.profileId || '-'} ` +
-              `created with version=${governanceProfile.profileVersion} ` +
-              `status=${governanceProfile.status}.`,
+              governanceProfile
+              ? `[GOVERNANCE] ${cps.nome} profile ${governanceProfile.profileId} (${governanceProfile.status}); explicit Plug starts a new approval cycle.`
+                : `[GOVERNANCE] ${cps.nome} registered without an active profile; explicit Plug is required.`,
           },
         ]);
 
@@ -6052,6 +6192,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
           cpsName: cps.nome,
           message: `CPS ${cps.nome} registered in Plug Phase.`,
         });
+        publishCpsLai1LifecyclePhase(cps, cps.lifecyclePhase);
 
         return true;
       } catch (err) {
@@ -6065,7 +6206,103 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         return false;
       }
     },
-    [ensureGovernanceProfileForCps, persistPlugEvent, pushSystemEvent]
+    [
+      ensureGovernanceProfileForCps,
+      persistPlugEvent,
+      publishCpsLai1LifecyclePhase,
+      pushSystemEvent,
+    ]
+  );
+
+  const plugCPS = useCallback(
+    async (idOrName) => {
+      const normalizedCpsId = normalizeCpsId(idOrName);
+      const cps = Object.values(registryRef.current || {}).find(
+        (item) => normalizeCpsId(item?.id) === normalizedCpsId ||
+          String(item?.nome || '').toLowerCase() === String(idOrName || '').toLowerCase()
+      );
+      if (!cps?.id) return { ok: false, reason: 'CPS_NOT_REGISTERED' };
+
+      const timestamp = new Date().toISOString();
+      const plugEventId = `${normalizeCpsId(cps.id)}-plug-event-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const asset = {
+        cps: { ...cps, cpsId: cps.id, lifecyclePhase: 'registered' },
+        identification: {
+          manufacturer: cps.manufacturer || null,
+          assetType: cps.assetType || null,
+          serialNumber: cps.serialNumber || null,
+          description: cps.descricao || null,
+        },
+        aas: cps.aasMetadata || null,
+        interfaces: {
+          baseTopic: cps.topic || cps.id,
+          brokerHost: cps.server || null,
+          brokerPort: cps.brokerPort || null,
+          endpoints: cps.endpoints || null,
+        },
+        supportedPhases: Array.isArray(cps.lifecycle?.supportedPhases)
+          ? cps.lifecycle.supportedPhases
+          : String(cps.lifecycle?.supportedPhases || '')
+              .split(/[|,;/]+/)
+              .map((phase) => phase.trim())
+              .filter(Boolean),
+      };
+
+      try {
+        const response = await fetch('/api/acsm/plug', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store',
+          body: JSON.stringify({
+            lifecycleTransition: { cpsId: cps.id, phase: 'plug', timestamp, plugEventId },
+            asset,
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result?.ok) {
+          throw new Error(result?.error || result?.reason || `Plug failed (HTTP ${response.status}).`);
+        }
+
+        const [governanceResponse, plugResponse] = await Promise.all([
+          fetch(`${GOVERNANCE_API_BASE}/cps/${encodeURIComponent(cps.id)}`, { cache: 'no-store' }),
+          fetch('/api/acsm/plug', { cache: 'no-store' }),
+        ]);
+        const [governanceData, plugState] = await Promise.all([
+          governanceResponse.json(),
+          plugResponse.json(),
+        ]);
+        const activeProfile = governanceData?.activeProfile || governanceData?.profile || null;
+        const snapshotProfile = plugState?.assets?.find((item) =>
+          normalizeCpsId(item?.cps?.cpsId || item?.cps?.id) === normalizeCpsId(cps.id)
+        )?.governance?.activeProfile;
+        if (
+          !governanceResponse.ok || !plugResponse.ok ||
+          activeProfile?.profileId !== result.activeProfile?.profileId ||
+          snapshotProfile?.profileId !== result.activeProfile?.profileId ||
+          activeProfile?.status !== GOVERNANCE_STATUS.PENDING_APPROVAL ||
+          snapshotProfile?.status !== GOVERNANCE_STATUS.PENDING_APPROVAL
+        ) {
+          throw new Error('Plug profile mismatch between action response, Governance API and Plug snapshot.');
+        }
+
+        applyGovernanceProfileToState(cps.id, activeProfile);
+        patchRegistryCps(cps, {
+          lifecyclePhase: 'plug',
+          lifecycle: lifecycleWithPhase(cps, 'plug'),
+          governanceProfile: activeProfile,
+          governanceStatus: activeProfile.status,
+        });
+        publishCpsLai1LifecyclePhase(cps, 'plug');
+        return { ok: true, cpsId: cps.id, lifecyclePhase: 'plug', activeProfile, state: plugState };
+      } catch (error) {
+        setLog((prev) => [...prev, {
+          time: new Date().toLocaleTimeString(),
+          message: `[PLUG_ERROR] ${cps.id}: ${error?.message || error}`,
+        }]);
+        return { ok: false, cpsId: cps.id, reason: error?.message || 'PLUG_FAILED' };
+      }
+    },
+    [applyGovernanceProfileToState, patchRegistryCps, publishCpsLai1LifecyclePhase]
   );
 
   useEffect(() => {
@@ -6094,7 +6331,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 
             if (cancelled) return { rawId, normalizedId, cancelled: true };
 
-            const registered = registerCPS(parsed);
+            const registered = await registerCPS(parsed);
             if (!registered) {
               throw new Error(`Registration rejected for ${rawId} (${normalizedId || 'unknown'}).`);
             }
@@ -6274,24 +6511,58 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   }, []);
 
   const restoreCPSFromMaintenance = useCallback(
-    (cpsObj, payload = {}) => {
+    async (cpsObj, payload = {}) => {
       if (!cpsObj) return false;
-      const governedCps = governanceWithProfile(cpsObj, governanceProfilesRef.current[cpsObj.id]);
-      if (!isGovernanceApproved(governedCps)) {
-        blockPlayForGovernance(governedCps);
-        refreshGovernanceProfile(governedCps.id);
+
+      if (isPhysicalCps(cpsObj)) {
+        const completedTs = payload?.ts || payload?.timestamp || Date.now();
+
+        const completedEntry = {
+          id: `${cpsObj.id}-plug-complete-${completedTs}`,
+          type: payload?.type || 'update_functions',
+          title: 'Plug completed',
+          message: payload?.summary || 'CPS ready for Plug and Governance validation.',
+          ts: completedTs,
+        };
+        const plugLifecycle = lifecycleWithPhase(cpsObj, 'plug');
+        patchRegistryCps(cpsObj, {
+          maintenance: {
+            ...(cpsObj.maintenance || {}),
+            inProgress: false,
+            lastEndTs: completedTs,
+          },
+          lifecycle: plugLifecycle,
+          lifecyclePhase: 'plug',
+          updates: {
+            lastMessage: completedEntry.message,
+            lastType: completedEntry.type,
+            lastTs: completedTs,
+          },
+        });
+        publishCpsLai1LifecyclePhase(cpsObj, 'plug');
+        appendRegistryHistory(cpsObj, completedEntry);
+        persistPlugEvent({
+          eventType: 'PLUG_COMPLETED',
+          cpsId: cpsObj.id,
+          cpsName: cpsObj.nome,
+          topic: cpsObj.topic,
+          message: completedEntry.message,
+          details: {
+            historyEntry: completedEntry,
+          },
+          ts: completedTs,
+        });
         setLog((prev) => [
           ...prev,
           {
             time: new Date().toLocaleTimeString(),
-            message:
-              `[AUTO_RETURN_BLOCKED] ${governedCps.nome || governedCps.id} cannot return to Play: ` +
-              `GOVERNANCE_NOT_APPROVED.`,
+            message: `[PLUG_COMPLETED] ${cpsObj.nome || cpsObj.id} entered Plug Phase for Governance validation.`,
           },
         ]);
-        return false;
+        return true;
       }
 
+      const governedCps = governanceWithProfile(cpsObj, governanceProfilesRef.current[cpsObj.id]);
       const alreadyInPlay = addedCPSRef.current.some((c) => c.id === governedCps.id);
       if (alreadyInPlay) {
         setLog((prev) => [
@@ -6305,6 +6576,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
       }
 
       const completedTs = payload?.ts || Date.now();
+      publishCpsLai1LifecyclePhase(governedCps, 'return');
 
       const maintenanceCompletedEntry = {
         id: `${cpsObj.id}-maintenance-complete-${completedTs}`,
@@ -6422,9 +6694,8 @@ export const CPSProvider = ({ children, acsmId, config }) => {
       appendRegistryHistory,
       persistPlugEvent,
       pushSystemEvent,
+      publishCpsLai1LifecyclePhase,
       rememberOperationMode,
-      blockPlayForGovernance,
-      refreshGovernanceProfile,
     ]
   );
 
@@ -6492,6 +6763,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         client.on('connect', () => {
           if (isDisposed) return;
           setMqttClient(client);
+          setMqttConnectionEpoch((value) => value + 1);
           pushMqttLog(`[MQTT_CONNECT] Connected to ${DEFAULT_BROKER_URL}`);
 
           const analyticsSubs = Array.from(new Set([
@@ -6773,9 +7045,10 @@ export const CPSProvider = ({ children, acsmId, config }) => {
             }
 
             setTimeout(() => {
-              const nextState = isMaintenanceReason(payload?.reason) ? 'maintenance' : 'stopped';
+              const nextState = isMaintenanceReason(payload?.reason) ? 'maintenance' : 'unplugged';
               rememberOperationMode(target, nextState);
               setAddedCPS((prev) => prev.filter((c) => c.id !== target.id));
+              const unplugLifecycle = lifecycleWithPhase(target, 'unplug');
               patchRegistryCpsRef.current?.(target, {
                 status: mapOperationalStateToDisplayStatus(nextState),
                 operationalState: nextState,
@@ -6784,7 +7057,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                   inProgress: isMaintenanceReason(payload?.reason),
                   lastStartTs: payload?.ts || Date.now(),
                 },
-                lifecycle: lifecycleWithPhase(target, 'unplug'),
+                lifecycle: unplugLifecycle,
                 lifecyclePhase: 'unplug',
                 globalState: {
                   ...(target.globalState || {}),
@@ -6795,6 +7068,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                 },
                 operationalData: operationalDataWithMode(target, nextState),
               });
+              publishCpsLai1LifecyclePhaseRef.current?.(target, 'unplug');
             }, 0);
 
             appendRegistryHistoryRef.current?.(target, {
@@ -6802,6 +7076,17 @@ export const CPSProvider = ({ children, acsmId, config }) => {
               type: payload?.type || 'unplug_request',
               title: 'Autonomous unplug',
               message: payload?.summary || 'CPS requested unplug.',
+              ts: payload?.ts || Date.now(),
+            });
+
+            persistPlugEvent({
+              id: `${target.id}-unplug-${payload?.ts || Date.now()}`,
+              eventType: 'UNPLUG',
+              cpsId: target.id,
+              cpsName: target.nome,
+              topic: target.topic,
+              message: payload?.summary || 'CPS requested unplug.',
+              details: { reason: payload?.reason || null, source: payload?.source || null },
               ts: payload?.ts || Date.now(),
             });
 
@@ -6825,9 +7110,17 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 
             if (!target) return;
 
-            if (maintenanceReturnRef.current[target.id] || isMaintenanceReason(payload?.reason)) {
-              restoreCPSFromMaintenanceRef.current?.(target, payload);
-              maintenanceReturnRef.current[target.id] = false;
+            const lifecyclePhase = getCpsLifecyclePhase(target);
+            if (
+              maintenanceReturnRef.current[target.id] ||
+              isMaintenanceReason(payload?.reason) ||
+              (isPhysicalCps(target) && lifecyclePhase === 'unplug')
+            ) {
+              Promise.resolve(restoreCPSFromMaintenanceRef.current?.(target, payload)).then(
+                (completed) => {
+                  if (completed) maintenanceReturnRef.current[target.id] = false;
+                }
+              );
               return;
             }
           }
@@ -6966,10 +7259,14 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                   ? {
                       ...c,
                       health: {
-                        score: data?.healthScore ?? c?.health?.score ?? null,
-                        label: data?.healthLabel ?? c?.health?.label ?? null,
+                        score: data?.score ?? data?.health ?? data?.healthScore ?? c?.health?.score ?? null,
+                        label: data?.healthState ?? data?.state ?? data?.healthLabel ?? c?.health?.label ?? null,
+                        healthType: data?.healthType ?? c?.health?.healthType ?? null,
+                        communication: data?.communication ?? c?.health?.communication ?? null,
+                        evidence: data?.evidence ?? c?.health?.evidence ?? null,
+                        note: data?.note ?? c?.health?.note ?? null,
                         sourceStatus: data?.sourceStatus ?? c?.health?.sourceStatus ?? null,
-                        lastUpdate: data?.ts ?? Date.now(),
+                        lastUpdate: data?.timestamp ?? data?.ts ?? Date.now(),
                       },
                     }
                   : c
@@ -6978,10 +7275,14 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 
             patchRegistryCpsRef.current?.(owner, {
               health: {
-                score: data?.healthScore ?? owner?.health?.score ?? null,
-                label: data?.healthLabel ?? owner?.health?.label ?? null,
+                score: data?.score ?? data?.health ?? data?.healthScore ?? owner?.health?.score ?? null,
+                label: data?.healthState ?? data?.state ?? data?.healthLabel ?? owner?.health?.label ?? null,
+                healthType: data?.healthType ?? owner?.health?.healthType ?? null,
+                communication: data?.communication ?? owner?.health?.communication ?? null,
+                evidence: data?.evidence ?? owner?.health?.evidence ?? null,
+                note: data?.note ?? owner?.health?.note ?? null,
                 sourceStatus: data?.sourceStatus ?? owner?.health?.sourceStatus ?? null,
-                lastUpdate: data?.ts ?? Date.now(),
+                lastUpdate: data?.timestamp ?? data?.ts ?? Date.now(),
               },
             });
 
@@ -6999,10 +7300,21 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 
             if (!isNewerSnapshot(data?.ts ?? data?.timestamp, owner?.globalState?.lastUpdate)) return;
 
+            const isCpsLai1Status = normalizeCpsId(owner?.id) === 'cpslai1';
+            const explicitOperationalState = isCpsLai1Status
+              ? getStatusOperationalState(data)
+              : getExplicitOperationMode(data);
+            const explicitCanonicalState =
+              explicitOperationalState !== null
+                ? canonicalOperationMode(explicitOperationalState)
+                : null;
             const nextGlobalState = {
               ...(owner.globalState || {}),
-              state: data?.state || owner?.globalState?.state || null,
-              status: data?.status || data?.state || owner?.globalState?.status || null,
+              state:
+                explicitCanonicalState ?? (data?.state || owner?.globalState?.state || null),
+              status:
+                explicitCanonicalState ??
+                (data?.status || data?.state || owner?.globalState?.status || null),
               playEnabled:
                 typeof data?.playEnabled === 'boolean'
                   ? data.playEnabled
@@ -7014,9 +7326,16 @@ export const CPSProvider = ({ children, acsmId, config }) => {
               summary: data?.summary || owner?.globalState?.summary || '',
               lastUpdate: data?.ts ?? Date.now(),
             };
-            const nextOperationMode =
-              getExplicitOperationMode(data) ?? nextGlobalState.state ?? nextGlobalState.status;
-            const nextCanonicalState = canonicalOperationMode(nextOperationMode);
+            const nextCanonicalState = canonicalOperationMode(
+              explicitCanonicalState ?? nextGlobalState.state ?? nextGlobalState.status
+            );
+            const operationalHealth = isCpsLai1Status
+              ? buildCpsLai1OperationalHealth({
+                  communication: data?.communication,
+                  operationalState: nextCanonicalState,
+                  timestamp: data?.timestamp ?? data?.ts ?? new Date(),
+                })
+              : null;
             if (nextCanonicalState === 'maintenance') {
               recordMaintenanceEnteredRef.current?.(
                 owner,
@@ -7024,9 +7343,11 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                 owner?.operationalState || owner?.globalState?.state || owner?.operationalData?.operationMode
               );
             }
-            rememberOperationMode(owner, nextOperationMode);
-            const nextOperationalData = operationalDataWithMode(owner, nextOperationMode);
-            const nextLifecyclePhase = getCpsLifecyclePhase(data);
+            const nextOperationalData = isCpsLai1Status
+              ? applyPhysicalStatus(owner, data)
+              : operationalDataWithMode(owner, nextCanonicalState);
+            if (!isCpsLai1Status) rememberOperationMode(owner, nextCanonicalState);
+            const nextLifecyclePhase = isCpsLai1Status ? null : getCpsLifecyclePhase(data);
             const lifecyclePatch = nextLifecyclePhase
               ? {
                   lifecycle: lifecycleWithPhase(owner, nextLifecyclePhase),
@@ -7044,6 +7365,19 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                       operationalState: nextCanonicalState,
                       globalState: nextGlobalState,
                       operationalData: nextOperationalData,
+                      ...(operationalHealth
+                        ? {
+                            health: {
+                              score: operationalHealth.score,
+                              label: operationalHealth.healthState,
+                              healthType: operationalHealth.healthType,
+                              communication: operationalHealth.communication,
+                              evidence: operationalHealth.evidence,
+                              note: operationalHealth.note,
+                              lastUpdate: operationalHealth.timestamp,
+                            },
+                          }
+                        : {}),
                     }
                   : c
               )
@@ -7054,6 +7388,28 @@ export const CPSProvider = ({ children, acsmId, config }) => {
               operationalState: nextCanonicalState,
               globalState: nextGlobalState,
               operationalData: nextOperationalData,
+              ...(operationalHealth
+                ? {
+                    health: {
+                      score: operationalHealth.score,
+                      label: operationalHealth.healthState,
+                      healthType: operationalHealth.healthType,
+                      communication: operationalHealth.communication,
+                      evidence: operationalHealth.evidence,
+                      note: operationalHealth.note,
+                      lastUpdate: operationalHealth.timestamp,
+                    },
+                  }
+                : {}),
+            });
+            publishCpsLai1OperationalHealth({
+              client,
+              topic: joinTopic(owner.topic, HEALTH_TOPIC_SUFFIX),
+              status: {
+                communication: data?.communication,
+                operationalState: nextCanonicalState,
+                timestamp: data?.timestamp ?? data?.ts ?? new Date(),
+              },
             });
             return;
           }
@@ -7062,8 +7418,10 @@ export const CPSProvider = ({ children, acsmId, config }) => {
             const data = safeParseJson(message);
             if (!data) return;
 
+            const isCpsLai1Data = isPhysicalCps(owner);
             const explicitDataOperationMode = getExplicitOperationMode(data);
-            const runtimeDataOperationMode = isRuntimeOperationMode(explicitDataOperationMode)
+            const runtimeDataOperationMode =
+              !isCpsLai1Data && isRuntimeOperationMode(explicitDataOperationMode)
               ? canonicalOperationMode(explicitDataOperationMode)
               : null;
             const ownerForDataCheck =
@@ -7109,8 +7467,11 @@ export const CPSProvider = ({ children, acsmId, config }) => {
             }));
 
             if (data && typeof data === 'object') {
-              const nextOperationalData = {
-                ...(owner?.operationalData || {}),
+              const normalizedOwnerOperationMode = normalizeOperationMode(ownerForDataCheck);
+              const fallbackOperationMode = isRuntimeOperationMode(normalizedOwnerOperationMode)
+                ? normalizedOwnerOperationMode
+                : null;
+              const operationalDataPatch = {
                 currentTemperature:
                   data?.CurrentTemperature ?? data?.currentTemperature ?? owner?.operationalData?.currentTemperature ?? null,
                 currentRPM: data?.CurrentRPM ?? data?.currentRPM ?? owner?.operationalData?.currentRPM ?? null,
@@ -7120,31 +7481,43 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                   data?.PieceCounter ?? data?.pieceCounter ?? owner?.operationalData?.pieceCounter ?? null,
                 cycleTimeMs:
                   data?.CycleTimeMs ?? data?.cycleTimeMs ?? owner?.operationalData?.cycleTimeMs ?? null,
-                operationMode:
-                  (runtimeDataOperationMode ?? normalizeOperationMode(ownerForDataCheck)) ||
-                  owner?.globalState?.state ||
-                  owner?.operationalData?.operationMode ||
-                  'play',
                 lastUpdate: normalizeSnapshotTimestamp(data?.ts ?? data?.timestamp) ?? Date.now(),
               };
+              const nextOperationalData = isCpsLai1Data
+                ? mergeNonStatusOperationalData(owner, operationalDataPatch)
+                : {
+                    ...(owner?.operationalData || {}),
+                    ...operationalDataPatch,
+                    operationMode: runtimeDataOperationMode ?? fallbackOperationMode,
+                  };
 
               setAddedCPS((prev) =>
                 prev.map((c) =>
                   c.id === owner.id
-                    ? {
+                    ? isCpsLai1Data
+                      ? {
+                          ...c,
+                          operationalData: mergeNonStatusOperationalData(c, operationalDataPatch),
+                        }
+                      : {
                         ...c,
                         status: mapOperationalStateToDisplayStatus(nextOperationalData.operationMode),
                         operationalState: canonicalOperationMode(nextOperationalData.operationMode),
                         operationalData: nextOperationalData,
-                      }
+                        }
                     : c
                 )
               );
-              patchRegistryCpsRef.current?.(owner, {
-                status: mapOperationalStateToDisplayStatus(nextOperationalData.operationMode),
-                operationalState: canonicalOperationMode(nextOperationalData.operationMode),
-                operationalData: nextOperationalData,
-              });
+              patchRegistryCpsRef.current?.(
+                owner,
+                isCpsLai1Data
+                  ? { operationalData: operationalDataPatch }
+                  : {
+                      status: mapOperationalStateToDisplayStatus(nextOperationalData.operationMode),
+                      operationalState: canonicalOperationMode(nextOperationalData.operationMode),
+                      operationalData: nextOperationalData,
+                    }
+              );
             }
             return;
           }
@@ -7187,7 +7560,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         }
       }
     };
-  }, [rememberOperationMode, withRememberedOperationMode]);
+  }, [persistPlugEvent, rememberOperationMode, withRememberedOperationMode]);
 
   useEffect(() => {
     if (!mqttClient) return;
@@ -7242,7 +7615,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   }, [mqttClient, availableCPS]);
 
   const addCPS = useCallback(
-    (nameOrId) => {
+    async (nameOrId) => {
       const key = String(nameOrId || '').toLowerCase();
       const cps =
         registry[key] ||
@@ -7261,13 +7634,27 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         return false;
       }
 
-      const governedCps = governanceWithProfile(cps, governanceProfiles[cps.id] || cps.governanceProfile);
+      const lifecycleCandidate = cps;
 
-      if (!isGovernanceApproved(governedCps)) {
-        blockPlayForGovernance(governedCps);
-        refreshGovernanceProfile(governedCps.id);
+      if (
+        isPhysicalCps(lifecycleCandidate) &&
+        !canTransitionCpsLai1Lifecycle(cpsLai1CanonicalLifecycleRef.current, 'play')
+      ) return false;
+
+      const governanceGate = await requestLifecyclePlayGate(lifecycleCandidate);
+      if (!governanceGate?.ok) {
+        await refreshGovernanceProfile(lifecycleCandidate.id);
         return false;
       }
+      const activeProfile = await refreshGovernanceProfile(lifecycleCandidate.id);
+      const governedCps = governanceWithProfile(lifecycleCandidate, activeProfile || {
+        profileId: governanceGate.profileId,
+        profileVersion: governanceGate.profileVersion,
+        status: governanceGate.governanceStatus,
+        approvedAt: governanceGate.approvedAt,
+        approvedBy: governanceGate.approvedBy,
+        plugCycleStatus: 'ACTIVE',
+      });
 
       if (addedCPSRef.current.some((item) => item.id === governedCps.id)) return true;
 
@@ -7301,11 +7688,10 @@ export const CPSProvider = ({ children, acsmId, config }) => {
       return true;
     },
     [
-      blockPlayForGovernance,
-      governanceProfiles,
       patchRegistryCps,
       publishLifecycleCommand,
       refreshGovernanceProfile,
+      requestLifecyclePlayGate,
       registry,
       rememberOperationMode,
     ]
@@ -7313,25 +7699,50 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 
   const removeCPS = useCallback((idOrName) => {
     const normalized = String(idOrName || '').toLowerCase();
+    const cps = Object.values(registryRef.current || {}).find(
+      (item) =>
+        item?.id === normalized || String(item?.nome || '').toLowerCase() === normalized
+    );
+    if (!cps) return false;
+
     setAddedCPS((prev) =>
       prev.filter(
         (c) => c.id !== normalized && String(c.nome || '').toLowerCase() !== normalized
       )
     );
+    patchRegistryCps(cps, {
+      lifecycle: lifecycleWithPhase(cps, 'unplug'),
+      lifecyclePhase: 'unplug',
+    });
+    publishCpsLai1LifecyclePhase(cps, 'unplug');
     return true;
-  }, []);
+  }, [patchRegistryCps, publishCpsLai1LifecyclePhase]);
 
  const startCPSById = useCallback(
-  (id) => {
+  async (id) => {
     const cps = Object.values(registryRef.current || {}).find((item) => item?.id === id);
     if (!cps) return false;
-    const governedCps = governanceWithProfile(cps, governanceProfiles[cps.id] || cps.governanceProfile);
+    const lifecycleCandidate = cps;
 
-    if (!isGovernanceApproved(governedCps)) {
-      blockPlayForGovernance(governedCps);
-      refreshGovernanceProfile(governedCps.id);
+    if (
+      isPhysicalCps(lifecycleCandidate) &&
+      !canTransitionCpsLai1Lifecycle(cpsLai1CanonicalLifecycleRef.current, 'play')
+    ) return false;
+
+    const governanceGate = await requestLifecyclePlayGate(lifecycleCandidate);
+    if (!governanceGate?.ok) {
+      await refreshGovernanceProfile(lifecycleCandidate.id);
       return false;
     }
+    const activeProfile = await refreshGovernanceProfile(lifecycleCandidate.id);
+    const governedCps = governanceWithProfile(lifecycleCandidate, activeProfile || {
+      profileId: governanceGate.profileId,
+      profileVersion: governanceGate.profileVersion,
+      status: governanceGate.governanceStatus,
+      approvedAt: governanceGate.approvedAt,
+      approvedBy: governanceGate.approvedBy,
+      plugCycleStatus: 'ACTIVE',
+    });
 
     publishLifecycleCommand(governedCps, 'play');
     rememberOperationMode(governedCps, 'running');
@@ -7380,11 +7791,10 @@ export const CPSProvider = ({ children, acsmId, config }) => {
     return true;
   },
   [
-    blockPlayForGovernance,
-    governanceProfiles,
     publishLifecycleCommand,
     patchRegistryCps,
     refreshGovernanceProfile,
+    requestLifecyclePlayGate,
     rememberOperationMode,
   ]
 );
@@ -7441,12 +7851,16 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 );
 
   const unplugCPS = useCallback(
-    (id) => {
-      const normalized = String(id || '').toLowerCase();
+    async (id) => {
+      const normalized = normalizeCpsId(id);
       const cps = Object.values(registryRef.current || {}).find(
-        (item) => item?.id === normalized || String(item?.nome || '').toLowerCase() === normalized
+        (item) =>
+          normalizeCpsId(item?.id || item?.cpsId || item?.topic) === normalized ||
+          String(item?.nome || '').toLowerCase() === String(id || '').toLowerCase()
       );
-      if (!cps || !mqttClient) return false;
+      if (!cps) {
+        throw new Error(`CPS not found for Unplug: ${id || '(empty id)'}`);
+      }
 
       const payload = {
         cpsId: cps.id,
@@ -7458,9 +7872,47 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         ts: Date.now(),
       };
 
-      mqttClient.publish(LIFECYCLE_UNPLUG_REQUEST_TOPIC, JSON.stringify(payload), {
-        qos: 1,
-        retain: false,
+      const lifecycleResponse = await fetch('/api/acsm/plug', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({
+          lifecycleTransition: {
+            cpsId: cps.id,
+            phase: 'unplug',
+            timestamp: new Date(payload.ts).toISOString(),
+          },
+        }),
+      });
+      const lifecycleResult = await lifecycleResponse.json().catch(() => null);
+      if (!lifecycleResponse.ok || lifecycleResult?.ok !== true) {
+        throw new Error(lifecycleResult?.error || lifecycleResult?.reason || 'ACSM Unplug transition failed.');
+      }
+
+      publishUnplugNotificationIfAvailable({
+        client: mqttClient,
+        topic: LIFECYCLE_UNPLUG_REQUEST_TOPIC,
+        payload,
+        onSkipped: (reason, error) => {
+        setLog((prev) => [
+          ...prev,
+          {
+            time: new Date().toLocaleTimeString(),
+              message: `${reason}. LIFECYCLE_UNPLUG = SUCCESS.${error ? ` ${error?.message || error}` : ''}`,
+          },
+        ]);
+        },
+      });
+
+      void persistPlugEvent({
+        id: `${cps.id}-unplug-${payload.ts}`,
+        eventType: 'UNPLUG',
+        cpsId: cps.id,
+        cpsName: cps.nome,
+        topic: cps.topic,
+        message: payload.summary,
+        details: { reason: payload.reason, source: ACTIVE_ACSM.code },
+        ts: payload.ts,
       });
 
       rememberOperationMode(cps, 'unplugged');
@@ -7482,9 +7934,16 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         },
         operationalData: operationalDataWithMode(cps, 'unplugged'),
       });
+      publishCpsLai1LifecyclePhase(cps, 'unplug');
       return true;
     },
-    [mqttClient, patchRegistryCps, rememberOperationMode]
+    [
+      mqttClient,
+      patchRegistryCps,
+      persistPlugEvent,
+      publishCpsLai1LifecyclePhase,
+      rememberOperationMode,
+    ]
   );
 
   const toggleCPSStatus = useCallback(
@@ -7563,6 +8022,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         getCanonicalOperationalState,
         log,
         registerCPS,
+        plugCPS,
         addCPS,
         removeCPS,
         startCPSById,

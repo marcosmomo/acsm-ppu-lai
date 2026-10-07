@@ -4,22 +4,19 @@ import {
   GOVERNANCE_ACTION_STATUS,
   GOVERNANCE_DECISION,
   GOVERNANCE_STATUS,
+  approveGovernanceProfileSnapshot,
+  buildGovernanceProfileResponse,
   buildGovernanceProfileId,
   buildGovernanceProfile,
   evaluateGovernancePolicy,
   getGovernableActionPolicy,
   normalizeGovernanceStatus,
-} from '../../lib/governance/policies';
+} from '../../lib/governance/policies.js';
 import {
   openEpisode,
   registerEvent,
-} from '../memory/cognitiveEpisodicMemoryService';
-import { executeGovernedAction } from './governedActionExecutor';
-import {
-  CURRENT_PLUG_PHASE_LOG_FILE,
-  buildCurrentExperimentLog,
-  parsePlugPhaseLogContent,
-} from '../../lib/reports/plugPhaseExperimentLog';
+} from '../memory/cognitiveEpisodicMemoryService.js';
+import { executeGovernedAction } from './governedActionExecutor.js';
 
 const DEFAULT_STORE = { profiles: {}, profileVersions: {}, pendingActions: {}, history: [] };
 
@@ -48,6 +45,8 @@ const EDITABLE_GOVERNANCE_ACTIONS = new Set([
   'ADJUST_WELDING_CURRENT',
   'ADJUST_INSPECTION_THRESHOLD',
   'ADJUST_TRANSPORT_SPEED',
+  'ADJUST_JOINING_FORCE',
+  'ADJUST_SORTING_THRESHOLD',
 ]);
 
 const normalizeProfileVersions = (profiles = {}, profileVersions = {}) => {
@@ -123,46 +122,6 @@ const recordHistory = (store, event) => {
   return entry;
 };
 
-const persistPlugLifecycleEvent = (event) => {
-  try {
-    const file = path.join(process.cwd(), CURRENT_PLUG_PHASE_LOG_FILE);
-    const raw = fs.existsSync(file)
-      ? parsePlugPhaseLogContent(fs.readFileSync(file, 'utf-8'))
-      : { events: [] };
-    const events = Array.isArray(raw?.events) ? raw.events : [];
-    const entry = {
-      id: event?.id || `evt-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-      phase: event?.phase || 'plug',
-      eventType: event?.eventType || 'lifecycle_event',
-      cpsId: event?.cpsId || null,
-      cpsName: event?.cpsName || null,
-      topic: event?.topic || event?.cpsId || null,
-      message: event?.message || 'Lifecycle event recorded.',
-      details: event?.details || {},
-      ts: event?.ts || Date.now(),
-      isoDate: new Date(event?.ts || Date.now()).toISOString(),
-    };
-
-    if (entry.id && events.some((item) => String(item?.id || '') === String(entry.id))) {
-      return null;
-    }
-
-    const nextLog = buildCurrentExperimentLog(
-      {
-        ...raw,
-        events: [...events, entry],
-      },
-      new Date()
-    );
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, `${JSON.stringify(nextLog, null, 2)}\n`, 'utf-8');
-    return entry;
-  } catch (error) {
-    console.warn('[PLUG_LIFECYCLE_LOG_WARN]', error?.message || error);
-    return null;
-  }
-};
-
 const recordHcmGovernanceEvent = (eventType, content = {}) => {
   try {
     if (content.episodeId) {
@@ -221,32 +180,6 @@ const recordGovernedActionExecution = (store, action, execution, governanceDecis
     appliedVariation: execution.appliedVariation,
     actionResult: execution.actionResult,
   });
-  if (execution?.executionStatus === 'EXECUTED') {
-    const ts = Date.parse(execution.executedAt || event.timestamp || '');
-    persistPlugLifecycleEvent({
-      id: action.actionId || action.governanceActionId
-        ? `evolution-${action.actionId || action.governanceActionId}`
-        : `evolution-${action.cpsId}-${action.action}-${Number.isFinite(ts) ? ts : Date.now()}`,
-      phase: 'plug',
-      eventType: 'EVOLUTION',
-      cpsId: action.cpsId,
-      cpsName: action.cpsName || execution?.actionResult?.cpsName || null,
-      topic: action.cpsId,
-      message: `Evolution registered from governed action ${action.action}.`,
-      details: {
-        source: action.source || execution?.command?.source || 'governance',
-        action: action.action,
-        governanceDecision,
-        actionId: action.actionId || action.governanceActionId || null,
-        previousValue: execution.previousValue,
-        newValue: execution.newValue,
-        appliedVariation: execution.appliedVariation,
-        unit: action.unit || '%',
-        executionStatus: execution.executionStatus,
-      },
-      ts: Number.isFinite(ts) ? ts : Date.now(),
-    });
-  }
   recordHcmGovernanceEvent('governed_action_executed', event);
   return event;
 };
@@ -306,8 +239,8 @@ const normalizeEditableGovernancePolicies = (policies = {}) => {
   });
 };
 
-export const ensureGovernanceProfile = (cpsId, cps = {}) => {
-  const key = normalizeCpsKey(cpsId || cps?.id || cps?.cpsId);
+export const ensureGovernanceProfile = (cpsId) => {
+  const key = normalizeCpsKey(cpsId);
   if (!key) {
     const error = new Error('cpsId is required.');
     error.status = 400;
@@ -315,34 +248,19 @@ export const ensureGovernanceProfile = (cpsId, cps = {}) => {
   }
 
   const store = readStore();
-  const existing = store.profiles[key] || null;
-  const profile = existing || buildGovernanceProfile(key, cps);
-
-  store.profiles[key] = profile;
-  store.profileVersions[key] = sortProfilesByVersion(
-    existing
-      ? store.profileVersions[key] || [existing]
-      : [...(store.profileVersions[key] || []), profile]
-  );
-
-  if (!existing) {
-    const event = recordHistory(store, {
-      eventType: 'GOVERNANCE_PROFILE_CREATED',
-      cpsId: key,
-      profileId: profile.profileId,
-      profileVersion: profile.profileVersion,
-      previousProfileVersion: profile.previousProfileVersion || null,
-      status: profile.status,
-      template: profile.template,
-    });
-    recordHcmGovernanceEvent('governance_profile_created', event);
-  }
-
-  writeStore(store);
-  return { profile, governanceStatus: profile.status };
+  const versions = store.profileVersions[key] || [];
+  const active = versions.filter((item) => item?.plugCycleStatus === 'ACTIVE').at(-1) || null;
+  return {
+    profile: active,
+    activeProfile: active,
+    governanceStatus: active?.status || GOVERNANCE_STATUS.NOT_DEFINED,
+    profiles: versions,
+    history: versions,
+    created: false,
+  };
 };
 
-export const createGovernanceProfileForPlug = (cpsId, cps = {}) => {
+export const createGovernanceProfileForPlug = (cpsId, cps = {}, { plugEventId = null } = {}) => {
   const key = normalizeCpsKey(cpsId || cps?.id || cps?.cpsId);
   if (!key) {
     const error = new Error('cpsId is required.');
@@ -352,49 +270,169 @@ export const createGovernanceProfileForPlug = (cpsId, cps = {}) => {
 
   const store = readStore();
   const versions = sortProfilesByVersion(store.profileVersions[key] || []);
-  const previousProfile = getLatestProfile(versions);
-  const previousProfileVersion = previousProfile ? getProfileVersion(previousProfile) : null;
-  const profileVersion = previousProfileVersion ? previousProfileVersion + 1 : 1;
-  const profile = buildGovernanceProfile(key, cps, previousProfile, {
-    profileVersion,
-    previousProfileId: previousProfile?.profileId || null,
-    previousProfileVersion,
-    status: GOVERNANCE_STATUS.PENDING_APPROVAL,
-    createdAt: nowIso(),
-  });
+  const eventProfile = plugEventId
+    ? versions.find((profile) => profile?.plugEventId === plugEventId) || null
+    : null;
+  if (eventProfile) {
+    return {
+      profile: eventProfile,
+      activeProfile: eventProfile.plugCycleStatus === 'ACTIVE' ? eventProfile : null,
+      governanceStatus: eventProfile.status,
+      profiles: versions,
+      history: versions,
+      created: false,
+      newPlugCycle: false,
+    };
+  }
+  const active = versions.filter((profile) => profile?.plugCycleStatus === 'ACTIVE').at(-1) || null;
+  const existing = active || null;
+  if (existing && !plugEventId) {
+    return {
+      profile: existing,
+      activeProfile: existing,
+      governanceStatus: existing.status,
+      profiles: versions,
+      history: versions,
+      created: false,
+    };
+  }
 
-  store.profileVersions[key] = sortProfilesByVersion([...versions, profile]);
+  const plugClosedAt = existing ? nowIso() : null;
+  const closedVersions = existing
+    ? versions.map((profile) => profile.profileId === existing.profileId
+      ? { ...profile, plugCycleStatus: 'CLOSED', plugClosedAt }
+      : profile)
+    : versions;
+  if (existing) {
+    recordHistory(store, {
+      eventType: 'GOVERNANCE_PLUG_CYCLE_CLOSED',
+      cpsId: key,
+      plugCycleId: existing.plugCycleId || null,
+      profileId: existing.profileId,
+      profileVersion: existing.profileVersion,
+      status: existing.status,
+      closedBy: 'new-plug-event',
+      plugClosedAt,
+    });
+  }
+  const latest = getLatestProfile(closedVersions);
+  {
+      const profileVersion = closedVersions.length
+        ? Math.max(...closedVersions.map((profile) => getProfileVersion(profile) + 1))
+        : 1;
+      const plugStartedAt = nowIso();
+      const profile = {
+        ...buildGovernanceProfile(key, cps, latest, {
+          profileVersion,
+          status: GOVERNANCE_STATUS.PENDING_APPROVAL,
+          createdAt: plugStartedAt,
+        }),
+        previousProfileId: latest?.profileId || null,
+        previousProfileVersion: latest?.profileVersion || null,
+        plugCycleId: `${key}-plug-v${profileVersion}`,
+        ...(plugEventId ? { plugEventId } : {}),
+        plugCycleStatus: 'ACTIVE',
+        plugStartedAt,
+        plugClosedAt: null,
+        approvedAt: null,
+        approvedBy: null,
+        rejectedAt: null,
+        rejectedBy: null,
+      };
+
+      store.profileVersions[key] = sortProfilesByVersion([...closedVersions, profile]);
+      store.profiles[key] = profile;
+      const event = recordHistory(store, {
+        eventType: latest ? 'GOVERNANCE_PLUG_CYCLE_OPENED' : 'GOVERNANCE_PROFILE_CREATED',
+        cpsId: key,
+        plugCycleId: profile.plugCycleId,
+        profileId: profile.profileId,
+        profileVersion: profile.profileVersion,
+        previousProfileId: latest?.profileId || null,
+        previousProfileVersion: latest?.profileVersion || null,
+        status: profile.status,
+        template: profile.template,
+      });
+      recordHcmGovernanceEvent(latest ? 'governance_plug_cycle_opened' : 'governance_profile_created', event);
+      writeStore(store);
+      return {
+        profile,
+        activeProfile: profile,
+        governanceStatus: profile.status,
+        profiles: store.profileVersions[key],
+        history: store.profileVersions[key],
+        created: true,
+        newPlugCycle: Boolean(latest),
+      };
+  }
+};
+
+export const closeGovernancePlugCycle = (cpsId, closedBy = 'lifecycle-unplug') => {
+  const key = normalizeCpsKey(cpsId);
+  if (!key) {
+    const error = new Error('cpsId is required.');
+    error.status = 400;
+    throw error;
+  }
+
+  const store = readStore();
+  const current = store.profiles[key] || null;
+  if (!current || current.plugCycleStatus === 'CLOSED') {
+    return {
+      profile: current,
+      governanceStatus: current?.status || GOVERNANCE_STATUS.NOT_DEFINED,
+      closed: false,
+    };
+  }
+
+  const plugClosedAt = nowIso();
+  const profile = {
+    ...current,
+    plugCycleStatus: 'CLOSED',
+    plugClosedAt,
+  };
   store.profiles[key] = profile;
-
+  store.profileVersions[key] = sortProfilesByVersion(
+    (store.profileVersions[key] || [current]).map((item) =>
+      item?.profileId === profile.profileId ||
+      getProfileVersion(item) === getProfileVersion(profile)
+        ? profile
+        : item
+    )
+  );
   const event = recordHistory(store, {
-    eventType: 'GOVERNANCE_PROFILE_CREATED',
+    eventType: 'GOVERNANCE_PLUG_CYCLE_CLOSED',
     cpsId: key,
+    plugCycleId: profile.plugCycleId || null,
     profileId: profile.profileId,
     profileVersion: profile.profileVersion,
-    previousProfileVersion,
     status: profile.status,
-    template: profile.template,
+    closedBy,
+    plugClosedAt,
   });
-  recordHcmGovernanceEvent('governance_profile_created', event);
-
   writeStore(store);
-  return {
-    profile,
-    governanceStatus: profile.status,
-    previousProfile,
-    previousProfileVersion,
-  };
+  return { profile, governanceStatus: profile.status, closed: true };
 };
 
 export const getGovernanceProfile = (cpsId) => {
   const key = normalizeCpsKey(cpsId);
   const store = readStore();
-  const profile = store.profiles[key] || buildGovernanceProfile(key);
+  const history = store.profileVersions[key] || [];
+  const activeProfile = history.filter((item) => item?.plugCycleStatus === 'ACTIVE').at(-1) || null;
   return {
-    profile,
-    governanceStatus: profile.status,
-    profiles: store.profileVersions[key] || (profile ? [profile] : []),
+    ...buildGovernanceProfileResponse(activeProfile, history),
+    activeProfile,
+    profile: activeProfile,
+    governanceStatus: activeProfile?.status || GOVERNANCE_STATUS.NOT_DEFINED,
   };
+};
+
+export const getActiveGovernanceProfile = (cpsId) => {
+  const key = normalizeCpsKey(cpsId);
+  const store = readStore();
+  return (store.profileVersions[key] || [])
+    .filter((profile) => profile?.plugCycleStatus === 'ACTIVE')
+    .at(-1) || null;
 };
 
 export const updateGovernanceProfile = (
@@ -498,13 +536,27 @@ export const updateGovernanceProfile = (
 export const approveGovernanceProfile = (cpsId, approvedBy = 'human-operator') => {
   const key = normalizeCpsKey(cpsId);
   const store = readStore();
-  const current = store.profiles[key] || buildGovernanceProfile(key);
+  const current = store.profiles[key] || null;
+  if (!current) {
+    const error = new Error('Governance Profile not found. Complete Plug first.');
+    error.status = 409;
+    error.details = { code: 'GOVERNANCE_PROFILE_REQUIRED', cpsId: key };
+    throw error;
+  }
+  if (normalizeGovernanceStatus(current.status) !== GOVERNANCE_STATUS.PENDING_APPROVAL) {
+    const error = new Error('Only the pending profile for the active Plug cycle can be approved.');
+    error.status = 409;
+    error.details = {
+      code: 'GOVERNANCE_PROFILE_NOT_PENDING',
+      cpsId: key,
+      status: current.status,
+      profileId: current.profileId,
+    };
+    throw error;
+  }
   const profile = {
-    ...current,
+    ...approveGovernanceProfileSnapshot(current, approvedBy, nowIso()),
     profileId: current.profileId || buildGovernanceProfileId(key, current.profileVersion),
-    status: GOVERNANCE_STATUS.APPROVED,
-    approvedAt: nowIso(),
-    approvedBy,
   };
   store.profiles[key] = profile;
   store.profileVersions[key] = sortProfilesByVersion(
@@ -520,7 +572,6 @@ export const approveGovernanceProfile = (cpsId, approvedBy = 'human-operator') =
     cpsId: key,
     profileId: profile.profileId,
     profileVersion: profile.profileVersion,
-    previousProfileVersion: profile.previousProfileVersion || null,
     status: profile.status,
     approvedBy,
   });
@@ -532,10 +583,16 @@ export const approveGovernanceProfile = (cpsId, approvedBy = 'human-operator') =
 export const rejectGovernanceProfile = (cpsId, rejectedBy = 'human-operator') => {
   const key = normalizeCpsKey(cpsId);
   const store = readStore();
-  const current = store.profiles[key] || buildGovernanceProfile(key);
+  const current = store.profiles[key] || null;
+  if (!current) {
+    const error = new Error('Governance Profile not found. Complete Plug first.');
+    error.status = 409;
+    error.details = { code: 'GOVERNANCE_PROFILE_REQUIRED', cpsId: key };
+    throw error;
+  }
   const profile = {
     ...current,
-    status: GOVERNANCE_STATUS.REJECTED,
+    status: GOVERNANCE_STATUS.DENIED,
     rejectedAt: nowIso(),
     rejectedBy,
   };
@@ -553,7 +610,6 @@ export const rejectGovernanceProfile = (cpsId, rejectedBy = 'human-operator') =>
     cpsId: key,
     profileId: profile.profileId,
     profileVersion: profile.profileVersion,
-    previousProfileVersion: profile.previousProfileVersion || null,
     status: profile.status,
     rejectedBy,
   });
@@ -770,6 +826,7 @@ export const decideGovernanceAction = async (actionId, decision, decidedBy = 'hu
 export const governanceStoreService = {
   ensureGovernanceProfile,
   createGovernanceProfileForPlug,
+  closeGovernancePlugCycle,
   getGovernanceProfile,
   updateGovernanceProfile,
   approveGovernanceProfile,

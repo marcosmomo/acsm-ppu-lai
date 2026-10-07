@@ -1,0 +1,491 @@
+[
+    {
+        "id":  "c3a0000000000001",
+        "type":  "tab",
+        "label":  "CPS-LAI-03 – Sorting Station",
+        "disabled":  true,
+        "info":  "READY_FOR_LAI_ACTIVATION\nIndependent read-only adapter for CPS-LAI-03. Only ns=3;s=OperatingMode is read as an operational scalar. Structural roots are metadata only; APPLICATION_TAGS_NOT_EXPOSED_BY_CURRENT_BROWSE. No process-state inference, production metrics, command path, or physical governance binding is implemented."
+    },
+    {
+        "id":  "c3a0000000000002",
+        "type":  "comment",
+        "z":  "c3a0000000000001",
+        "name":  "1. OPC UA READ ONLY – confirmed scalar only",
+        "info":  "Structural evidence only; never poll as scalar values: PLC=ns=3;s=PLC, Inputs=ns=3;s=Inputs, Outputs=ns=3;s=Outputs, Memory=ns=3;s=Memory, Counters=ns=3;s=Counters, Timers=ns=3;s=Timers, DataBlocksGlobal=ns=3;s=DataBlocksGlobal, DataBlocksInstance=ns=3;s=DataBlocksInstance.",
+        "x":  260,
+        "y":  60,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "c3a0000000000003",
+        "type":  "inject",
+        "z":  "c3a0000000000001",
+        "name":  "READ OperatingMode every 10 s – activate only at LAI",
+        "props":  [
+                      {
+                          "p":  "payload"
+                      },
+                      {
+                          "p":  "topic",
+                          "vt":  "str"
+                      }
+                  ],
+        "repeat":  "10",
+        "crontab":  "",
+        "once":  false,
+        "onceDelay":  0.1,
+        "topic":  "",
+        "payload":  "",
+        "payloadType":  "date",
+        "x":  260,
+        "y":  140,
+        "wires":  [
+                      [
+                          "c3a0000000000004"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a0000000000004",
+        "type":  "OpcUa-Item",
+        "z":  "c3a0000000000001",
+        "item":  "ns=3;s=OperatingMode",
+        "datatype":  "opcua.DataType.Int32",
+        "value":  "",
+        "name":  "OperatingMode → OperationModeRaw [confirmed read only]",
+        "x":  650,
+        "y":  140,
+        "wires":  [
+                      [
+                          "c3a0000000000005"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a0000000000005",
+        "type":  "OpcUa-Client",
+        "z":  "c3a0000000000001",
+        "endpoint":  "c3a0000000000015",
+        "action":  "read",
+        "deadbandtype":  "a",
+        "deadbandvalue":  0,
+        "time":  10,
+        "timeUnit":  "s",
+        "certificate":  "n",
+        "localfile":  "",
+        "localkeyfile":  "",
+        "securitymode":  "None",
+        "securitypolicy":  "None",
+        "useTransport":  false,
+        "maxChunkCount":  1,
+        "maxMessageSize":  8192,
+        "receiveBufferSize":  8192,
+        "sendBufferSize":  8192,
+        "setstatusandtime":  true,
+        "keepsessionalive":  true,
+        "name":  "CPS-LAI-03 OPC UA READ",
+        "applicationName":  "",
+        "applicationUri":  "",
+        "x":  970,
+        "y":  140,
+        "wires":  [
+                      [
+                          "c3a0000000000006"
+                      ],
+                      [
+                          "c3a0000000000013"
+                      ],
+                      [
+                          "c3a0000000000013"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a0000000000006",
+        "type":  "function",
+        "z":  "c3a0000000000001",
+        "name":  "Normalize + cache OperatingMode",
+        "func":  "const expectedNodeId = \u0027ns=3;s=OperatingMode\u0027;\nconst rawTopic = String(msg.topic || \u0027\u0027).trim();\nconst nodeId = rawTopic.split(\u0027;datatype=\u0027)[0].trim();\nif (nodeId !== expectedNodeId) {\n    node.warn(\u0027Rejected unexpected OPC UA NodeId: \u0027 + nodeId);\n    return null;\n}\nif (msg.payload === null || msg.payload === undefined) {\n    node.warn(\u0027Rejected null OPC UA value for OperatingMode\u0027);\n    return null;\n}\nconst statusValue = typeof msg.statusCode === \u0027number\u0027\n    ? msg.statusCode\n    : (msg.statusCode \u0026\u0026 typeof msg.statusCode.value === \u0027number\u0027 ? msg.statusCode.value : null);\nif (statusValue !== null \u0026\u0026 statusValue !== 0) {\n    node.warn(\u0027Rejected OPC UA StatusCode for OperatingMode: \u0027 + statusValue);\n    return null;\n}\nlet value = msg.payload;\nwhile (value !== null \u0026\u0026 typeof value === \u0027object\u0027 \u0026\u0026 Object.prototype.hasOwnProperty.call(value, \u0027value\u0027)) {\n    value = value.value;\n}\nconst numericValue = typeof value === \u0027number\u0027 ? value : Number(value);\nif (!Number.isInteger(numericValue) || numericValue \u003c -2147483648 || numericValue \u003e 2147483647) {\n    node.warn(\u0027Rejected non-Int32 OperatingMode value: \u0027 + JSON.stringify(value));\n    return null;\n}\nconst nowMs = Date.now();\nconst nowIso = new Date(nowMs).toISOString();\nconst toIsoOrNull = (input) =\u003e {\n    if (!input) return null;\n    const parsed = new Date(input);\n    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();\n};\nconst sample = {\n    field: \u0027OperationModeRaw\u0027,\n    nodeId,\n    dataType: \u0027Int32\u0027,\n    value: numericValue,\n    timestamp: nowIso,\n    sourceTimestamp: toIsoOrNull(msg.sourceTimestamp),\n    serverTimestamp: toIsoOrNull(msg.serverTimestamp),\n    evidenceStatus: \u0027CONFIRMED\u0027,\n    semanticMappingStatus: \u0027PENDING\u0027\n};\nlet latest = global.get(\u0027cpslai3_latest\u0027);\nif (!latest || typeof latest !== \u0027object\u0027 || Array.isArray(latest)) latest = {};\nlatest.OperationModeRaw = sample;\nglobal.set(\u0027cpslai3_latest\u0027, latest);\nglobal.set(\u0027cpslai3_last_update_ms\u0027, nowMs);\nmsg.payload = { cpsId: \u0027cpslai3\u0027, ...sample };\nreturn msg;",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  1260,
+        "y":  140,
+        "wires":  [
+                      [
+                          "c3a0000000000014"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a0000000000007",
+        "type":  "status",
+        "z":  "c3a0000000000001",
+        "name":  "CPS-LAI-03 OPC UA connection status",
+        "scope":  [
+                      "c3a0000000000005"
+                  ],
+        "x":  280,
+        "y":  220,
+        "wires":  [
+                      [
+                          "c3a0000000000008"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a0000000000008",
+        "type":  "function",
+        "z":  "c3a0000000000001",
+        "name":  "Store CPS-LAI-03 OPC UA status",
+        "func":  "const status = msg.status \u0026\u0026 typeof msg.status === \u0027object\u0027 ? msg.status : {};\nconst text = String(status.text || \u0027\u0027).trim();\nconst normalized = text.toLowerCase();\nconst connected = !/(disconnected|error|failed|closed)/.test(normalized) \u0026\u0026 /(connected|active|session)/.test(normalized);\nconst record = { connected, status, timestamp: new Date().toISOString() };\nflow.set(\u0027cpslai3_opcua_status\u0027, record);\nmsg.payload = { cpsId: \u0027cpslai3\u0027, communication: record };\nreturn msg;",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  670,
+        "y":  220,
+        "wires":  [
+                      [
+                          "c3a0000000000014"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a0000000000009",
+        "type":  "comment",
+        "z":  "c3a0000000000001",
+        "name":  "2. ACSM lifecycle is authoritative",
+        "info":  "Accepted phases: plug, play, stop, maintenance, return, unplug. Lifecycle never derives physical state.",
+        "x":  250,
+        "y":  320,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "c3a000000000000a",
+        "type":  "mqtt in",
+        "z":  "c3a0000000000001",
+        "name":  "MQTT ACSM lifecycle cpslai3",
+        "topic":  "acsm/cpslai3/lifecycle",
+        "qos":  "1",
+        "datatype":  "auto",
+        "broker":  "c3a0000000000016",
+        "nl":  false,
+        "rap":  true,
+        "rh":  0,
+        "inputs":  0,
+        "x":  250,
+        "y":  380,
+        "wires":  [
+                      [
+                          "c3a000000000000b"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a000000000000b",
+        "type":  "function",
+        "z":  "c3a0000000000001",
+        "name":  "Store ACSM lifecyclePhase for cpslai3",
+        "func":  "let data = msg.payload;\nif (Buffer.isBuffer(data)) data = data.toString(\u0027utf8\u0027);\nif (typeof data === \u0027string\u0027) {\n    try { data = JSON.parse(data); } catch (error) {\n        node.warn(\u0027Rejected invalid lifecycle JSON\u0027);\n        return null;\n    }\n}\nif (!data || typeof data !== \u0027object\u0027 || Array.isArray(data)) return null;\nif (data.cpsId \u0026\u0026 String(data.cpsId).trim().toLowerCase() !== \u0027cpslai3\u0027) {\n    node.warn(\u0027Rejected lifecycle for unexpected cpsId\u0027);\n    return null;\n}\nconst allowed = [\u0027plug\u0027, \u0027play\u0027, \u0027stop\u0027, \u0027maintenance\u0027, \u0027return\u0027, \u0027unplug\u0027];\nconst phase = String(data.lifecyclePhase || \u0027\u0027).trim().toLowerCase();\nif (!allowed.includes(phase)) {\n    node.warn(\u0027Rejected unsupported lifecycle phase: \u0027 + phase);\n    return null;\n}\nconst nowMs = Date.now();\nflow.set(\u0027cpslai3_lifecycle_phase\u0027, phase);\nflow.set(\u0027cpslai3_lifecycle_phase_ts\u0027, nowMs);\nflow.set(\u0027cpslai3_lifecycle_phase_source\u0027, String(data.source || \u0027ACSM\u0027));\nflow.set(\u0027cpslai3_lifecycle_phase_message_ts\u0027, data.timestamp || null);\nmsg.payload = { cpsId: \u0027cpslai3\u0027, lifecyclePhase: phase, source: String(data.source || \u0027ACSM\u0027), sourceTimestamp: data.timestamp || null, receivedAt: new Date(nowMs).toISOString() };\nreturn msg;",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  620,
+        "y":  380,
+        "wires":  [
+                      [
+                          "c3a0000000000014"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a000000000000c",
+        "type":  "comment",
+        "z":  "c3a0000000000001",
+        "name":  "3. Build evidence-only MQTT payloads",
+        "info":  "Data is emitted only after a real validated OperatingMode sample. Status remains UNKNOWN. OEE remains NOT_INITIALIZED.",
+        "x":  260,
+        "y":  500,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "c3a000000000000d",
+        "type":  "inject",
+        "z":  "c3a0000000000001",
+        "name":  "PUBLISH evidence snapshot every 10 s – activate only at LAI",
+        "props":  [
+                      {
+                          "p":  "payload"
+                      },
+                      {
+                          "p":  "topic",
+                          "vt":  "str"
+                      }
+                  ],
+        "repeat":  "10",
+        "crontab":  "",
+        "once":  false,
+        "onceDelay":  0.1,
+        "topic":  "",
+        "payload":  "",
+        "payloadType":  "date",
+        "x":  300,
+        "y":  580,
+        "wires":  [
+                      [
+                          "c3a000000000000e"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a000000000000e",
+        "type":  "function",
+        "z":  "c3a0000000000001",
+        "name":  "Build CPS-LAI-03 MQTT snapshot",
+        "func":  "const latest = global.get(\u0027cpslai3_latest\u0027) || {};\nconst lastUpdateMs = global.get(\u0027cpslai3_last_update_ms\u0027) || null;\nconst operationModeEvidence = latest.OperationModeRaw || null;\nconst communication = flow.get(\u0027cpslai3_opcua_status\u0027) || { connected: false, status: {}, timestamp: null };\nconst lifecyclePhase = flow.get(\u0027cpslai3_lifecycle_phase\u0027) || null;\nconst nowMs = Date.now();\nconst nowIso = new Date(nowMs).toISOString();\nconst dataAgeMs = lastUpdateMs === null ? null : Math.max(0, nowMs - Number(lastUpdateMs));\nconst dataPayload = operationModeEvidence ? {\n    schemaVersion: \u00271.0\u0027,\n    cpsId: \u0027cpslai3\u0027,\n    assetName: \u0027SortingStationLAI\u0027,\n    displayName: \u0027CPS-LAI-03 – Sorting Station\u0027,\n    source: \u0027OPC_UA\u0027,\n    endpoint: \u0027opc.tcp://192.168.1.30:4840\u0027,\n    timestamp: nowIso,\n    operationModeRaw: operationModeEvidence.value,\n    operationMode: \u0027UNKNOWN\u0027,\n    operationModeSemanticStatus: \u0027PENDING\u0027,\n    evidence: { OperatingMode: operationModeEvidence }\n} : null;\nconst statusPayload = {\n    schemaVersion: \u00271.0\u0027,\n    cpsId: \u0027cpslai3\u0027,\n    timestamp: nowIso,\n    lifecyclePhase,\n    operationModeRaw: operationModeEvidence ? operationModeEvidence.value : null,\n    operationMode: \u0027UNKNOWN\u0027,\n    operationModeSemanticStatus: \u0027PENDING\u0027,\n    operationalState: \u0027UNKNOWN\u0027,\n    operationalStateReason: \u0027INSUFFICIENT_PHYSICAL_EVIDENCE\u0027,\n    communication: { connected: communication.connected === true, status: communication.status || {}, statusTimestamp: communication.timestamp || null, lastValidatedSampleAt: operationModeEvidence ? operationModeEvidence.timestamp : null, dataAgeMs },\n    evidenceStatus: operationModeEvidence ? \u0027PARTIAL_CONFIRMED_EVIDENCE\u0027 : \u0027INSUFFICIENT_PHYSICAL_EVIDENCE\u0027\n};\nconst oeePayload = {\n    schemaVersion: \u00271.0\u0027,\n    cpsId: \u0027cpslai3\u0027,\n    timestamp: nowIso,\n    calculationState: \u0027NOT_INITIALIZED\u0027,\n    oee: { current: null, availability: null, performance: null, quality: null },\n    evidenceStatus: \u0027INSUFFICIENT_PROCESS_DATA\u0027\n};\nreturn [\n    dataPayload ? { payload: JSON.stringify(dataPayload) } : null,\n    { payload: JSON.stringify(statusPayload) },\n    { payload: JSON.stringify(oeePayload) }\n];",
+        "outputs":  3,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  720,
+        "y":  580,
+        "wires":  [
+                      [
+                          "c3a000000000000f"
+                      ],
+                      [
+                          "c3a0000000000010"
+                      ],
+                      [
+                          "c3a0000000000011"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a000000000000f",
+        "type":  "mqtt out",
+        "z":  "c3a0000000000001",
+        "name":  "MQTT cpslai3/data",
+        "topic":  "cpslai3/data",
+        "qos":  "0",
+        "retain":  "false",
+        "respTopic":  "",
+        "contentType":  "application/json",
+        "userProps":  "",
+        "correl":  "",
+        "expiry":  "",
+        "broker":  "c3a0000000000016",
+        "x":  1110,
+        "y":  540,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "c3a0000000000010",
+        "type":  "mqtt out",
+        "z":  "c3a0000000000001",
+        "name":  "MQTT cpslai3/status",
+        "topic":  "cpslai3/status",
+        "qos":  "0",
+        "retain":  "false",
+        "respTopic":  "",
+        "contentType":  "application/json",
+        "userProps":  "",
+        "correl":  "",
+        "expiry":  "",
+        "broker":  "c3a0000000000016",
+        "x":  1110,
+        "y":  580,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "c3a0000000000011",
+        "type":  "mqtt out",
+        "z":  "c3a0000000000001",
+        "name":  "MQTT cpslai3/oee",
+        "topic":  "cpslai3/oee",
+        "qos":  "0",
+        "retain":  "false",
+        "respTopic":  "",
+        "contentType":  "application/json",
+        "userProps":  "",
+        "correl":  "",
+        "expiry":  "",
+        "broker":  "c3a0000000000016",
+        "x":  1100,
+        "y":  620,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "c3a0000000000012",
+        "type":  "catch",
+        "z":  "c3a0000000000001",
+        "name":  "CPS-LAI-03 adapter errors",
+        "scope":  [
+                      "c3a0000000000005",
+                      "c3a0000000000006",
+                      "c3a0000000000008",
+                      "c3a000000000000b",
+                      "c3a000000000000e"
+                  ],
+        "uncaught":  false,
+        "x":  260,
+        "y":  720,
+        "wires":  [
+                      [
+                          "c3a0000000000013"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a0000000000013",
+        "type":  "debug",
+        "z":  "c3a0000000000001",
+        "name":  "CPS-LAI-03 OPC UA / adapter errors",
+        "active":  false,
+        "tosidebar":  true,
+        "console":  false,
+        "tostatus":  false,
+        "complete":  "true",
+        "targetType":  "full",
+        "x":  650,
+        "y":  720,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "c3a0000000000014",
+        "type":  "debug",
+        "z":  "c3a0000000000001",
+        "name":  "CPS-LAI-03 evidence diagnostics",
+        "active":  false,
+        "tosidebar":  true,
+        "console":  false,
+        "tostatus":  false,
+        "complete":  "payload",
+        "targetType":  "msg",
+        "x":  1450,
+        "y":  260,
+        "wires":  [
+
+                  ]
+    },
+    {
+        "id":  "c3a0000000000017",
+        "type":  "inject",
+        "z":  "c3a0000000000001",
+        "name":  "RESET CPS-LAI-03 CONTEXT",
+        "props":  [
+                      {
+                          "p":  "payload"
+                      }
+                  ],
+        "repeat":  "",
+        "crontab":  "",
+        "once":  false,
+        "onceDelay":  0.1,
+        "payload":  "",
+        "payloadType":  "date",
+        "x":  250,
+        "y":  800,
+        "wires":  [
+                      [
+                          "c3a0000000000018"
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a0000000000018",
+        "type":  "function",
+        "z":  "c3a0000000000001",
+        "name":  "Clear CPS-LAI-03 context only",
+        "func":  "global.set(\u0027cpslai3_latest\u0027, {});\nglobal.set(\u0027cpslai3_last_update_ms\u0027, 0);\nflow.set(\u0027cpslai3_opcua_status\u0027, { connected: false, status: {}, timestamp: null });\nflow.set(\u0027cpslai3_lifecycle_phase\u0027, null);\nflow.set(\u0027cpslai3_lifecycle_phase_ts\u0027, null);\nflow.set(\u0027cpslai3_lifecycle_phase_source\u0027, null);\nflow.set(\u0027cpslai3_lifecycle_phase_message_ts\u0027, null);\nnode.warn(\u0027CPS-LAI-03 context cleared\u0027);\nreturn null;",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "x":  590,
+        "y":  800,
+        "wires":  [
+                      [
+
+                      ]
+                  ]
+    },
+    {
+        "id":  "c3a0000000000015",
+        "type":  "OpcUa-Endpoint",
+        "endpoint":  "opc.tcp://192.168.1.30:4840",
+        "secpol":  "None",
+        "secmode":  "None",
+        "none":  true,
+        "login":  false
+    },
+    {
+        "id":  "c3a0000000000016",
+        "type":  "mqtt-broker",
+        "name":  "ACSM Mosquitto localhost – cpslai3",
+        "broker":  "localhost",
+        "port":  "1883",
+        "clientid":  "nodered-cpslai3-adapter",
+        "autoConnect":  true,
+        "usetls":  false,
+        "protocolVersion":  "4",
+        "keepalive":  "60",
+        "cleansession":  true,
+        "autoUnsubscribe":  true,
+        "birthTopic":  "",
+        "birthQos":  "0",
+        "birthPayload":  "",
+        "birthMsg":  {
+
+                     },
+        "closeTopic":  "",
+        "closeQos":  "0",
+        "closePayload":  "",
+        "closeMsg":  {
+
+                     },
+        "willTopic":  "",
+        "willQos":  "0",
+        "willPayload":  "",
+        "willMsg":  {
+
+                    }
+    }
+]

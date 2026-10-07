@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0",
+  "cpsId": "cpslai2",
+  "station": "Joining Station",
+  "endpoint": "opc.tcp://192.168.1.20:4840",
+  "accessMode": "READ_ONLY",
+  "structuralRoots": {
+    "PLC": "ns=3;s=PLC",
+    "Inputs": "ns=3;s=Inputs",
+    "Outputs": "ns=3;s=Outputs",
+    "Memory": "ns=3;s=Memory",
+    "Counters": "ns=3;s=Counters",
+    "Timers": "ns=3;s=Timers",
+    "DataBlocksGlobal": "ns=3;s=DataBlocksGlobal",
+    "DataBlocksInstance": "ns=3;s=DataBlocksInstance"
+  },
+  "fields": {
+    "OperatingMode": {
+      "PLCTag": "OperatingMode",
+      "PLCAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "OPCUANodeId": "ns=3;s=OperatingMode",
+      "DataType": "Int32",
+      "AccessMode": "READ",
+      "EvidenceStatus": "CONFIRMED",
+      "SemanticMappingStatus": "PENDING"
+    },
+    "PieceAtEntry": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "PiecePositioned": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "PieceAtExit": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "JoiningReady": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "JoiningActive": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "JoiningCompleted": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "JoiningError": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "JoiningForce": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "JoiningPressure": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "GoodPieceCount": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "BadPieceCount": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "TotalPieceCount": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "ProcessingTimeMs": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "Alarm": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "Fault": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "Play": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "Stop": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" },
+    "Reset": { "PLCTag": "FIELD_CONFIRMATION_REQUIRED", "PLCAddress": "FIELD_CONFIRMATION_REQUIRED", "OPCUANodeId": "FIELD_CONFIRMATION_REQUIRED", "DataType": "FIELD_CONFIRMATION_REQUIRED", "AccessMode": "UNBOUND", "EvidenceStatus": "PENDING" }
+  }
+}

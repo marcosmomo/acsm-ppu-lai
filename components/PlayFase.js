@@ -91,8 +91,16 @@ const humanizeGlobalState = (state) => {
   if (s === 'failure') return 'Failure';
   if (s === 'ready') return 'Ready';
   if (s === 'unplugged') return 'Unplugged';
+  if (s === 'unknown') return 'UNKNOWN';
 
   return '—';
+};
+
+const humanizeOperationMode = (mode) => {
+  const normalized = String(mode || 'UNKNOWN').trim().toUpperCase();
+  return ['INIT', 'MANUAL', 'STEP_BY_STEP', 'AUTOMATIC', 'UNKNOWN'].includes(normalized)
+    ? normalized
+    : 'UNKNOWN';
 };
 
 const mapGlobalStateBadgeClass = (state) => {
@@ -114,7 +122,20 @@ const formatPercent = (value) => {
   return `${(n * 100).toFixed(1)}%`;
 };
 
+const formatProductionCount = (value) => {
+  if (value === null || value === undefined || value === '') return '\u2014';
+  const n = Number(value);
+  return Number.isFinite(n) ? String(Math.trunc(n)) : '\u2014';
+};
+
+const formatCycleTimeMs = (value) => {
+  if (value === null || value === undefined || value === '') return '\u2014';
+  const n = Number(value);
+  return Number.isFinite(n) ? `${(n / 1000).toFixed(3)} s` : '\u2014';
+};
+
 const humanizeOeeLabel = (value) => {
+  if (value === null || value === undefined || value === '') return '\u2014';
   const n = Number(value);
   if (!Number.isFinite(n)) return '—';
   if (n >= 0.85) return 'Excellent';
@@ -124,6 +145,7 @@ const humanizeOeeLabel = (value) => {
 };
 
 const mapOeeBadgeClass = (value) => {
+  if (value === null || value === undefined || value === '') return 'feat-badge';
   const n = Number(value);
   if (!Number.isFinite(n)) return 'feat-badge';
   if (n >= 0.85) return 'feat-badge feat-active';
@@ -447,6 +469,9 @@ const PlayFase = () => {
     error: null,
   });
   const [playApiCopyFeedback, setPlayApiCopyFeedback] = useState('');
+  const [unpluggingCpsId, setUnpluggingCpsId] = useState(null);
+  const [unplugError, setUnplugError] = useState('');
+  const [unplugSuccess, setUnplugSuccess] = useState('');
   const visibleCPS = Array.isArray(playPhaseCPS) ? playPhaseCPS : addedCPS;
   const registeredCpsCount =
     Array.isArray(acsmConfig?.managedCpsIds) && acsmConfig.managedCpsIds.length > 0
@@ -483,7 +508,9 @@ const PlayFase = () => {
 
   const globalOee = useMemo(() => {
     const validOees = visibleCPS
-      .map((cps) => Number(cps?.oee?.value ?? cps?.oee?.current))
+      .map((cps) => cps?.oee?.value ?? cps?.oee?.current)
+      .filter((value) => value !== null && value !== undefined && value !== '')
+      .map(Number)
       .filter((v) => Number.isFinite(v) && v >= 0);
 
     if (!validOees.length) {
@@ -607,10 +634,17 @@ const PlayFase = () => {
   };
 
   const handleExit = async (cps) => {
+    setUnplugError('');
+    setUnplugSuccess('');
+    setUnpluggingCpsId(cps?.id || null);
     try {
-      await Promise.resolve(unplugCPS(cps.nome));
+      const ok = await unplugCPS(cps?.id || cps?.cpsId);
+      if (!ok) throw new Error('ACSM did not complete the Unplug transition.');
+      setUnplugSuccess(`${cps?.nome || cps?.id} was unplugged in the ACSM.`);
     } catch (e) {
-      alert(`Failed to unplug CPS: ${e?.message || e}`);
+      setUnplugError(`Unable to unplug ${cps?.nome || cps?.id}: ${e?.message || e}`);
+    } finally {
+      setUnpluggingCpsId(null);
     }
   };
 
@@ -619,6 +653,8 @@ const PlayFase = () => {
       <div className="added-cps-display-play">
         <div className="play-phase-summary">
           <h2>Play Phase</h2>
+          {unplugError ? <div className="play-api-error" role="alert">{unplugError}</div> : null}
+          {unplugSuccess ? <div className="plug-feedback plug-feedback-success" role="status">{unplugSuccess}</div> : null}
 
           <h3>CPS in Play Phase:</h3>
 
@@ -730,6 +766,7 @@ const PlayFase = () => {
               const globalStateText = humanizeGlobalState(globalStateValue);
               const globalStateBadgeCls = mapGlobalStateBadgeClass(globalStateValue);
               const globalStateWhen = formatDateTime(cps.globalState?.lastUpdate);
+              const operationModeText = humanizeOperationMode(cps?.operationalData?.operationMode);
 
               const healthScore = cps.health?.score ?? null;
               const healthLabel = cps.health?.label ?? null;
@@ -744,6 +781,9 @@ const PlayFase = () => {
               const oeeText = humanizeOeeLabel(oeeValue);
               const oeeBadgeCls = mapOeeBadgeClass(oeeValue);
               const oeeWhen = formatDateTime(cps.oee?.lastUpdate);
+              const isCpsLai1 =
+                normalizeCpsId(cps?.id || cps?.cpsId || cps?.topic) === 'cpslai1';
+              const production = isCpsLai1 ? cps?.production : null;
               const governanceStatus = String(
                 cps?.governanceStatus || cps?.governanceProfile?.status || 'NOT_DEFINED'
               );
@@ -989,8 +1029,9 @@ const PlayFase = () => {
                             className="exit-btn"
                             title="Remove CPS from Play Phase"
                             onClick={() => handleExit(cps)}
+                            disabled={unpluggingCpsId === cps?.id}
                           >
-                            Unplug
+                            {unpluggingCpsId === cps?.id ? 'Unplugging…' : 'Unplug'}
                           </button>
                         </>
                       )}
@@ -1094,7 +1135,7 @@ const PlayFase = () => {
                   <div className="single-feature-card" style={{ marginBottom: 12 }}>
                     <div className="single-feature-row" style={{ marginBottom: 0 }}>
                       <div className="single-feature-title">
-                        Global CPS State: <strong>{globalStateText}</strong>
+                        Operational State: <strong>{globalStateText}</strong>
                       </div>
 
                       <div className="single-feature-status">
@@ -1108,6 +1149,26 @@ const PlayFase = () => {
                       </div>
                     </div>
                   </div>
+
+                  {isCpsLai1 && (
+                    <div className="single-feature-card" style={{ marginBottom: 12 }}>
+                      <div className="single-feature-row" style={{ marginBottom: 0 }}>
+                        <div className="single-feature-title">
+                          Operation Mode: <strong>{operationModeText}</strong>
+                        </div>
+
+                        <div className="single-feature-status">
+                          <span className="feat-badge">{operationModeText}</span>
+                        </div>
+
+                        <div className="single-feature-meta">
+                          <div className="single-feature-time">
+                            Last state update: <span>{globalStateWhen}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="single-feature-card" style={{ marginBottom: 12 }}>
                     <div className="single-feature-row" style={{ marginBottom: 0 }}>
@@ -1157,6 +1218,42 @@ const PlayFase = () => {
                         Quality: <strong>{formatPercent(oeeQuality)}</strong>
                       </div>
                     </div>
+
+                    {isCpsLai1 && (
+                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e2e8f0' }}>
+                        <div className="single-feature-title" style={{ marginBottom: 8 }}>
+                          <strong>Production Metrics</strong>
+                        </div>
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                            gap: 8,
+                          }}
+                        >
+                          <div className="single-feature-title">
+                            Total Count:{' '}
+                            <strong>{formatProductionCount(production?.totalCount)}</strong>
+                          </div>
+                          <div className="single-feature-title">
+                            Completed Cycles:{' '}
+                            <strong>{formatProductionCount(production?.completedCycles)}</strong>
+                          </div>
+                          <div className="single-feature-title">
+                            Incomplete Cycles:{' '}
+                            <strong>{formatProductionCount(production?.incompleteCycles)}</strong>
+                          </div>
+                          <div className="single-feature-title">
+                            Last Cycle Time:{' '}
+                            <strong>{formatCycleTimeMs(production?.lastCycleTimeMs)}</strong>
+                          </div>
+                          <div className="single-feature-title">
+                            Average Cycle Time:{' '}
+                            <strong>{formatCycleTimeMs(production?.averageCycleTimeMs)}</strong>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="single-feature-card">
