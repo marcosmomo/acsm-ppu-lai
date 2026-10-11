@@ -141,6 +141,7 @@ const physicalModeEntry = (operationMode, overrides = {}) => {
     semanticMappingStatus: 'PHYSICALLY_VALIDATED_MODE_MARKER',
   });
   const values = {
+    INIT: [false, false, false],
     MANUAL: [true, false, false],
     AUTOMATIC: [false, true, false],
     STEP_BY_STEP: [false, false, true],
@@ -156,6 +157,7 @@ const physicalModeEntry = (operationMode, overrides = {}) => {
       derivedAt: collectedAt,
     },
     data: {
+      GCT_0: modeSample('GCT_0', operationMode === 'INIT'),
       sys_man: modeSample('sys_man', values[0]),
       sys_sup: modeSample('sys_sup', values[1]),
       sys_man2: modeSample('sys_man2', values[2]),
@@ -165,14 +167,41 @@ const physicalModeEntry = (operationMode, overrides = {}) => {
 };
 
 test('card selector accepts each current validated physical operation mode', () => {
-  for (const mode of ['MANUAL', 'AUTOMATIC', 'STEP_BY_STEP', 'UNKNOWN']) {
+  for (const mode of ['INIT', 'MANUAL', 'AUTOMATIC', 'STEP_BY_STEP', 'UNKNOWN']) {
     assert.equal(getCpsLai2PhysicalOperationMode(physicalModeEntry(mode), true), mode);
   }
 });
 
-test('card selector returns UNKNOWN without telemetry or with stale telemetry', () => {
-  assert.equal(getCpsLai2PhysicalOperationMode(null, true), 'UNKNOWN');
+test('card selector returns INIT without telemetry and UNKNOWN with stale telemetry', () => {
+  assert.equal(getCpsLai2PhysicalOperationMode(null, true), 'INIT');
   assert.equal(getCpsLai2PhysicalOperationMode(physicalModeEntry('MANUAL'), false), 'UNKNOWN');
+});
+
+test('a retained or historical invalid snapshot is evidence and therefore not INIT', () => {
+  const historical = physicalModeEntry('MANUAL', {
+    publishedAt: '2020-01-01T00:00:00.000Z',
+  });
+  historical.data.sys_man.stale = true;
+  historical.data.sys_man.valid = false;
+  assert.equal(getCpsLai2PhysicalOperationMode(historical, true), 'UNKNOWN');
+
+  const recentlyRepublished = {
+    ...historical,
+    publishedAt: new Date().toISOString(),
+  };
+  assert.equal(getCpsLai2PhysicalOperationMode(recentlyRepublished, true), 'UNKNOWN');
+});
+
+test('CPS-LAI-02 leaves INIT on first valid physical mode and never masks later failures', () => {
+  assert.equal(getCpsLai2PhysicalOperationMode(null, false), 'INIT');
+  for (const mode of ['MANUAL', 'AUTOMATIC', 'STEP_BY_STEP']) {
+    assert.equal(getCpsLai2PhysicalOperationMode(physicalModeEntry(mode), true), mode);
+  }
+  assert.equal(getCpsLai2PhysicalOperationMode(physicalModeEntry('MANUAL'), false), 'UNKNOWN');
+  const conflict = physicalModeEntry('UNKNOWN');
+  conflict.data.sys_man.value = true;
+  conflict.data.sys_sup.value = true;
+  assert.equal(getCpsLai2PhysicalOperationMode(conflict, true), 'UNKNOWN');
 });
 
 test('card selector rejects invalid derivation and invalid marker evidence', () => {

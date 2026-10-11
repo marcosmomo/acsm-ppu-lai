@@ -1,694 +1,1044 @@
 [
-    {
-        "id":  "c3a0000000000001",
-        "type":  "tab",
-        "label":  "CPS-LAI-03 â€“ Sorting Station",
-        "disabled":  true,
-        "info":  "READY_FOR_LAI_ACTIVATION\nIndependent read-only adapter for CPS-LAI-03. The physically correlated mode markers sys_man, sys_sup and sys_man2 are read through the single existing OPC UA client. Datatype, quality and freshness remain mandatory evidence. No process-state inference, production metrics, command path, or physical governance binding is implemented."
-    },
-    {
-        "id":  "c3a0000000000002",
-        "type":  "comment",
-        "z":  "c3a0000000000001",
-        "name":  "1. OPC UA READ ONLY â€“ confirmed scalar only",
-        "info":  "Structural evidence only; never poll as scalar values: PLC=ns=3;s=PLC, Inputs=ns=3;s=Inputs, Outputs=ns=3;s=Outputs, Memory=ns=3;s=Memory, Counters=ns=3;s=Counters, Timers=ns=3;s=Timers, DataBlocksGlobal=ns=3;s=DataBlocksGlobal, DataBlocksInstance=ns=3;s=DataBlocksInstance.",
-        "x":  260,
-        "y":  60,
-        "wires":  [
-
-                  ]
-    },
-    {
-        "id":  "c3a0000000000003",
-        "type":  "inject",
-        "z":  "c3a0000000000001",
-        "name":  "READ OperatingMode every 10 s â€“ activate only at LAI",
-        "props":  [
-                      {
-                          "p":  "payload"
-                      },
-                      {
-                          "p":  "topic",
-                          "vt":  "str"
-                      }
-                  ],
-        "repeat":  "2",
-        "crontab":  "",
-        "once":  false,
-        "onceDelay":  0.1,
-        "topic":  "",
-        "payload":  "",
-        "payloadType":  "date",
-        "x":  260,
-        "y":  140,
-        "wires":  [
-                      [
-                          "c3a0000000000004",
-                          "c3a000000000001a"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a0000000000004",
-        "type":  "function",
-        "z":  "c3a0000000000001",
-        "func":  "const TAGS = [\n  { tag:\u0027sys_man\u0027, nodeId:\u0027ns=3;s=\\\"sys_man\\\"\u0027 },\n  { tag:\u0027sys_sup\u0027, nodeId:\u0027ns=3;s=\\\"sys_sup\\\"\u0027 },\n  { tag:\u0027sys_man2\u0027, nodeId:\u0027ns=3;s=\\\"sys_man2\\\"\u0027 }\n];\nconst now = Date.now();\nconst active = flow.get(\u0027cpslai3_mode_read_batch\u0027);\nif (active \u0026\u0026 now \u003c= active.expiresAt \u0026\u0026 active.received.length \u003c TAGS.length) return null;\nconst batchId = `cpslai3-mode-${now}`;\nflow.set(\u0027cpslai3_mode_read_batch\u0027, { batchId, expiresAt:now + 6000, received:[], expected:TAGS.map(tag =\u003e tag.nodeId) });\nflow.set(\u0027cpslai3_mode_tags\u0027, Object.fromEntries(TAGS.map(tag =\u003e [tag.nodeId, tag])));\nreturn [TAGS.map(tag =\u003e ({ topic:tag.nodeId, payload:\u0027\u0027, _tag:tag.tag, _nodeId:tag.nodeId, _batchId:batchId, _readRequestedAt:new Date(now).toISOString() }))];",
-        "outputs":  1,
-        "timeout":  0,
-        "noerr":  0,
-        "initialize":  "",
-        "finalize":  "",
-        "libs":  [
-
-                 ],
-        "name":  "OperatingMode â†’ OperationModeRaw [confirmed read only]",
-        "x":  650,
-        "y":  140,
-        "wires":  [
-                      [
-                          "c3a0000000000005"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a0000000000005",
-        "type":  "OpcUa-Client",
-        "z":  "c3a0000000000001",
-        "endpoint":  "c3a0000000000015",
-        "action":  "info",
-        "deadbandtype":  "a",
-        "deadbandvalue":  0,
-        "time":  10,
-        "timeUnit":  "s",
-        "certificate":  "n",
-        "localfile":  "",
-        "localkeyfile":  "",
-        "securitymode":  "None",
-        "securitypolicy":  "None",
-        "useTransport":  false,
-        "maxChunkCount":  1,
-        "maxMessageSize":  8192,
-        "receiveBufferSize":  8192,
-        "sendBufferSize":  8192,
-        "setstatusandtime":  true,
-        "keepsessionalive":  true,
-        "name":  "CPS-LAI-03 OPC UA READ",
-        "applicationName":  "",
-        "applicationUri":  "",
-        "x":  970,
-        "y":  140,
-        "wires":  [
-                      [
-                          "c3a000000000001b"
-                      ],
-                      [
-                          "c3a0000000000013"
-                      ],
-                      [
-                          "c3a0000000000013"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a0000000000006",
-        "type":  "function",
-        "z":  "c3a0000000000001",
-        "name":  "Validate and cache physical mode marker",
-        "func":  "const configured = flow.get('cpslai3_mode_tags') || {};\nconst nodeId = String(msg._nodeId || msg.topic || '').split(';datatype=')[0].trim();\nconst meta = configured[nodeId];\nif (!meta || (msg._tag && msg._tag !== meta.tag)) { node.warn('Rejected unexpected CPS-LAI-03 OPC UA sample: ' + nodeId); return null; }\nconst batch = flow.get('cpslai3_mode_read_batch');\nif (!batch || batch.batchId !== msg._batchId || Date.now() > batch.expiresAt || batch.received.includes(nodeId)) { node.warn('Rejected late, unknown or duplicate CPS-LAI-03 read response: ' + nodeId); return null; }\nbatch.received.push(nodeId);\nflow.set('cpslai3_mode_read_batch', batch.received.length === batch.expected.length ? null : batch);\n\nconst hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);\nconst raw = hasOwn(msg, 'value') ? msg.value\n  : hasOwn(msg.payload, 'value') ? msg.payload.value\n    : hasOwn(msg.payload?.attributes, 'value') ? msg.payload.attributes.value\n      : undefined;\nconst dataTypeAttribute = msg.dataType ?? msg.dataTypeNodeId ?? msg.attributes?.dataType\n  ?? msg.payload?.dataTypeNodeId ?? msg.payload?.attributes?.dataType ?? null;\nconst dataTypeNodeId = (() => {\n  if (dataTypeAttribute === null || dataTypeAttribute === undefined || dataTypeAttribute === '') return null;\n  if (typeof dataTypeAttribute === 'string') return dataTypeAttribute.trim();\n  if (typeof dataTypeAttribute?.toString === 'function') {\n    const text = dataTypeAttribute.toString();\n    if (text && text !== '[object Object]') return text.trim();\n  }\n  const namespace = dataTypeAttribute.namespace ?? dataTypeAttribute.namespaceIndex;\n  const value = dataTypeAttribute.value ?? dataTypeAttribute.identifier;\n  if (Number(namespace) === 0 && value !== undefined) return 'ns=0;i=' + String(value);\n  return null;\n})();\nconst normalizedTypeToken = String(dataTypeNodeId || '').replace(/\\s/g, '').toLowerCase();\nconst booleanDataTypeProven = normalizedTypeToken === 'ns=0;i=1'\n  || normalizedTypeToken === 'boolean'\n  || normalizedTypeToken === 'datatype.boolean';\nconst statusCode = String(msg.statusCode?.name || msg.statusCode || msg.payload?.statusCode?.name || msg.payload?.statusCode || msg.quality || 'Unknown');\nconst toIso = value => { if (!value) return null; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString(); };\nconst collectedAt = new Date().toISOString();\nconst sourceTimestamp = toIso(msg.sourceTimestamp || msg.payload?.sourceTimestamp);\nconst serverTimestamp = toIso(msg.serverTimestamp || msg.payload?.serverTimestamp);\nconst good = /^Good(?:\\b|\\s|\\()/i.test(statusCode);\nconst valid = booleanDataTypeProven && typeof raw === 'boolean' && good;\nconst invalidReason = !dataTypeNodeId ? 'MISSING_DATATYPE_ATTRIBUTE'\n  : !booleanDataTypeProven ? 'INCOMPATIBLE_DATATYPE_ATTRIBUTE'\n    : typeof raw !== 'boolean' ? 'NON_BOOLEAN_VALUE'\n      : !good ? 'BAD_OPCUA_QUALITY' : null;\nconst sample = {\n  field:meta.tag, nodeId:meta.nodeId, value:raw ?? null,\n  dataType:booleanDataTypeProven ? 'Boolean' : null,\n  dataTypeNodeId, dataTypeEvidence:dataTypeNodeId ? 'OPC_UA_ATTRIBUTE_DATATYPE' : null,\n  statusCode, quality:statusCode, valid, timestamp:collectedAt, collectedAt,\n  sourceTimestamp, serverTimestamp,\n  semanticMappingStatus:'PHYSICALLY_VALIDATED_MODE_MARKER', invalidReason\n};\nconst samples = flow.get('cpslai3_mode_samples') || {};\nconst prior = samples[meta.tag];\nconst order = value => Date.parse(value?.serverTimestamp || value?.sourceTimestamp || value?.collectedAt || '');\nif (!prior || !Number.isFinite(order(prior)) || !Number.isFinite(order(sample)) || order(sample) >= order(prior)) { samples[meta.tag] = sample; flow.set('cpslai3_mode_samples', samples); }\nmsg.payload = { cpsId:'cpslai3', ...sample };\nreturn msg;",
-        "outputs":  1,
-        "timeout":  0,
-        "noerr":  0,
-        "initialize":  "",
-        "finalize":  "",
-        "libs":  [
-
-                 ],
-        "x":  1260,
-        "y":  140,
-        "wires":  [
-                      [
-                          "c3a0000000000014"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a0000000000007",
-        "type":  "status",
-        "z":  "c3a0000000000001",
-        "name":  "CPS-LAI-03 OPC UA connection status",
-        "scope":  [
-                      "c3a0000000000005"
-                  ],
-        "x":  280,
-        "y":  220,
-        "wires":  [
-                      [
-                          "c3a0000000000008"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a0000000000008",
-        "type":  "function",
-        "z":  "c3a0000000000001",
-        "name":  "Store CPS-LAI-03 OPC UA status",
-        "func":  "const status = msg.status \u0026\u0026 typeof msg.status === \u0027object\u0027 ? msg.status : {};\nconst text = String(status.text || \u0027\u0027).trim();\nconst normalized = text.toLowerCase();\nconst connected = !/(disconnected|error|failed|closed)/.test(normalized) \u0026\u0026 /(connected|active|session)/.test(normalized);\nconst record = { connected, status, timestamp: new Date().toISOString() };\nflow.set(\u0027cpslai3_opcua_status\u0027, record);\nmsg.payload = { cpsId: \u0027cpslai3\u0027, communication: record };\nreturn msg;",
-        "outputs":  1,
-        "timeout":  0,
-        "noerr":  0,
-        "initialize":  "",
-        "finalize":  "",
-        "libs":  [
-
-                 ],
-        "x":  670,
-        "y":  220,
-        "wires":  [
-                      [
-                          "c3a0000000000014",
-                          "c3a0000000000025"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a0000000000009",
-        "type":  "comment",
-        "z":  "c3a0000000000001",
-        "name":  "2. ACSM lifecycle is authoritative",
-        "info":  "Accepted phases: plug, play, stop, maintenance, return, unplug. Lifecycle never derives physical state.",
-        "x":  250,
-        "y":  320,
-        "wires":  [
-
-                  ]
-    },
-    {
-        "id":  "c3a000000000000a",
-        "type":  "mqtt in",
-        "z":  "c3a0000000000001",
-        "name":  "MQTT ACSM lifecycle cpslai3",
-        "topic":  "acsm/cpslai3/lifecycle",
-        "qos":  "1",
-        "datatype":  "auto",
-        "broker":  "c3a0000000000016",
-        "nl":  false,
-        "rap":  true,
-        "rh":  0,
-        "inputs":  0,
-        "x":  250,
-        "y":  380,
-        "wires":  [
-                      [
-                          "c3a000000000000b"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a000000000000b",
-        "type":  "function",
-        "z":  "c3a0000000000001",
-        "name":  "Store ACSM lifecyclePhase for cpslai3",
-        "func":  "let data = msg.payload;\nif (Buffer.isBuffer(data)) data = data.toString(\u0027utf8\u0027);\nif (typeof data === \u0027string\u0027) {\n    try { data = JSON.parse(data); } catch (error) {\n        node.warn(\u0027Rejected invalid lifecycle JSON\u0027);\n        return null;\n    }\n}\nif (!data || typeof data !== \u0027object\u0027 || Array.isArray(data)) return null;\nif (data.cpsId \u0026\u0026 String(data.cpsId).trim().toLowerCase() !== \u0027cpslai3\u0027) {\n    node.warn(\u0027Rejected lifecycle for unexpected cpsId\u0027);\n    return null;\n}\nconst allowed = [\u0027plug\u0027, \u0027play\u0027, \u0027stop\u0027, \u0027maintenance\u0027, \u0027return\u0027, \u0027unplug\u0027];\nconst phase = String(data.lifecyclePhase || \u0027\u0027).trim().toLowerCase();\nif (!allowed.includes(phase)) {\n    node.warn(\u0027Rejected unsupported lifecycle phase: \u0027 + phase);\n    return null;\n}\nconst nowMs = Date.now();\nflow.set(\u0027cpslai3_lifecycle_phase\u0027, phase);\nflow.set(\u0027cpslai3_lifecycle_phase_ts\u0027, nowMs);\nflow.set(\u0027cpslai3_lifecycle_phase_source\u0027, String(data.source || \u0027ACSM\u0027));\nflow.set(\u0027cpslai3_lifecycle_phase_message_ts\u0027, data.timestamp || null);\nmsg.payload = { cpsId: \u0027cpslai3\u0027, lifecyclePhase: phase, source: String(data.source || \u0027ACSM\u0027), sourceTimestamp: data.timestamp || null, receivedAt: new Date(nowMs).toISOString() };\nreturn msg;",
-        "outputs":  1,
-        "timeout":  0,
-        "noerr":  0,
-        "initialize":  "",
-        "finalize":  "",
-        "libs":  [
-
-                 ],
-        "x":  620,
-        "y":  380,
-        "wires":  [
-                      [
-                          "c3a0000000000014"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a000000000000c",
-        "type":  "comment",
-        "z":  "c3a0000000000001",
-        "name":  "3. Build evidence-only MQTT payloads",
-        "info":  "Data is emitted only after a real validated OperatingMode sample. Status remains UNKNOWN. OEE remains NOT_COMPUTED until validated production evidence is available.",
-        "x":  260,
-        "y":  500,
-        "wires":  [
-
-                  ]
-    },
-    {
-        "id":  "c3a000000000000d",
-        "type":  "inject",
-        "z":  "c3a0000000000001",
-        "name":  "PUBLISH evidence snapshot every 10 s â€“ activate only at LAI",
-        "props":  [
-                      {
-                          "p":  "payload"
-                      },
-                      {
-                          "p":  "topic",
-                          "vt":  "str"
-                      }
-                  ],
-        "repeat":  "2",
-        "crontab":  "",
-        "once":  false,
-        "onceDelay":  0.1,
-        "topic":  "",
-        "payload":  "",
-        "payloadType":  "date",
-        "x":  300,
-        "y":  580,
-        "wires":  [
-                      [
-                          "c3a000000000000e"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a000000000000e",
-        "type":  "function",
-        "z":  "c3a0000000000001",
-        "name":  "Build CPS-LAI-03 MQTT snapshot",
-        "func":  "const MARKERS = [\n  { role:'MANUAL', tag:'sys_man', nodeId:'ns=3;s=\"sys_man\"' },\n  { role:'AUTOMATIC', tag:'sys_sup', nodeId:'ns=3;s=\"sys_sup\"' },\n  { role:'STEP_BY_STEP', tag:'sys_man2', nodeId:'ns=3;s=\"sys_man2\"' }\n];\nconst STALE_AFTER_MS = 6000;\nconst samples = flow.get('cpslai3_mode_samples') || {};\nconst communicationStatus = flow.get('cpslai3_opcua_status') || { connected:false, status:{}, timestamp:null };\nconst lifecyclePhase = flow.get('cpslai3_lifecycle_phase') || null;\nconst publishedAt = new Date().toISOString();\nconst nowMs = Date.parse(publishedAt);\nconst data = {};\nfor (const marker of MARKERS) {\n  const cached = samples[marker.tag];\n  if (!cached) continue;\n  const collectedAtMs = Date.parse(cached.collectedAt);\n  const ageMs = Number.isFinite(collectedAtMs) ? Math.max(0, nowMs - collectedAtMs) : null;\n  const stale = ageMs === null || ageMs > STALE_AFTER_MS;\n  data[marker.tag] = { ...cached, validAtCollection:cached.valid, valid:cached.valid === true && !stale, ageMs, stale };\n}\nconst entries = MARKERS.map(marker => data[marker.tag]);\nconst result = (operationMode, reason) => ({ operationMode, source:'CPS_LAI_03_PHYSICAL_MODE_MARKERS', semanticValidationStatus:'PHYSICALLY_VALIDATED', reason, derivedAt:publishedAt, tagsUsed:MARKERS });\nlet derived;\nif (entries.some(sample => !sample)) derived = result('UNKNOWN', 'MISSING_MODE_MARKER');\nelse if (entries.some(sample => String(sample.dataType || '').toLowerCase() !== 'boolean')) derived = result('UNKNOWN', 'INCOMPATIBLE_MARKER_DATATYPE');\nelse if (entries.some(sample => sample.stale === true)) derived = result('UNKNOWN', 'STALE_MODE_MARKER');\nelse if (entries.some(sample => sample.valid !== true)) derived = result('UNKNOWN', 'INVALID_MODE_MARKER');\nelse if (entries.some(sample => !/^Good(?:\\b|\\s|\\()/i.test(String(sample.statusCode || sample.quality || '')))) derived = result('UNKNOWN', 'BAD_OPCUA_QUALITY');\nelse if (entries.some(sample => typeof sample.value !== 'boolean')) derived = result('UNKNOWN', 'NON_BOOLEAN_MARKER_VALUE');\nelse {\n  const active = entries.map(sample => sample.value);\n  const activeCount = active.filter(Boolean).length;\n  if (activeCount === 0) derived = result('UNKNOWN', 'NO_ACTIVE_MODE_MARKER');\n  else if (activeCount > 1) derived = result('UNKNOWN', 'NON_EXCLUSIVE_MODE_MARKERS');\n  else if (active[0]) derived = result('MANUAL', 'EXCLUSIVE_MANUAL_MARKER');\n  else if (active[1]) derived = result('AUTOMATIC', 'EXCLUSIVE_AUTOMATIC_MARKER');\n  else derived = result('STEP_BY_STEP', 'EXCLUSIVE_STEP_BY_STEP_MARKER');\n}\nconst currentSamples = entries.filter(sample => sample && sample.stale !== true);\nconst dataFresh = currentSamples.length > 0;\nconst dataPayload = {\n  schemaVersion:'1.2', cpsId:'cpslai3', formalCpsId:'CPS-LAI-03', assetName:'SortingStationLAI',\n  displayName:'CPS-LAI-03 – Sorting Station', source:'OPC_UA',\n  endpoint:'opc.tcp://192.168.1.30:4840', timestamp:publishedAt, publishedAt,\n  snapshotComplete:entries.every(Boolean), availableTagCount:entries.filter(Boolean).length,\n  expectedTagCount:MARKERS.length, staleAfterMs:STALE_AFTER_MS,\n  communication:{ dataFresh, connected:communicationStatus.connected === true },\n  data, derived\n};\nconst statusPayload = {\n  schemaVersion:'1.1', cpsId:'cpslai3', timestamp:publishedAt, lifecyclePhase,\n  communication:{ dataFresh, connected:communicationStatus.connected === true, status:communicationStatus.status || {}, statusTimestamp:communicationStatus.timestamp || null },\n  evidenceStatus:derived.operationMode === 'UNKNOWN' ? 'INSUFFICIENT_OR_INVALID_MODE_EVIDENCE' : 'PHYSICALLY_VALIDATED_MODE_MARKERS'\n};\nconst oeePayload = { schemaVersion:'1.0', cpsId:'cpslai3', timestamp:publishedAt, calculationState:'NOT_INITIALIZED', oee:{ current:null, availability:null, performance:null, quality:null }, evidenceStatus:'INSUFFICIENT_PROCESS_DATA' };\nreturn [\n  { topic:'cpslai3/data', qos:1, retain:false, payload:JSON.stringify(dataPayload) },\n  { payload:JSON.stringify(statusPayload) },\n  { payload:JSON.stringify(oeePayload) }\n];",
-        "outputs":  3,
-        "timeout":  0,
-        "noerr":  0,
-        "initialize":  "",
-        "finalize":  "",
-        "libs":  [
-
-                 ],
-        "x":  720,
-        "y":  580,
-        "wires":  [
-                      [
-                          "c3a000000000000f"
-                      ],
-                      [
-                          "c3a0000000000010"
-                      ],
-                      [
-                          "c3a0000000000019"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a000000000000f",
-        "type":  "mqtt out",
-        "z":  "c3a0000000000001",
-        "name":  "MQTT cpslai3/data",
-        "topic":  "cpslai3/data",
-        "qos":  "1",
-        "retain":  "false",
-        "respTopic":  "",
-        "contentType":  "application/json",
-        "userProps":  "",
-        "correl":  "",
-        "expiry":  "",
-        "broker":  "c3a0000000000016",
-        "x":  1110,
-        "y":  540,
-        "wires":  [
-
-                  ]
-    },
-    {
-        "id":  "c3a0000000000010",
-        "type":  "mqtt out",
-        "z":  "c3a0000000000001",
-        "name":  "MQTT cpslai3/status",
-        "topic":  "cpslai3/status",
-        "qos":  "0",
-        "retain":  "false",
-        "respTopic":  "",
-        "contentType":  "application/json",
-        "userProps":  "",
-        "correl":  "",
-        "expiry":  "",
-        "broker":  "c3a0000000000016",
-        "x":  1110,
-        "y":  580,
-        "wires":  [
-
-                  ]
-    },
-    {
-        "id":  "c3a0000000000019",
-        "type":  "function",
-        "z":  "c3a0000000000001",
-        "name":  "Publish CPS1-compatible OEE contract; preserve NOT_COMPUTED without production evidence",
-        "func":  "const session=flow.get('cpslai3_exp_session')||null; const timestamp=new Date().toISOString(); const metrics=flow.get('cpslai3_exp_metrics')||{pieceSensorActivationCount:null,conveyorSignalActiveTimeMs:null,separator1ActivationCount:null,separator2ActivationCount:null}; const oee={current:null,availability:null,performance:null,quality:null}; const missing=['PLANNED_PRODUCTION_TIME_NOT_AVAILABLE','VALIDATED_PRODUCTIVE_TIME_NOT_AVAILABLE','COMPLETED_PIECE_COUNT_NOT_AVAILABLE','GOOD_PIECE_COUNT_NOT_AVAILABLE','IDEAL_CYCLE_TIME_NOT_CONFIGURED']; let payload=msg.payload; if(Buffer.isBuffer(payload))payload=payload.toString('utf8'); if(typeof payload==='string'){try{payload=JSON.parse(payload);}catch(_){payload={};}} if(!payload||payload.cpsId!=='cpslai3')payload={schemaVersion:'1.2',cpsId:'cpslai3'}; payload={...payload,timestamp,windowId:session?.id||null,metricSessionId:session?.id||null,windowStartedAt:session?.startedAt||null,windowEndedAt:session?.stoppedAt||null,windowStatus:session?.status||'NOT_STARTED',calculationState:'NOT_COMPUTED',sourceStatus:'NOT_COMPUTED',evidenceStatus:'INSUFFICIENT_PROCESS_DATA',source:'CPS_LAI_03_EXPERIMENTAL_OEE',reason:'CPS_LAI_03_SIGNALS_DO_NOT_YET_PROVE_THE_CPS_LAI_01_OEE_INPUT_SEMANTICS',missingInputs:missing,componentStatus:{availability:'NOT_COMPUTED',performance:'NOT_COMPUTED',quality:'NOT_COMPUTED'},experimentalEvidence:metrics,parameterEvidence:{idealCycleTimeMs:null,idealCycleTimeSource:null},oee}; msg.payload=JSON.stringify(payload); return msg;",
-        "outputs":  1,
-        "timeout":  0,
-        "noerr":  0,
-        "initialize":  "",
-        "finalize":  "",
-        "libs":  [],
-        "x":  890,
-        "y":  660,
-        "wires":  [
-                      [
-                          "c3a0000000000011"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a0000000000011",
-        "type":  "mqtt out",
-        "z":  "c3a0000000000001",
-        "name":  "MQTT cpslai3/oee",
-        "topic":  "cpslai3/oee",
-        "qos":  "0",
-        "retain":  "false",
-        "respTopic":  "",
-        "contentType":  "application/json",
-        "userProps":  "",
-        "correl":  "",
-        "expiry":  "",
-        "broker":  "c3a0000000000016",
-        "x":  1100,
-        "y":  620,
-        "wires":  [
-
-                  ]
-    },
-    {
-        "id":  "c3a0000000000012",
-        "type":  "catch",
-        "z":  "c3a0000000000001",
-        "name":  "CPS-LAI-03 adapter errors",
-        "scope":  [
-                      "c3a0000000000005",
-                      "c3a0000000000006",
-                      "c3a0000000000008",
-                      "c3a000000000000b",
-                      "c3a000000000000e"
-                  ],
-        "uncaught":  false,
-        "x":  260,
-        "y":  720,
-        "wires":  [
-                      [
-                          "c3a0000000000013"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a0000000000013",
-        "type":  "debug",
-        "z":  "c3a0000000000001",
-        "name":  "CPS-LAI-03 OPC UA / adapter errors",
-        "active":  false,
-        "tosidebar":  true,
-        "console":  false,
-        "tostatus":  false,
-        "complete":  "true",
-        "targetType":  "full",
-        "x":  650,
-        "y":  720,
-        "wires":  [
-
-                  ]
-    },
-    {
-        "id":  "c3a0000000000014",
-        "type":  "debug",
-        "z":  "c3a0000000000001",
-        "name":  "CPS-LAI-03 evidence diagnostics",
-        "active":  false,
-        "tosidebar":  true,
-        "console":  false,
-        "tostatus":  false,
-        "complete":  "payload",
-        "targetType":  "msg",
-        "x":  1450,
-        "y":  260,
-        "wires":  [
-
-                  ]
-    },
-    {
-        "id":  "c3a0000000000017",
-        "type":  "inject",
-        "z":  "c3a0000000000001",
-        "name":  "RESET CPS-LAI-03 CONTEXT",
-        "props":  [
-                      {
-                          "p":  "payload"
-                      }
-                  ],
-        "repeat":  "",
-        "crontab":  "",
-        "once":  false,
-        "onceDelay":  0.1,
-        "payload":  "",
-        "payloadType":  "date",
-        "x":  250,
-        "y":  800,
-        "wires":  [
-                      [
-                          "c3a0000000000018"
-                      ]
-                  ]
-    },
-    {
-        "id":  "c3a0000000000018",
-        "type":  "function",
-        "z":  "c3a0000000000001",
-        "name":  "Clear CPS-LAI-03 context only",
-        "func":  "flow.set('cpslai3_mode_samples', {});\nflow.set('cpslai3_mode_read_batch', null);\nflow.set('cpslai3_mode_tags', {});\nflow.set('cpslai3_opcua_status', { connected: false, status: {}, timestamp: null });\nflow.set('cpslai3_lifecycle_phase', null);\nflow.set('cpslai3_lifecycle_phase_ts', null);\nflow.set('cpslai3_lifecycle_phase_source', null);\nflow.set('cpslai3_lifecycle_phase_message_ts', null);\nnode.warn('CPS-LAI-03 context cleared');\nreturn null;",
-        "outputs":  1,
-        "timeout":  0,
-        "noerr":  0,
-        "initialize":  "",
-        "finalize":  "",
-        "libs":  [
-
-                 ],
-        "x":  590,
-        "y":  800,
-        "wires":  [
-                      [
-
-                      ]
-                  ]
-    },
-    {
-        "id": "c3a000000000001a",
-        "type": "function",
-        "z": "c3a0000000000001",
-        "name": "Read experimental signals through existing OPC UA client",
-        "func": "const tags=[['B1BG1','ns=3;s=\\\"B1BG1\\\"'],['G1BG3','ns=3;s=\\\"G1BG3\\\"'],['G1MB1','ns=3;s=\\\"G1MB1\\\"'],['G1MB2','ns=3;s=\\\"G1MB2\\\"']]; const now=Date.now(), old=flow.get('cpslai3_exp_batch'), max=Number(flow.get('cpslai3_exp_max_gap_ms'))||6000; if(old&&now<=old.expiresAt)return null; if(old){flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_quality','BATCH_TIMEOUT_BASELINE_RESET');} const id='exp-'+now; flow.set('cpslai3_exp_batch',{id,expiresAt:now+max,expected:tags.map(x=>x[1]),received:[]}); return [tags.map(([tag,nodeId])=>({topic:nodeId,payload:'',_nodeId:nodeId,_tag:tag,_expBatchId:id,_experimental:true}))];",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 520,
-        "y": 220,
-        "wires": [["c3a0000000000005"]]
-    },
-    {
-        "id": "c3a000000000001b",
-        "type": "function",
-        "z": "c3a0000000000001",
-        "name": "Route mode and experimental OPC UA reads",
-        "func": "if(msg?._experimental)return [null,msg]; return [msg,null];",
-        "outputs": 2,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1190,
-        "y": 140,
-        "wires": [["c3a0000000000006"],["c3a000000000001c"]]
-    },
-    {
-        "id": "c3a000000000001c",
-        "type": "function",
-        "z": "c3a0000000000001",
-        "name": "Experimental event/time aggregator (not production or OEE)",
-        "func": "const ids={B1BG1:'ns=3;s=\\\"B1BG1\\\"',G1BG3:'ns=3;s=\\\"G1BG3\\\"',G1MB1:'ns=3;s=\\\"G1MB1\\\"',G1MB2:'ns=3;s=\\\"G1MB2\\\"'}; const tag=msg._tag,nodeId=String(msg._nodeId||msg.topic||'').split(';datatype=')[0].trim(), batch=flow.get('cpslai3_exp_batch'); if(!ids[tag]||ids[tag]!==nodeId||!batch||batch.id!==msg._expBatchId||Date.now()>batch.expiresAt||batch.received.some(x=>x.tag===tag))return null; const own=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k), raw=own(msg,'value')?msg.value:own(msg.payload,'value')?msg.payload.value:msg.payload?.attributes?.value, dt=msg.dataType??msg.dataTypeNodeId??msg.attributes?.dataType??msg.payload?.dataTypeNodeId??msg.payload?.attributes?.dataType, dtid=typeof dt==='string'?dt:(dt&&Number(dt.namespace??dt.namespaceIndex)===0?'ns=0;i='+String(dt.value??dt.identifier):String(dt||'')), sc=String(msg.statusCode?.name||msg.statusCode||msg.payload?.statusCode?.name||msg.payload?.statusCode||msg.quality||'Unknown'), good=/^Good(?:\\b|\\s|\\()/i.test(sc), sample={tag,nodeId,value:raw,dataType:dtid||null,statusCode:sc,quality:sc,valid:typeof raw==='boolean'&&good&&(dtid==='ns=0;i=1'||/^boolean$/i.test(dtid)),collectedAt:new Date().toISOString(),sourceTimestamp:msg.sourceTimestamp||msg.payload?.sourceTimestamp||null,serverTimestamp:msg.serverTimestamp||msg.payload?.serverTimestamp||null}; batch.received.push(sample); if(batch.received.length<4){flow.set('cpslai3_exp_batch',batch);return null;} flow.set('cpslai3_exp_batch',null); const session=flow.get('cpslai3_exp_session'); if(!session||session.status!=='RUNNING')return null; const all=['B1BG1','G1BG3','G1MB1','G1MB2'].map(t=>batch.received.find(x=>x.tag===t)), times=all.map(x=>Date.parse(x.collectedAt)), now=Date.now(), max=Number(flow.get('cpslai3_exp_max_gap_ms'))||6000, valid=all.every(x=>x?.valid)&&Math.max(...times)-Math.min(...times)<=max&&now-Math.min(...times)<=max; let m=flow.get('cpslai3_exp_metrics')||{pieceSensorActivationCount:0,conveyorSignalActiveTimeMs:0,separator1ActivationCount:0,separator2ActivationCount:0}, prev=flow.get('cpslai3_exp_baseline'), quality='CURRENT', last=flow.get('cpslai3_exp_last_event')||null; if(!valid){prev=null;quality='INVALID_OR_STALE_SAMPLE';} else if(!prev||now-prev.at>max){prev={at:now,v:Object.fromEntries(all.map(x=>[x.tag,x.value]))};quality='BASELINE_ONLY';} else {const gap=now-prev.at, v=Object.fromEntries(all.map(x=>[x.tag,x.value])); if(gap>max){quality='BASELINE_ONLY_AFTER_GAP';} else {if(prev.v.B1BG1===false&&v.B1BG1===true){m.pieceSensorActivationCount++;last={type:'PIECE_SENSOR_ACTIVATION',tag:'B1BG1',at:new Date(now).toISOString()};} if(prev.v.G1MB1===false&&v.G1MB1===true){m.separator1ActivationCount++;last={type:'SEPARATOR_1_ACTIVATION',tag:'G1MB1',at:new Date(now).toISOString()};} if(prev.v.G1MB2===false&&v.G1MB2===true){m.separator2ActivationCount++;last={type:'SEPARATOR_2_ACTIVATION',tag:'G1MB2',at:new Date(now).toISOString()};} if(prev.v.G1BG3===true&&v.G1BG3===true)m.conveyorSignalActiveTimeMs+=gap;} prev={at:now,v};} flow.set('cpslai3_exp_baseline',valid?prev:null); flow.set('cpslai3_exp_metrics',m); flow.set('cpslai3_exp_quality',quality); flow.set('cpslai3_exp_last_event',last); msg.payload={schemaVersion:'1.0',cpsId:'cpslai3',metricSessionId:session.id,sessionStatus:session.status,startedAt:session.startedAt,updatedAt:new Date(now).toISOString(),source:'CPS_LAI_03_EXPERIMENTAL_SIGNAL_AGGREGATOR',evidenceOrigin:'OPC_UA_READ',evidenceQuality:quality,maxSampleGapMs:max,lastEvent:last,metrics:m,measuredSignals:all,interpretation:{pieceSensorActivationCount:'B1BG1 rising edges; not completed pieces',conveyorSignalActiveTimeMs:'bounded consecutive true intervals; not planned production time',separator1ActivationCount:'G1MB1 rising edges; not classification result',separator2ActivationCount:'G1MB2 rising edges; not classification result',oee:'NOT_COMPUTED'}}; return msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1530,
-        "y": 340,
-        "wires": [["c3a000000000001d"]]
-    },
-    {
-        "id": "c3a000000000001d",
-        "type": "mqtt out",
-        "z": "c3a0000000000001",
-        "name": "MQTT cpslai3/experimental-metrics",
-        "topic": "cpslai3/experimental-metrics",
-        "qos": "1",
-        "retain": "false",
-        "broker": "c3a0000000000016",
-        "x": 1830,
-        "y": 340,
-        "wires": []
-    },
-    {
-        "id": "c3a000000000001e",
-        "type": "inject",
-        "z": "c3a0000000000001",
-        "name": "Start experimental metrics session (manual)",
-        "props": [{"p":"payload"}],
-        "repeat": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "payload": "",
-        "payloadType": "date",
-        "x": 260,
-        "y": 900,
-        "wires": [["c3a000000000001f"]]
-    },
-    {
-        "id": "c3a000000000001f",
-        "type": "function",
-        "z": "c3a0000000000001",
-        "name": "Start or reset experimental metrics session",
-        "func": "const now=new Date().toISOString(), id='cpslai3-exp-'+Date.now()+'-'+Math.random().toString(36).slice(2,8), session={id,status:'RUNNING',startedAt:now}, metrics={pieceSensorActivationCount:0,conveyorSignalActiveTimeMs:0,separator1ActivationCount:0,separator2ActivationCount:0}; flow.set('cpslai3_exp_session',session);flow.set('cpslai3_exp_metrics',metrics);flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_last_event',null);msg.payload={schemaVersion:'1.0',cpsId:'cpslai3',metricSessionId:id,sessionStatus:'RUNNING',startedAt:now,updatedAt:now,source:'CPS_LAI_03_EXPERIMENTAL_SIGNAL_AGGREGATOR',evidenceOrigin:'OPC_UA_READ',evidenceQuality:'BASELINE_PENDING',maxSampleGapMs:Number(flow.get('cpslai3_exp_max_gap_ms'))||6000,lastEvent:null,metrics,measuredSignals:[],interpretation:{oee:'NOT_COMPUTED'}};return msg;",
-        "outputs": 1,
-        "x": 650,
-        "y": 900,
-        "wires": [["c3a000000000001d", "c3a0000000000019"]]
-    },
-    {
-        "id": "c3a0000000000020",
-        "type": "inject",
-        "z": "c3a0000000000001",
-        "name": "Reset experimental metrics (new session)",
-        "props": [{"p":"payload"}],
-        "repeat": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "payload": "",
-        "payloadType": "date",
-        "x": 260,
-        "y": 960,
-        "wires": [["c3a000000000001f"]]
-    },
-    {
-        "id": "c3a0000000000021",
-        "type": "inject",
-        "z": "c3a0000000000001",
-        "name": "Stop experimental metrics session",
-        "props": [{"p":"payload"}],
-        "repeat": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "payload": "",
-        "payloadType": "date",
-        "x": 260,
-        "y": 1020,
-        "wires": [["c3a0000000000022"]]
-    },
-    {
-        "id": "c3a0000000000022",
-        "type": "function",
-        "z": "c3a0000000000001",
-        "name": "Stop experimental metrics session",
-        "func": "const s=flow.get('cpslai3_exp_session');if(!s)return null;s.status='STOPPED';s.stoppedAt=new Date().toISOString();flow.set('cpslai3_exp_session',s);msg.payload={schemaVersion:'1.0',cpsId:'cpslai3',metricSessionId:s.id,sessionStatus:s.status,startedAt:s.startedAt,updatedAt:s.stoppedAt,source:'CPS_LAI_03_EXPERIMENTAL_SIGNAL_AGGREGATOR',evidenceOrigin:'OPC_UA_READ',evidenceQuality:'SESSION_STOPPED',maxSampleGapMs:Number(flow.get('cpslai3_exp_max_gap_ms'))||6000,lastEvent:flow.get('cpslai3_exp_last_event')||null,metrics:flow.get('cpslai3_exp_metrics'),measuredSignals:[],interpretation:{oee:'NOT_COMPUTED'}};return msg;",
-        "outputs": 1,
-        "x": 650,
-        "y": 1020,
-        "wires": [["c3a000000000001d"]]
-    },
-    {
-        "id": "c3a0000000000023",
-        "type": "inject",
-        "z": "c3a0000000000001",
-        "name": "Reset experimental baseline on Node-RED start/deploy",
-        "props": [{"p":"payload"}],
-        "repeat": "",
-        "once": true,
-        "onceDelay": 0.2,
-        "payload": "",
-        "payloadType": "date",
-        "x": 270,
-        "y": 1080,
-        "wires": [["c3a0000000000024", "c3a0000000000019"]]
-    },
-    {
-        "id": "c3a0000000000024",
-        "type": "function",
-        "z": "c3a0000000000001",
-        "name": "Interrupt any previous experimental session safely",
-        "func": "const session=flow.get('cpslai3_exp_session');if(session&&session.status==='RUNNING'){session.status='INTERRUPTED_BY_RUNTIME_RESTART';session.stoppedAt=new Date().toISOString();flow.set('cpslai3_exp_session',session);}flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_batch',null);flow.set('cpslai3_exp_quality','BASELINE_PENDING');return null;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 680,
-        "y": 1080,
-        "wires": [[]]
-    },
-    {
-        "id": "c3a0000000000025",
-        "type": "function",
-        "z": "c3a0000000000001",
-        "name": "Reset experimental baseline on OPC UA disconnect/reconnect",
-        "func": "const connected=msg.payload?.communication?.connected;if(typeof connected!=='boolean')return null;const prior=flow.get('cpslai3_exp_connected');if(prior!==connected){flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_batch',null);flow.set('cpslai3_exp_quality',connected?'BASELINE_PENDING':'COMMUNICATION_LOST');}flow.set('cpslai3_exp_connected',connected);return null;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1120,
-        "y": 220,
-        "wires": [[]]
-    },
-    {
-        "id":  "c3a0000000000015",
-        "type":  "OpcUa-Endpoint",
-        "endpoint":  "opc.tcp://192.168.1.30:4840",
-        "secpol":  "None",
-        "secmode":  "None",
-        "none":  true,
-        "login":  false
-    },
-    {
-        "id":  "c3a0000000000016",
-        "type":  "mqtt-broker",
-        "name":  "ACSM Mosquitto localhost â€“ cpslai3",
-        "broker":  "localhost",
-        "port":  "1883",
-        "clientid":  "nodered-cpslai3-adapter",
-        "autoConnect":  true,
-        "usetls":  false,
-        "protocolVersion":  "4",
-        "keepalive":  "60",
-        "cleansession":  true,
-        "autoUnsubscribe":  true,
-        "birthTopic":  "",
-        "birthQos":  "0",
-        "birthPayload":  "",
-        "birthMsg":  {
-
-                     },
-        "closeTopic":  "",
-        "closeQos":  "0",
-        "closePayload":  "",
-        "closeMsg":  {
-
-                     },
-        "willTopic":  "",
-        "willQos":  "0",
-        "willPayload":  "",
-        "willMsg":  {
-
-                    }
-    }
+  {
+    "id": "c3a0000000000001",
+    "type": "tab",
+    "label": "CPS-LAI-03 â€“ Sorting Station",
+    "disabled": true,
+    "info": "READY_FOR_LAI_ACTIVATION\nIndependent read-only adapter for CPS-LAI-03. The physically correlated mode markers sys_man, sys_sup and sys_man2 are read through the single existing OPC UA client. Datatype, quality and freshness remain mandatory evidence. No process-state inference, production metrics, command path, or physical governance binding is implemented."
+  },
+  {
+    "id": "c3a0000000000002",
+    "type": "comment",
+    "z": "c3a0000000000001",
+    "name": "1. OPC UA READ ONLY â€“ confirmed scalar only",
+    "info": "Structural evidence only; never poll as scalar values: PLC=ns=3;s=PLC, Inputs=ns=3;s=Inputs, Outputs=ns=3;s=Outputs, Memory=ns=3;s=Memory, Counters=ns=3;s=Counters, Timers=ns=3;s=Timers, DataBlocksGlobal=ns=3;s=DataBlocksGlobal, DataBlocksInstance=ns=3;s=DataBlocksInstance.",
+    "x": 260,
+    "y": 60,
+    "wires": []
+  },
+  {
+    "id": "c3a0000000000003",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "READ OperatingMode every 10 s â€“ activate only at LAI",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "2",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 260,
+    "y": 140,
+    "wires": [
+      [
+        "c3a0000000000004",
+        "c3a000000000001a"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000004",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "func": "const TAGS = [\n  { tag:'GCT_0', nodeId:'ns=3;s=\\\"GCT_0\\\"' },\n  { tag:'sys_man', nodeId:'ns=3;s=\\\"sys_man\\\"' },\n  { tag:'sys_sup', nodeId:'ns=3;s=\\\"sys_sup\\\"' },\n  { tag:'sys_man2', nodeId:'ns=3;s=\\\"sys_man2\\\"' }\n];\nconst now = Date.now();\nconst active = flow.get('cpslai3_mode_read_batch');\nif (active && now <= active.expiresAt && active.received.length < TAGS.length) return null;\nconst batchId = `cpslai3-mode-${now}`;\nflow.set('cpslai3_mode_read_batch', { batchId, expiresAt:now + 6000, received:[], expected:TAGS.map(tag => tag.nodeId) });\nflow.set('cpslai3_mode_tags', Object.fromEntries(TAGS.map(tag => [tag.nodeId, tag])));\nreturn [TAGS.map(tag => ({ topic:tag.nodeId, payload:'', _tag:tag.tag, _nodeId:tag.nodeId, _batchId:batchId, _readRequestedAt:new Date(now).toISOString() }))];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "name": "OperatingMode â†’ OperationModeRaw [confirmed read only]",
+    "x": 650,
+    "y": 140,
+    "wires": [
+      [
+        "c3a0000000000005"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000005",
+    "type": "OpcUa-Client",
+    "z": "c3a0000000000001",
+    "endpoint": "c3a0000000000015",
+    "action": "info",
+    "deadbandtype": "a",
+    "deadbandvalue": 0,
+    "time": 10,
+    "timeUnit": "s",
+    "certificate": "n",
+    "localfile": "",
+    "localkeyfile": "",
+    "securitymode": "None",
+    "securitypolicy": "None",
+    "useTransport": false,
+    "maxChunkCount": 1,
+    "maxMessageSize": 8192,
+    "receiveBufferSize": 8192,
+    "sendBufferSize": 8192,
+    "setstatusandtime": true,
+    "keepsessionalive": true,
+    "name": "CPS-LAI-03 OPC UA READ",
+    "applicationName": "",
+    "applicationUri": "",
+    "x": 970,
+    "y": 140,
+    "wires": [
+      [
+        "c3a000000000001b"
+      ],
+      [
+        "c3a0000000000013"
+      ],
+      [
+        "c3a0000000000013"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000006",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Validate and cache physical mode marker",
+    "func": "const configured = flow.get('cpslai3_mode_tags') || {};\nconst nodeId = String(msg._nodeId || msg.topic || '').split(';datatype=')[0].trim();\nconst meta = configured[nodeId];\nif (!meta || (msg._tag && msg._tag !== meta.tag)) { node.warn('Rejected unexpected CPS-LAI-03 OPC UA sample: ' + nodeId); return null; }\nconst batch = flow.get('cpslai3_mode_read_batch');\nif (!batch || batch.batchId !== msg._batchId || Date.now() > batch.expiresAt || batch.received.includes(nodeId)) { node.warn('Rejected late, unknown or duplicate CPS-LAI-03 read response: ' + nodeId); return null; }\nbatch.received.push(nodeId);\nflow.set('cpslai3_mode_read_batch', batch.received.length === batch.expected.length ? null : batch);\n\nconst hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);\nconst raw = hasOwn(msg, 'value') ? msg.value\n  : hasOwn(msg.payload, 'value') ? msg.payload.value\n    : hasOwn(msg.payload?.attributes, 'value') ? msg.payload.attributes.value\n      : undefined;\nconst dataTypeAttribute = msg.dataType ?? msg.dataTypeNodeId ?? msg.attributes?.dataType\n  ?? msg.payload?.dataTypeNodeId ?? msg.payload?.attributes?.dataType ?? null;\nconst dataTypeNodeId = (() => {\n  if (dataTypeAttribute === null || dataTypeAttribute === undefined || dataTypeAttribute === '') return null;\n  if (typeof dataTypeAttribute === 'string') return dataTypeAttribute.trim();\n  if (typeof dataTypeAttribute?.toString === 'function') {\n    const text = dataTypeAttribute.toString();\n    if (text && text !== '[object Object]') return text.trim();\n  }\n  const namespace = dataTypeAttribute.namespace ?? dataTypeAttribute.namespaceIndex;\n  const value = dataTypeAttribute.value ?? dataTypeAttribute.identifier;\n  if (Number(namespace) === 0 && value !== undefined) return 'ns=0;i=' + String(value);\n  return null;\n})();\nconst normalizedTypeToken = String(dataTypeNodeId || '').replace(/\\s/g, '').toLowerCase();\nconst booleanDataTypeProven = normalizedTypeToken === 'ns=0;i=1'\n  || normalizedTypeToken === 'boolean'\n  || normalizedTypeToken === 'datatype.boolean';\nconst statusCode = String(msg.statusCode?.name || msg.statusCode || msg.payload?.statusCode?.name || msg.payload?.statusCode || msg.quality || 'Unknown');\nconst toIso = value => { if (!value) return null; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString(); };\nconst collectedAt = new Date().toISOString();\nconst sourceTimestamp = toIso(msg.sourceTimestamp || msg.payload?.sourceTimestamp);\nconst serverTimestamp = toIso(msg.serverTimestamp || msg.payload?.serverTimestamp);\nconst good = /^Good(?:\\b|\\s|\\()/i.test(statusCode);\nconst valid = booleanDataTypeProven && typeof raw === 'boolean' && good;\nconst invalidReason = !dataTypeNodeId ? 'MISSING_DATATYPE_ATTRIBUTE'\n  : !booleanDataTypeProven ? 'INCOMPATIBLE_DATATYPE_ATTRIBUTE'\n    : typeof raw !== 'boolean' ? 'NON_BOOLEAN_VALUE'\n      : !good ? 'BAD_OPCUA_QUALITY' : null;\nconst sample = {\n  field:meta.tag, nodeId:meta.nodeId, value:raw ?? null,\n  dataType:booleanDataTypeProven ? 'Boolean' : null,\n  dataTypeNodeId, dataTypeEvidence:dataTypeNodeId ? 'OPC_UA_ATTRIBUTE_DATATYPE' : null,\n  statusCode, quality:statusCode, valid, timestamp:collectedAt, collectedAt,\n  sourceTimestamp, serverTimestamp,\n  semanticMappingStatus:meta.tag==='GCT_0'?'PHYSICALLY_VALIDATED_INIT_MARKER':'PHYSICALLY_VALIDATED_MODE_MARKER', invalidReason\n};\nconst samples = flow.get('cpslai3_mode_samples') || {};\nconst prior = samples[meta.tag];\nconst order = value => Date.parse(value?.serverTimestamp || value?.sourceTimestamp || value?.collectedAt || '');\nif (!prior || !Number.isFinite(order(prior)) || !Number.isFinite(order(sample)) || order(sample) >= order(prior)) { samples[meta.tag] = sample; flow.set('cpslai3_mode_samples', samples); }\nmsg.payload = { cpsId:'cpslai3', ...sample };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1260,
+    "y": 140,
+    "wires": [
+      [
+        "c3a0000000000014"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000007",
+    "type": "status",
+    "z": "c3a0000000000001",
+    "name": "CPS-LAI-03 OPC UA connection status",
+    "scope": [
+      "c3a0000000000005"
+    ],
+    "x": 280,
+    "y": 220,
+    "wires": [
+      [
+        "c3a0000000000008"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000008",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Store CPS-LAI-03 OPC UA status",
+    "func": "const status = msg.status && typeof msg.status === 'object' ? msg.status : {};\nconst text = String(status.text || '').trim();\nconst normalized = text.toLowerCase();\nconst connected = !/(disconnected|error|failed|closed)/.test(normalized) && /(connected|active|session)/.test(normalized);\nconst record = { connected, status, timestamp: new Date().toISOString() };\nflow.set('cpslai3_opcua_status', record);\nmsg.payload = { cpsId: 'cpslai3', communication: record };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 670,
+    "y": 220,
+    "wires": [
+      [
+        "c3a0000000000014",
+        "c3a0000000000025"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000009",
+    "type": "comment",
+    "z": "c3a0000000000001",
+    "name": "2. ACSM lifecycle is authoritative",
+    "info": "Accepted phases: plug, play, stop, maintenance, return, unplug. Lifecycle never derives physical state.",
+    "x": 250,
+    "y": 320,
+    "wires": []
+  },
+  {
+    "id": "c3a000000000000a",
+    "type": "mqtt in",
+    "z": "c3a0000000000001",
+    "name": "MQTT ACSM lifecycle cpslai3",
+    "topic": "acsm/cpslai3/lifecycle",
+    "qos": "1",
+    "datatype": "auto",
+    "broker": "c3a0000000000016",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 250,
+    "y": 380,
+    "wires": [
+      [
+        "c3a000000000000b"
+      ]
+    ]
+  },
+  {
+    "id": "c3a000000000000b",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Store ACSM lifecyclePhase for cpslai3",
+    "func": "let data = msg.payload;\nif (Buffer.isBuffer(data)) data = data.toString('utf8');\nif (typeof data === 'string') {\n    try { data = JSON.parse(data); } catch (error) {\n        node.warn('Rejected invalid lifecycle JSON');\n        return null;\n    }\n}\nif (!data || typeof data !== 'object' || Array.isArray(data)) return null;\nif (data.cpsId && String(data.cpsId).trim().toLowerCase() !== 'cpslai3') {\n    node.warn('Rejected lifecycle for unexpected cpsId');\n    return null;\n}\nconst allowed = ['plug', 'play', 'stop', 'maintenance', 'return', 'unplug'];\nconst phase = String(data.lifecyclePhase || '').trim().toLowerCase();\nif (!allowed.includes(phase)) {\n    node.warn('Rejected unsupported lifecycle phase: ' + phase);\n    return null;\n}\nconst nowMs = Date.now();\nflow.set('cpslai3_lifecycle_phase', phase);\nflow.set('cpslai3_lifecycle_phase_ts', nowMs);\nflow.set('cpslai3_lifecycle_phase_source', String(data.source || 'ACSM'));\nflow.set('cpslai3_lifecycle_phase_message_ts', data.timestamp || null);\nmsg.payload = { cpsId: 'cpslai3', lifecyclePhase: phase, source: String(data.source || 'ACSM'), sourceTimestamp: data.timestamp || null, receivedAt: new Date(nowMs).toISOString() };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 620,
+    "y": 380,
+    "wires": [
+      [
+        "c3a0000000000014"
+      ]
+    ]
+  },
+  {
+    "id": "c3a000000000000c",
+    "type": "comment",
+    "z": "c3a0000000000001",
+    "name": "3. Build evidence-only MQTT payloads",
+    "info": "Data is emitted only after a real validated OperatingMode sample. Status remains UNKNOWN. OEE remains NOT_COMPUTED until validated production evidence is available.",
+    "x": 260,
+    "y": 500,
+    "wires": []
+  },
+  {
+    "id": "c3a000000000000d",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "PUBLISH evidence snapshot every 10 s â€“ activate only at LAI",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "2",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 300,
+    "y": 580,
+    "wires": [
+      [
+        "c3a000000000000e"
+      ]
+    ]
+  },
+  {
+    "id": "c3a000000000000e",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Build CPS-LAI-03 MQTT snapshot",
+    "func": "const INIT = { sourceTag:'GCT_0', tag:'GCT_0', nodeId:'ns=3;s=\"GCT_0\"' };\nconst MARKERS = [\n  { role:'MANUAL', tag:'sys_man', nodeId:'ns=3;s=\"sys_man\"' },\n  { role:'AUTOMATIC', tag:'sys_sup', nodeId:'ns=3;s=\"sys_sup\"' },\n  { role:'STEP_BY_STEP', tag:'sys_man2', nodeId:'ns=3;s=\"sys_man2\"' }\n];\nconst ALL_TAGS = [INIT, ...MARKERS];\nconst STALE_AFTER_MS = 6000;\nconst samples = flow.get('cpslai3_mode_samples') || {};\nconst communicationStatus = flow.get('cpslai3_opcua_status') || { connected:false, status:{}, timestamp:null };\nconst lifecyclePhase = flow.get('cpslai3_lifecycle_phase') || null;\nconst publishedAt = new Date().toISOString();\nconst publishedAtMs = Date.parse(publishedAt);\nconst data = {};\nfor (const item of ALL_TAGS) {\n  const cached = samples[item.tag];\n  if (!cached) continue;\n  const collectedAtMs = Date.parse(cached.collectedAt);\n  const ageMs = Number.isFinite(collectedAtMs) ? Math.max(0, publishedAtMs - collectedAtMs) : null;\n  const stale = ageMs === null || ageMs > STALE_AFTER_MS;\n  data[item.tag] = { ...cached, validAtCollection:cached.valid, valid:cached.valid === true && !stale, ageMs, stale };\n}\nconst init = data.GCT_0;\nconst markerSamples = MARKERS.map(marker => data[marker.tag]);\nconst valid = (sample, expectedNodeId) =>\n  sample && sample.nodeId === expectedNodeId &&\n  String(sample.dataType || sample.datatype || '').toLowerCase() === 'boolean' &&\n  sample.dataTypeNodeId === 'ns=0;i=1' &&\n  sample.dataTypeEvidence === 'OPC_UA_ATTRIBUTE_DATATYPE' &&\n  sample.stale !== true && sample.valid === true &&\n  /^Good(?:\\b|\\s|\\()/i.test(String(sample.statusCode || sample.quality || '')) &&\n  typeof sample.value === 'boolean' && Number.isFinite(Date.parse(sample.collectedAt));\nconst result = (operationMode, reason) => ({\n  operationMode,\n  source:'CPS_LAI_03_PHYSICAL_MODE_MARKERS',\n  semanticValidationStatus:'PHYSICALLY_VALIDATED',\n  reason,\n  derivedAt:publishedAt,\n  tagsUsed:ALL_TAGS,\n  initEvidence:{\n    sourceTag:'GCT_0',\n    nodeId:init?.nodeId ?? null,\n    value:init?.value ?? null,\n    statusCode:init?.statusCode ?? init?.quality ?? null,\n    collectedAt:init?.collectedAt ?? null,\n    evidenceStatus:valid(init, INIT.nodeId) ? 'PHYSICALLY_VALIDATED' : 'INVALID_OR_STALE',\n    reason\n  }\n});\nlet derived;\nif (!init) derived = result('UNKNOWN', 'MISSING_INIT_MARKER');\nelse if (!valid(init, INIT.nodeId)) derived = result('UNKNOWN', init.stale === true ? 'STALE_INIT_MARKER' : 'INVALID_INIT_MARKER');\nelse if (markerSamples.some((sample, index) => !valid(sample, MARKERS[index].nodeId))) derived = result('UNKNOWN', 'INVALID_OR_MISSING_MODE_MARKER');\nelse {\n  const activeCount = markerSamples.filter(sample => sample.value).length;\n  if (init.value === true) derived = activeCount === 0\n    ? result('INIT', 'VALIDATED_GCT_0_ACTIVE')\n    : result('UNKNOWN', 'INIT_MARKER_CONFLICT');\n  else if (activeCount === 0) derived = result('UNKNOWN', 'NO_ACTIVE_MODE_MARKER');\n  else if (activeCount > 1) derived = result('UNKNOWN', 'NON_EXCLUSIVE_MODE_MARKERS');\n  else if (markerSamples[0].value) derived = result('MANUAL', 'EXCLUSIVE_MANUAL_MARKER');\n  else if (markerSamples[1].value) derived = result('AUTOMATIC', 'EXCLUSIVE_AUTOMATIC_MARKER');\n  else derived = result('STEP_BY_STEP', 'EXCLUSIVE_STEP_BY_STEP_MARKER');\n}\nconst availableTagCount = ALL_TAGS.filter(item => data[item.tag]).length;\nconst snapshotComplete = availableTagCount === ALL_TAGS.length;\nconst dataFresh = ALL_TAGS.every(item => data[item.tag] && data[item.tag].stale !== true);\nconst dataPayload = {\n  schemaVersion:'1.2', cpsId:'cpslai3', formalCpsId:'CPS-LAI-03', assetName:'SortingStationLAI',\n  displayName:'CPS-LAI-03 – Sorting Station', source:'OPC_UA',\n  endpoint:'opc.tcp://192.168.1.30:4840', timestamp:publishedAt, publishedAt,\n  snapshotComplete, availableTagCount, expectedTagCount:ALL_TAGS.length,\n  staleAfterMs:STALE_AFTER_MS,\n  communication:{ dataFresh, connected:communicationStatus.connected === true },\n  data, derived\n};\nconst statusPayload = {\n  schemaVersion:'1.1', cpsId:'cpslai3', timestamp:publishedAt, lifecyclePhase,\n  communication:{ dataFresh, connected:communicationStatus.connected === true, status:communicationStatus.status || {}, statusTimestamp:communicationStatus.timestamp || null },\n  evidenceStatus:derived.operationMode === 'UNKNOWN' ? 'INSUFFICIENT_OR_INVALID_MODE_EVIDENCE' : 'PHYSICALLY_VALIDATED_MODE_MARKERS'\n};\nconst oeePayload = { schemaVersion:'1.0', cpsId:'cpslai3', timestamp:publishedAt, calculationState:'NOT_INITIALIZED', oee:{ current:null, availability:null, performance:null, quality:null }, evidenceStatus:'INSUFFICIENT_PROCESS_DATA' };\nreturn [\n  { topic:'cpslai3/data', qos:1, retain:false, payload:JSON.stringify(dataPayload) },\n  { payload:JSON.stringify(statusPayload) },\n  { payload:JSON.stringify(oeePayload) }\n];",
+    "outputs": 3,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 720,
+    "y": 580,
+    "wires": [
+      [
+        "c3a000000000000f"
+      ],
+      [
+        "c3a0000000000010"
+      ],
+      [
+        "c3a0000000000019"
+      ]
+    ]
+  },
+  {
+    "id": "c3a000000000000f",
+    "type": "mqtt out",
+    "z": "c3a0000000000001",
+    "name": "MQTT cpslai3/data",
+    "topic": "cpslai3/data",
+    "qos": "1",
+    "retain": "false",
+    "respTopic": "",
+    "contentType": "application/json",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "c3a0000000000016",
+    "x": 1110,
+    "y": 540,
+    "wires": []
+  },
+  {
+    "id": "c3a0000000000010",
+    "type": "mqtt out",
+    "z": "c3a0000000000001",
+    "name": "MQTT cpslai3/status",
+    "topic": "cpslai3/status",
+    "qos": "0",
+    "retain": "false",
+    "respTopic": "",
+    "contentType": "application/json",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "c3a0000000000016",
+    "x": 1110,
+    "y": 580,
+    "wires": []
+  },
+  {
+    "id": "c3a0000000000019",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Publish CPS1-compatible OEE contract; preserve NOT_COMPUTED without production evidence",
+    "func": "const session=flow.get('cpslai3_exp_session')||null; const timestamp=new Date().toISOString(); const metrics=flow.get('cpslai3_exp_metrics')||{pieceSensorActivationCount:null,conveyorSignalActiveTimeMs:null,separator1ActivationCount:null,separator2ActivationCount:null}; const oee={current:null,availability:null,performance:null,quality:null}; const missing=['PLANNED_PRODUCTION_TIME_NOT_AVAILABLE','VALIDATED_PRODUCTIVE_TIME_NOT_AVAILABLE','COMPLETED_PIECE_COUNT_NOT_AVAILABLE','GOOD_PIECE_COUNT_NOT_AVAILABLE','IDEAL_CYCLE_TIME_NOT_CONFIGURED']; let payload=msg.payload; if(Buffer.isBuffer(payload))payload=payload.toString('utf8'); if(typeof payload==='string'){try{payload=JSON.parse(payload);}catch(_){payload={};}} if(!payload||payload.cpsId!=='cpslai3')payload={schemaVersion:'1.2',cpsId:'cpslai3'}; payload={...payload,timestamp,windowId:session?.id||null,metricSessionId:session?.id||null,windowStartedAt:session?.startedAt||null,windowEndedAt:session?.stoppedAt||null,windowStatus:session?.status||'NOT_STARTED',calculationState:'NOT_COMPUTED',sourceStatus:'NOT_COMPUTED',evidenceStatus:'INSUFFICIENT_PROCESS_DATA',source:'CPS_LAI_03_EXPERIMENTAL_OEE',reason:'CPS_LAI_03_SIGNALS_DO_NOT_YET_PROVE_THE_CPS_LAI_01_OEE_INPUT_SEMANTICS',missingInputs:missing,componentStatus:{availability:'NOT_COMPUTED',performance:'NOT_COMPUTED',quality:'NOT_COMPUTED'},experimentalEvidence:metrics,parameterEvidence:{idealCycleTimeMs:null,idealCycleTimeSource:null},oee}; msg.payload=JSON.stringify(payload); return msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 890,
+    "y": 660,
+    "wires": [
+      [
+        "c3a0000000000011"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000011",
+    "type": "mqtt out",
+    "z": "c3a0000000000001",
+    "name": "MQTT cpslai3/oee",
+    "topic": "cpslai3/oee",
+    "qos": "0",
+    "retain": "false",
+    "respTopic": "",
+    "contentType": "application/json",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "c3a0000000000016",
+    "x": 1100,
+    "y": 620,
+    "wires": []
+  },
+  {
+    "id": "c3a0000000000012",
+    "type": "catch",
+    "z": "c3a0000000000001",
+    "name": "CPS-LAI-03 adapter errors",
+    "scope": [
+      "c3a0000000000005",
+      "c3a0000000000006",
+      "c3a0000000000008",
+      "c3a000000000000b",
+      "c3a000000000000e"
+    ],
+    "uncaught": false,
+    "x": 260,
+    "y": 720,
+    "wires": [
+      [
+        "c3a0000000000013"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000013",
+    "type": "debug",
+    "z": "c3a0000000000001",
+    "name": "CPS-LAI-03 OPC UA / adapter errors",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "x": 650,
+    "y": 720,
+    "wires": []
+  },
+  {
+    "id": "c3a0000000000014",
+    "type": "debug",
+    "z": "c3a0000000000001",
+    "name": "CPS-LAI-03 evidence diagnostics",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 1450,
+    "y": 260,
+    "wires": []
+  },
+  {
+    "id": "c3a0000000000017",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "RESET CPS-LAI-03 CONTEXT",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "payload": "",
+    "payloadType": "date",
+    "x": 250,
+    "y": 800,
+    "wires": [
+      [
+        "c3a0000000000018"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000018",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Clear CPS-LAI-03 context only",
+    "func": "flow.set('cpslai3_mode_samples', {});\nflow.set('cpslai3_mode_read_batch', null);\nflow.set('cpslai3_mode_tags', {});\nflow.set('cpslai3_opcua_status', { connected: false, status: {}, timestamp: null });\nflow.set('cpslai3_lifecycle_phase', null);\nflow.set('cpslai3_lifecycle_phase_ts', null);\nflow.set('cpslai3_lifecycle_phase_source', null);\nflow.set('cpslai3_lifecycle_phase_message_ts', null);\nnode.warn('CPS-LAI-03 context cleared');\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 800,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "c3a000000000001a",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Read experimental signals through existing OPC UA client",
+    "func": "const tags=[['B1BG1','ns=3;s=\\\"B1BG1\\\"'],['G1BG3','ns=3;s=\\\"G1BG3\\\"'],['G1MB1','ns=3;s=\\\"G1MB1\\\"'],['G1MB2','ns=3;s=\\\"G1MB2\\\"']]; const now=Date.now(), old=flow.get('cpslai3_exp_batch'), max=Number(flow.get('cpslai3_exp_max_gap_ms'))||6000; if(old&&now<=old.expiresAt)return null; if(old){flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_quality','BATCH_TIMEOUT_BASELINE_RESET');} const id='exp-'+now; flow.set('cpslai3_exp_batch',{id,expiresAt:now+max,expected:tags.map(x=>x[1]),received:[]}); return [tags.map(([tag,nodeId])=>({topic:nodeId,payload:'',_nodeId:nodeId,_tag:tag,_expBatchId:id,_experimental:true}))];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 520,
+    "y": 220,
+    "wires": [
+      [
+        "c3a0000000000005"
+      ]
+    ]
+  },
+  {
+    "id": "c3a000000000001b",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Route operational, experimental, INIT diagnostic, GCT_0 probe and tag-discovery reads",
+    "func": "if(msg?._tagDiscovery===true)return [null,null,null,null,msg];if(msg?._gct0Probe===true)return [null,null,null,msg,null];if(msg?._initDiagnostic===true)return [null,null,msg,null,null];if(msg?._experimental)return [null,msg,null,null,null];return [msg,null,null,null,null];",
+    "outputs": 5,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1190,
+    "y": 140,
+    "wires": [
+      [
+        "c3a0000000000006"
+      ],
+      [
+        "c3a000000000001c"
+      ],
+      [
+        "cpslai3_init_diag_collect"
+      ],
+      [
+        "cpslai3_gct0_normalize"
+      ],
+      [
+        "cpslai3_tag_discovery_return"
+      ]
+    ]
+  },
+  {
+    "id": "c3a000000000001c",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Experimental event/time aggregator (not production or OEE)",
+    "func": "const ids={B1BG1:'ns=3;s=\\\"B1BG1\\\"',G1BG3:'ns=3;s=\\\"G1BG3\\\"',G1MB1:'ns=3;s=\\\"G1MB1\\\"',G1MB2:'ns=3;s=\\\"G1MB2\\\"'}; const tag=msg._tag,nodeId=String(msg._nodeId||msg.topic||'').split(';datatype=')[0].trim(), batch=flow.get('cpslai3_exp_batch'); if(!ids[tag]||ids[tag]!==nodeId||!batch||batch.id!==msg._expBatchId||Date.now()>batch.expiresAt||batch.received.some(x=>x.tag===tag))return null; const own=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k), raw=own(msg,'value')?msg.value:own(msg.payload,'value')?msg.payload.value:msg.payload?.attributes?.value, dt=msg.dataType??msg.dataTypeNodeId??msg.attributes?.dataType??msg.payload?.dataTypeNodeId??msg.payload?.attributes?.dataType, dtid=typeof dt==='string'?dt:(dt&&Number(dt.namespace??dt.namespaceIndex)===0?'ns=0;i='+String(dt.value??dt.identifier):String(dt||'')), sc=String(msg.statusCode?.name||msg.statusCode||msg.payload?.statusCode?.name||msg.payload?.statusCode||msg.quality||'Unknown'), good=/^Good(?:\\b|\\s|\\()/i.test(sc), sample={tag,nodeId,value:raw,dataType:dtid||null,statusCode:sc,quality:sc,valid:typeof raw==='boolean'&&good&&(dtid==='ns=0;i=1'||/^boolean$/i.test(dtid)),collectedAt:new Date().toISOString(),sourceTimestamp:msg.sourceTimestamp||msg.payload?.sourceTimestamp||null,serverTimestamp:msg.serverTimestamp||msg.payload?.serverTimestamp||null}; batch.received.push(sample); if(batch.received.length<4){flow.set('cpslai3_exp_batch',batch);return null;} flow.set('cpslai3_exp_batch',null); const session=flow.get('cpslai3_exp_session'); if(!session||session.status!=='RUNNING')return null; const all=['B1BG1','G1BG3','G1MB1','G1MB2'].map(t=>batch.received.find(x=>x.tag===t)), times=all.map(x=>Date.parse(x.collectedAt)), now=Date.now(), max=Number(flow.get('cpslai3_exp_max_gap_ms'))||6000, valid=all.every(x=>x?.valid)&&Math.max(...times)-Math.min(...times)<=max&&now-Math.min(...times)<=max; let m=flow.get('cpslai3_exp_metrics')||{pieceSensorActivationCount:0,conveyorSignalActiveTimeMs:0,separator1ActivationCount:0,separator2ActivationCount:0}, prev=flow.get('cpslai3_exp_baseline'), quality='CURRENT', last=flow.get('cpslai3_exp_last_event')||null; if(!valid){prev=null;quality='INVALID_OR_STALE_SAMPLE';} else if(!prev||now-prev.at>max){prev={at:now,v:Object.fromEntries(all.map(x=>[x.tag,x.value]))};quality='BASELINE_ONLY';} else {const gap=now-prev.at, v=Object.fromEntries(all.map(x=>[x.tag,x.value])); if(gap>max){quality='BASELINE_ONLY_AFTER_GAP';} else {if(prev.v.B1BG1===false&&v.B1BG1===true){m.pieceSensorActivationCount++;last={type:'PIECE_SENSOR_ACTIVATION',tag:'B1BG1',at:new Date(now).toISOString()};} if(prev.v.G1MB1===false&&v.G1MB1===true){m.separator1ActivationCount++;last={type:'SEPARATOR_1_ACTIVATION',tag:'G1MB1',at:new Date(now).toISOString()};} if(prev.v.G1MB2===false&&v.G1MB2===true){m.separator2ActivationCount++;last={type:'SEPARATOR_2_ACTIVATION',tag:'G1MB2',at:new Date(now).toISOString()};} if(prev.v.G1BG3===true&&v.G1BG3===true)m.conveyorSignalActiveTimeMs+=gap;} prev={at:now,v};} flow.set('cpslai3_exp_baseline',valid?prev:null); flow.set('cpslai3_exp_metrics',m); flow.set('cpslai3_exp_quality',quality); flow.set('cpslai3_exp_last_event',last); msg.payload={schemaVersion:'1.0',cpsId:'cpslai3',metricSessionId:session.id,sessionStatus:session.status,startedAt:session.startedAt,updatedAt:new Date(now).toISOString(),source:'CPS_LAI_03_EXPERIMENTAL_SIGNAL_AGGREGATOR',evidenceOrigin:'OPC_UA_READ',evidenceQuality:quality,maxSampleGapMs:max,lastEvent:last,metrics:m,measuredSignals:all,interpretation:{pieceSensorActivationCount:'B1BG1 rising edges; not completed pieces',conveyorSignalActiveTimeMs:'bounded consecutive true intervals; not planned production time',separator1ActivationCount:'G1MB1 rising edges; not classification result',separator2ActivationCount:'G1MB2 rising edges; not classification result',oee:'NOT_COMPUTED'}}; return msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1530,
+    "y": 340,
+    "wires": [
+      [
+        "c3a000000000001d"
+      ]
+    ]
+  },
+  {
+    "id": "c3a000000000001d",
+    "type": "mqtt out",
+    "z": "c3a0000000000001",
+    "name": "MQTT cpslai3/experimental-metrics",
+    "topic": "cpslai3/experimental-metrics",
+    "qos": "1",
+    "retain": "false",
+    "broker": "c3a0000000000016",
+    "x": 1830,
+    "y": 340,
+    "wires": []
+  },
+  {
+    "id": "c3a000000000001e",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "Start experimental metrics session (manual)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "payload": "",
+    "payloadType": "date",
+    "x": 260,
+    "y": 900,
+    "wires": [
+      [
+        "c3a000000000001f"
+      ]
+    ]
+  },
+  {
+    "id": "c3a000000000001f",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Start or reset experimental metrics session",
+    "func": "const now=new Date().toISOString(), id='cpslai3-exp-'+Date.now()+'-'+Math.random().toString(36).slice(2,8), session={id,status:'RUNNING',startedAt:now}, metrics={pieceSensorActivationCount:0,conveyorSignalActiveTimeMs:0,separator1ActivationCount:0,separator2ActivationCount:0}; flow.set('cpslai3_exp_session',session);flow.set('cpslai3_exp_metrics',metrics);flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_last_event',null);msg.payload={schemaVersion:'1.0',cpsId:'cpslai3',metricSessionId:id,sessionStatus:'RUNNING',startedAt:now,updatedAt:now,source:'CPS_LAI_03_EXPERIMENTAL_SIGNAL_AGGREGATOR',evidenceOrigin:'OPC_UA_READ',evidenceQuality:'BASELINE_PENDING',maxSampleGapMs:Number(flow.get('cpslai3_exp_max_gap_ms'))||6000,lastEvent:null,metrics,measuredSignals:[],interpretation:{oee:'NOT_COMPUTED'}};return msg;",
+    "outputs": 1,
+    "x": 650,
+    "y": 900,
+    "wires": [
+      [
+        "c3a000000000001d",
+        "c3a0000000000019"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000020",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "Reset experimental metrics (new session)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "payload": "",
+    "payloadType": "date",
+    "x": 260,
+    "y": 960,
+    "wires": [
+      [
+        "c3a000000000001f"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000021",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "Stop experimental metrics session",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "payload": "",
+    "payloadType": "date",
+    "x": 260,
+    "y": 1020,
+    "wires": [
+      [
+        "c3a0000000000022"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000022",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Stop experimental metrics session",
+    "func": "const s=flow.get('cpslai3_exp_session');if(!s)return null;s.status='STOPPED';s.stoppedAt=new Date().toISOString();flow.set('cpslai3_exp_session',s);msg.payload={schemaVersion:'1.0',cpsId:'cpslai3',metricSessionId:s.id,sessionStatus:s.status,startedAt:s.startedAt,updatedAt:s.stoppedAt,source:'CPS_LAI_03_EXPERIMENTAL_SIGNAL_AGGREGATOR',evidenceOrigin:'OPC_UA_READ',evidenceQuality:'SESSION_STOPPED',maxSampleGapMs:Number(flow.get('cpslai3_exp_max_gap_ms'))||6000,lastEvent:flow.get('cpslai3_exp_last_event')||null,metrics:flow.get('cpslai3_exp_metrics'),measuredSignals:[],interpretation:{oee:'NOT_COMPUTED'}};return msg;",
+    "outputs": 1,
+    "x": 650,
+    "y": 1020,
+    "wires": [
+      [
+        "c3a000000000001d"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000023",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "Reset experimental baseline on Node-RED start/deploy",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "once": true,
+    "onceDelay": 0.2,
+    "payload": "",
+    "payloadType": "date",
+    "x": 270,
+    "y": 1080,
+    "wires": [
+      [
+        "c3a0000000000024",
+        "c3a0000000000019"
+      ]
+    ]
+  },
+  {
+    "id": "c3a0000000000024",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Interrupt any previous experimental session safely",
+    "func": "const session=flow.get('cpslai3_exp_session');if(session&&session.status==='RUNNING'){session.status='INTERRUPTED_BY_RUNTIME_RESTART';session.stoppedAt=new Date().toISOString();flow.set('cpslai3_exp_session',session);}flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_batch',null);flow.set('cpslai3_exp_quality','BASELINE_PENDING');return null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 680,
+    "y": 1080,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "c3a0000000000025",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Reset experimental baseline on OPC UA disconnect/reconnect",
+    "func": "const connected=msg.payload?.communication?.connected;if(typeof connected!=='boolean')return null;const prior=flow.get('cpslai3_exp_connected');if(prior!==connected){flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_batch',null);flow.set('cpslai3_exp_quality',connected?'BASELINE_PENDING':'COMMUNICATION_LOST');}flow.set('cpslai3_exp_connected',connected);return null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1120,
+    "y": 220,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "c3a0000000000015",
+    "type": "OpcUa-Endpoint",
+    "endpoint": "opc.tcp://192.168.1.30:4840",
+    "secpol": "None",
+    "secmode": "None",
+    "none": true,
+    "login": false
+  },
+  {
+    "id": "c3a0000000000016",
+    "type": "mqtt-broker",
+    "name": "ACSM Mosquitto localhost â€“ cpslai3",
+    "broker": "localhost",
+    "port": "1883",
+    "clientid": "nodered-cpslai3-adapter",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": "",
+    "willMsg": {}
+  },
+  {
+    "id": "cpslai3_init_diag_start",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "START INIT diagnostic (manual)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "START",
+    "payloadType": "str",
+    "x": 190,
+    "y": 700,
+    "wires": [
+      [
+        "cpslai3_init_diag_control"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai3_init_diag_stop",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "STOP INIT diagnostic (manual)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "STOP",
+    "payloadType": "str",
+    "x": 190,
+    "y": 740,
+    "wires": [
+      [
+        "cpslai3_init_diag_control"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai3_init_diag_control",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Manual diagnostic gate",
+    "func": "const command=String(msg.payload||'').toUpperCase();\nif(command==='START'){flow.set('cpslai3_init_diag_enabled',true);flow.set('cpslai3_init_diag_batch',null);node.status({fill:'green',shape:'dot',text:'INIT diagnostic running'});return null;}\nif(command==='STOP'){flow.set('cpslai3_init_diag_enabled',false);flow.set('cpslai3_init_diag_batch',null);node.status({fill:'grey',shape:'ring',text:'INIT diagnostic stopped'});return null;}\nreturn null;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 470,
+    "y": 720,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "cpslai3_init_diag_step",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "Set experimental step (edit payload)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "PLC_STARTING",
+    "payloadType": "str",
+    "x": 210,
+    "y": 780,
+    "wires": [
+      [
+        "cpslai3_init_diag_set_step"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai3_init_diag_set_step",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Store diagnostic testStep only",
+    "func": "const step=String(msg.payload||'').trim().toUpperCase();\nif(!/^[A-Z][A-Z0-9_]{1,63}$/.test(step)){node.warn('Invalid diagnostic test step');return null;}\nflow.set('cpslai3_init_diag_step',step);node.status({fill:'blue',shape:'dot',text:step});return null;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 500,
+    "y": 780,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "cpslai3_init_diag_tick",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "Diagnostic READ every 2 s (gated)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "2",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "str",
+    "x": 190,
+    "y": 830,
+    "wires": [
+      [
+        "cpslai3_init_diag_build"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai3_init_diag_build",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Build four-tag diagnostic batch",
+    "func": "const TIMEOUT_MS=5000;\nconst TAGS=[{tag:'OperatingMode',nodeId:'ns=3;s=OperatingMode',expectedType:'Int32'},{tag:'sys_man',nodeId:'ns=3;s=\"sys_man\"',expectedType:'Boolean'},{tag:'sys_sup',nodeId:'ns=3;s=\"sys_sup\"',expectedType:'Boolean'},{tag:'sys_man2',nodeId:'ns=3;s=\"sys_man2\"',expectedType:'Boolean'}];\nif(flow.get('cpslai3_init_diag_enabled')!==true)return [null,null];\nconst now=Date.now();let expired=null;const active=flow.get('cpslai3_init_diag_batch');\nif(active&&now<active.expiresAt)return [null,null];\nif(active){const missingTags=active.tags.filter(t=>!active.samples[t.tag]).map(t=>t.tag);expired={payload:{schemaVersion:'1.0',recordType:'INIT_PHYSICAL_DIAGNOSTIC',cpsId:'cpslai3',batchId:active.batchId,testStep:active.testStep,readRequestedAt:active.readRequestedAt,completedAt:new Date(now).toISOString(),complete:false,missingTags,failureReason:'BATCH_TIMEOUT',samples:active.samples}};}\nconst seq=Number(flow.get('cpslai3_init_diag_sequence')||0)+1;flow.set('cpslai3_init_diag_sequence',seq);const batchId='cpslai3-init-'+now+'-'+seq;const readRequestedAt=new Date(now).toISOString();const testStep=flow.get('cpslai3_init_diag_step')||'UNSPECIFIED';flow.set('cpslai3_init_diag_batch',{batchId,expiresAt:now+TIMEOUT_MS,readRequestedAt,testStep,tags:TAGS,samples:{}});\nconst reads=TAGS.map(t=>({topic:t.nodeId,payload:'',action:'info',_initDiagnostic:true,_initCpsId:'cpslai3',_initBatchId:batchId,_initTag:t.tag,_initNodeId:t.nodeId,_initExpectedType:t.expectedType}));return [reads,expired];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 480,
+    "y": 830,
+    "wires": [
+      [
+        "c3a0000000000005"
+      ],
+      [
+        "cpslai3_init_diag_jsonl"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai3_init_diag_collect",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Validate and assemble diagnostic batch",
+    "func": "const batch=flow.get('cpslai3_init_diag_batch');const now=new Date().toISOString();\nif(!batch||batch.batchId!==msg._initBatchId)return null;const tag=msg._initTag;const meta=batch.tags.find(t=>t.tag===tag);if(!meta||meta.nodeId!==msg._initNodeId||batch.samples[tag])return null;\nconst own=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k);const raw=own(msg,'value')?msg.value:own(msg.payload,'value')?msg.payload.value:own(msg.payload?.attributes,'value')?msg.payload.attributes.value:undefined;const attr=msg.dataType??msg.dataTypeNodeId??msg.attributes?.dataType??msg.payload?.dataTypeNodeId??msg.payload?.attributes?.dataType??null;const typeText=typeof attr==='string'?attr:(attr&&Number(attr.namespace??attr.namespaceIndex)===0?'ns=0;i='+String(attr.value??attr.identifier):String(attr||''));const normalized=String(typeText).replace(/\\s/g,'').toLowerCase();const actualType=(normalized==='ns=0;i=6'||normalized==='int32'||normalized==='datatype.int32')?'Int32':(normalized==='ns=0;i=1'||normalized==='boolean'||normalized==='datatype.boolean')?'Boolean':null;const statusCode=String(msg.statusCode?.name||msg.statusCode||msg.payload?.statusCode?.name||msg.payload?.statusCode||msg.quality||'Unknown');const good=/^Good(?:\\b|\\s|\\()/i.test(statusCode);const valueTypeOk=meta.expectedType==='Int32'?Number.isInteger(raw):typeof raw==='boolean';const typeOk=actualType===meta.expectedType;const failureReason=!actualType?'MISSING_OR_UNSUPPORTED_DATATYPE':!typeOk?'DATATYPE_MISMATCH':!good?'BAD_STATUS_CODE':!valueTypeOk?'VALUE_TYPE_MISMATCH':null;const iso=v=>{if(!v)return null;const d=new Date(v);return Number.isNaN(d.getTime())?null:d.toISOString();};batch.samples[tag]={nodeId:meta.nodeId,value:raw??null,datatype:actualType,datatypeRaw:typeText||null,statusCode,collectedAt:now,sourceTimestamp:iso(msg.sourceTimestamp||msg.payload?.sourceTimestamp),serverTimestamp:iso(msg.serverTimestamp||msg.payload?.serverTimestamp),valid:failureReason===null,failureReason};flow.set('cpslai3_init_diag_batch',batch);if(Object.keys(batch.samples).length<batch.tags.length)return null;flow.set('cpslai3_init_diag_batch',null);const missingTags=batch.tags.filter(t=>!batch.samples[t.tag]).map(t=>t.tag);const failures=Object.entries(batch.samples).filter(([,s])=>!s.valid).map(([name,s])=>({tag:name,reason:s.failureReason}));msg.payload={schemaVersion:'1.0',recordType:'INIT_PHYSICAL_DIAGNOSTIC',cpsId:'cpslai3',batchId:batch.batchId,testStep:batch.testStep,readRequestedAt:batch.readRequestedAt,completedAt:now,complete:missingTags.length===0,missingTags,failureReason:failures.length?'INVALID_SAMPLE':null,failures,samples:batch.samples};return msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1470,
+    "y": 790,
+    "wires": [
+      [
+        "cpslai3_init_diag_jsonl"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai3_init_diag_jsonl",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Encode INIT diagnostic JSONL",
+    "func": "msg.payload=JSON.stringify(msg.payload)+'\\n';return msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1720,
+    "y": 830,
+    "wires": [
+      [
+        "cpslai3_init_diag_file"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai3_init_diag_file",
+    "type": "file",
+    "z": "c3a0000000000001",
+    "name": "Append CPS-LAI-03 INIT diagnostic",
+    "filename": "cpslai3-init-diagnostic.jsonl",
+    "filenameType": "str",
+    "appendNewline": false,
+    "createDir": true,
+    "overwriteFile": "false",
+    "encoding": "none",
+    "x": 1980,
+    "y": 830,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "cpslai3_gct0_manual_read",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "READ GCT_0 once (manual supervised)",
+    "props": [{ "p": "payload" }],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "str",
+    "x": 210,
+    "y": 900,
+    "wires": [["cpslai3_gct0_build_read"]]
+  },
+  {
+    "id": "cpslai3_b1bg1_manual_read",
+    "type": "inject",
+    "z": "c3a0000000000001",
+    "name": "READ B1BG1 once (manual supervised)",
+    "props": [
+      { "p": "payload" },
+      { "p": "_manualProbeTag", "v": "B1BG1", "vt": "str" }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "str",
+    "x": 220,
+    "y": 960,
+    "wires": [["cpslai3_gct0_build_read"]]
+  },
+  {
+    "id": "cpslai3_gct0_build_read",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Build isolated GCT_0 / B1BG1 INFO read",
+    "func": "const tag=msg._manualProbeTag==='B1BG1'?'B1BG1':'GCT_0';const nodeId='ns=3;s=\"'+tag+'\"';const requestedAt=new Date().toISOString();return {topic:nodeId,payload:'',action:'info',_gct0Probe:true,_gct0NodeId:nodeId,_gct0RequestedAt:requestedAt,_manualProbeTag:tag,_manualProbeRequestedAt:requestedAt};",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 490,
+    "y": 900,
+    "wires": [["c3a0000000000005"]]
+  },
+  {
+    "id": "cpslai3_gct0_normalize",
+    "type": "function",
+    "z": "c3a0000000000001",
+    "name": "Normalize isolated probe evidence only",
+    "func": "const allowed={'GCT_0':'ns=3;s=\"GCT_0\"','B1BG1':'ns=3;s=\"B1BG1\"'};const tag=msg._manualProbeTag==='B1BG1'?'B1BG1':'GCT_0';const expected=allowed[tag];const returned=String(msg.topic||msg.nodeId||msg._gct0NodeId||'').split(';datatype=')[0].trim();const own=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k);const originalPayload=msg.payload;const value=own(msg,'value')?msg.value:own(originalPayload,'value')?originalPayload.value:own(originalPayload?.attributes,'value')?originalPayload.attributes.value:null;const attr=msg.dataType??msg.dataTypeNodeId??msg.attributes?.dataType??originalPayload?.dataTypeNodeId??originalPayload?.attributes?.dataType??null;const datatype=typeof attr==='string'?attr:(attr&&typeof attr.toString==='function'?attr.toString():null);const statusCode=String(msg.statusCode?.name||msg.statusCode||originalPayload?.statusCode?.name||originalPayload?.statusCode||msg.quality||'Unknown');msg.payload={schemaVersion:'1.0',recordType:'CPS_LAI_03_'+tag+'_PROBE',cpsId:'cpslai3',requestedNodeId:expected,returnedNodeId:returned||null,nodeIdMatches:returned===expected,value,datatype:datatype||null,statusCode,goodQuality:/^Good(?:\\b|\\s|\\()/i.test(statusCode),requestedAt:msg._manualProbeRequestedAt||msg._gct0RequestedAt||null,collectedAt:new Date().toISOString(),sourceTimestamp:msg.sourceTimestamp||originalPayload?.sourceTimestamp||null,serverTimestamp:msg.serverTimestamp||originalPayload?.serverTimestamp||null,interpretation:'UNVALIDATED_CANDIDATE_ONLY'};return msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1480,
+    "y": 900,
+    "wires": [["cpslai3_gct0_debug"]]
+  },
+  {
+    "id": "cpslai3_gct0_debug",
+    "type": "debug",
+    "z": "c3a0000000000001",
+    "name": "GCT_0 evidence — Debug only",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1760,
+    "y": 900,
+    "wires": []
+  },
+  {
+    "id": "cpslai3_tag_discovery_in",
+    "type": "link in",
+    "z": "c3a0000000000001",
+    "name": "Tag Discovery requests — existing READ client",
+    "links": [],
+    "x": 650,
+    "y": 1040,
+    "wires": [["c3a0000000000005"]]
+  },
+  {
+    "id": "cpslai3_tag_discovery_return",
+    "type": "link out",
+    "z": "c3a0000000000001",
+    "name": "Return tag-discovery response to Link Call",
+    "mode": "return",
+    "links": [],
+    "x": 1510,
+    "y": 1040,
+    "wires": []
+  }
 ]

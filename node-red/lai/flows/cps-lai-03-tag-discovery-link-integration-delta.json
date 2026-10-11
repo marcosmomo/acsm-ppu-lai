@@ -1,0 +1,27 @@
+[
+  {
+    "id": "cpslai3_tag_discovery_in",
+    "type": "link in",
+    "z": "c3a0000000000001",
+    "name": "Tag Discovery requests — existing READ client",
+    "links": [],
+    "x": 650,
+    "y": 300,
+    "wires": [
+      [
+        "c3a0000000000005"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai3_tag_discovery_return",
+    "type": "link out",
+    "z": "c3a0000000000001",
+    "name": "Return only tag-discovery responses to Link Call",
+    "mode": "return",
+    "links": [],
+    "x": 1530,
+    "y": 300,
+    "wires": []
+  }
+]

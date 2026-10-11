@@ -18,6 +18,7 @@ import {
   shouldUseLocalTelemetryModal,
 } from '../lib/acsm/cpsTelemetry.mjs';
 import { deriveCpsLai3PhysicalOperationMode } from '../lib/acsm/cpsLai3OperationMode.mjs';
+import { isValidatedPhysicalOperationMode } from '../lib/acsm/cpsOperationMode.mjs';
 import GovernanceApproval from './GovernanceApproval';
 
 // ===== Status helpers (EN) =====
@@ -379,10 +380,16 @@ const getDescriptionUrl = (cps) =>
   normalizeUrl(cps?.endpoints?.description) || normalizeUrl(cps?.dashboardUrl) || '';
 
 const getDataUrl = (cps) =>
-  normalizeUrl(cps?.endpoints?.indicators) ||
-  normalizeUrl(cps?.endpoints?.summary) ||
-  normalizeUrl(cps?.apiData) ||
-  '';
+  (() => {
+    const cpsId = normalizeCpsId(cps?.id || cps?.cpsId || cps?.baseTopic || cps?.cps);
+    if (cpsId === 'cpslai2' || cpsId === 'cpslai3') {
+      return `http://localhost:1881/${cpsId}/data`;
+    }
+    return normalizeUrl(cps?.endpoints?.indicators) ||
+      normalizeUrl(cps?.endpoints?.summary) ||
+      normalizeUrl(cps?.apiData) ||
+      '';
+  })();
 
 const getHistoryUrl = (cps) => normalizeUrl(cps?.endpoints?.history) || '';
 const getHealthUrl = (cps) => normalizeUrl(cps?.endpoints?.health) || '';
@@ -613,11 +620,11 @@ const PlayFase = () => {
   };
 
   const openCpsData = (cps, dataUrl) => {
-    if (shouldUseLocalTelemetryModal(cps)) {
-      setTelemetryModalCps(cps);
-      return;
-    }
-    openExternalUrl(dataUrl, 'No IndicatorsEndpoint, SummaryEndpoint or APIData found in the AAS.');
+    const cpsId = normalizeCpsId(cps?.id || cps?.cpsId || cps?.baseTopic || cps?.cps);
+    const unavailableMessage = cpsId === 'cpslai3'
+      ? 'The CPS-LAI-03 data endpoint could not be opened. Confirm that GET /cpslai3/data is implemented and available in the Node-RED runtime.'
+      : 'No data endpoint is available for this CPS.';
+    openExternalUrl(dataUrl, unavailableMessage);
   };
 
   const closeTelemetryModal = () => setTelemetryModalCps(null);
@@ -796,6 +803,9 @@ const PlayFase = () => {
               const isCpsLai3 = normalizedCpsId === 'cpslai3';
               const physicalTelemetryConnected =
                 telemetryCommunication?.[normalizedCpsId] === true;
+              const localPhysicalModeEvidence = usesLocalTelemetryModal
+                ? telemetryData?.[normalizedCpsId]
+                : null;
               const cpsLai3ModeEvidence = isCpsLai3 ? telemetryData?.[normalizedCpsId] : null;
               const cpsLai3Mode = isCpsLai3
                 ? deriveCpsLai3PhysicalOperationMode({
@@ -810,7 +820,7 @@ const PlayFase = () => {
                     physicalTelemetryConnected
                   )
                 : isCpsLai3
-                  ? (cpsLai3Mode?.valid ? cpsLai3Mode.operationMode : 'UNKNOWN')
+                  ? cpsLai3Mode?.operationMode || 'INIT'
                   : humanizeOperationMode(cps?.operationalData?.operationMode);
               const historyUrl = getHistoryUrl(cps);
               const healthUrl = getHealthUrl(cps);
@@ -829,7 +839,11 @@ const PlayFase = () => {
                 usesLocalTelemetryModal
                   ? {
                       operationMode: operationModeText,
-                      valid: physicalTelemetryConnected && operationModeText !== 'UNKNOWN',
+                      valid:
+                        physicalTelemetryConnected &&
+                        isValidatedPhysicalOperationMode(operationModeText) &&
+                        localPhysicalModeEvidence?.derived?.operationMode === operationModeText &&
+                        localPhysicalModeEvidence?.derived?.semanticValidationStatus === 'PHYSICALLY_VALIDATED',
                     }
                   : isCpsLai3
                     ? {
@@ -903,7 +917,7 @@ const PlayFase = () => {
                 >
                   <div className="cps-header">
                     <span className="cps-name">
-                      {cps.nome} — <strong>{globalStateText}</strong></span>
+                      {cps.nome} — <strong className="operational-state-value">{globalStateText}</strong></span>
 
                     <span className={`governance-status governance-status-${governanceStatus.toLowerCase()}`}>
                       {governanceStatus.replace(/_/g, ' ')}
@@ -957,11 +971,9 @@ const PlayFase = () => {
                             onClick={() => openCpsData(cps, dataUrl)}
                             className="desc-btn"
                             title={
-                              usesLocalTelemetryModal
-                                ? 'Inspect aggregated real MQTT telemetry'
-                                : dataUrl
-                                  ? `Open CPS data endpoint: ${dataUrl}`
-                                  : 'Data endpoint not available'
+                              dataUrl
+                                ? `Open CPS data endpoint in a new tab: ${dataUrl}`
+                                : 'Data endpoint not available'
                             }
                             disabled={!usesLocalTelemetryModal && !dataUrl}
                           >
@@ -1061,11 +1073,9 @@ const PlayFase = () => {
                             onClick={() => openCpsData(cps, dataUrl)}
                             className="desc-btn"
                             title={
-                              usesLocalTelemetryModal
-                                ? 'Inspect aggregated real MQTT telemetry'
-                                : dataUrl
-                                  ? `Open CPS data endpoint: ${dataUrl}`
-                                  : 'Data endpoint not available'
+                              dataUrl
+                                ? `Open CPS data endpoint in a new tab: ${dataUrl}`
+                                : 'Data endpoint not available'
                             }
                             disabled={!usesLocalTelemetryModal && !dataUrl}
                           >
@@ -1161,11 +1171,9 @@ const PlayFase = () => {
                             onClick={() => openCpsData(cps, dataUrl)}
                             className="desc-btn"
                             title={
-                              usesLocalTelemetryModal
-                                ? 'Inspect aggregated real MQTT telemetry'
-                                : dataUrl
-                                  ? `Open CPS data endpoint: ${dataUrl}`
-                                  : 'Data endpoint not available'
+                              dataUrl
+                                ? `Open CPS data endpoint in a new tab: ${dataUrl}`
+                                : 'Data endpoint not available'
                             }
                             disabled={!usesLocalTelemetryModal && !dataUrl}
                           >
@@ -1233,7 +1241,7 @@ const PlayFase = () => {
                   <div className="single-feature-card" style={{ marginBottom: 12 }}>
                     <div className="single-feature-row" style={{ marginBottom: 0 }}>
                       <div className="single-feature-title">
-                        Operational State: <strong>{globalStateText}</strong>
+                        Operational State: <strong className="operational-state-value">{globalStateText}</strong>
                       </div>
 
                       <div className="single-feature-status">
@@ -1417,7 +1425,7 @@ const PlayFase = () => {
                             style={{ marginBottom: 10 }}
                           >
                             <div className="single-feature-title">
-                              Operation: <strong>{statusText}</strong>
+                              Operation: <strong className="operational-state-value">{statusText}</strong>
                             </div>
 
                             <div className="single-feature-status">

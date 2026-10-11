@@ -54,7 +54,8 @@ test('adapter retains one read-only OPC UA client and adds only the four request
   const clients = flow.filter((node) => node.type === 'OpcUa-Client');
   assert.equal(clients.length, 1);
   assert.equal(clients[0].action, 'info');
-  assert.equal(flow.some((node) => /write|call/i.test(`${node.action || ''} ${node.name || ''}`)), false);
+  assert.equal(flow.some((node) => /write/i.test(`${node.action || ''} ${node.name || ''}`)), false);
+  assert.equal(flow.some((node) => /^OpcUa-(?:Method|Call)$/i.test(node.type) || (node.type.startsWith('OpcUa-') && /call/i.test(node.action || ''))), false);
 
   const requestNode = byId('c3a000000000001a');
   for (const [tag, nodeId] of Object.entries(goodSignals)) {

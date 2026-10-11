@@ -50,7 +50,7 @@
     "type": "function",
     "z": "cpslai2_physical_tab",
     "name": "Build read-only candidate subscriptions",
-    "func": "const tags = [\n  { tag:'sys_man', nodeId:'ns=3;s=\"sys_man\"', dataType:'Boolean' },\n  { tag:'sys_man2', nodeId:'ns=3;s=\"sys_man2\"', dataType:'Boolean' },\n  { tag:'sys_sup', nodeId:'ns=3;s=\"sys_sup\"', dataType:'Boolean' },\n  { tag:'sys_menu', nodeId:'ns=3;s=\"sys_menu\"', dataType:'Boolean' },\n  { tag:'man_step_0', nodeId:'ns=3;s=\"man_step_0\"', dataType:'Boolean' },\n  { tag:'man_step_1', nodeId:'ns=3;s=\"man_step_1\"', dataType:'Boolean' }\n];\nflow.set('cpslai2_telemetry_by_nodeid', Object.fromEntries(tags.map(t => [t.nodeId, t])));\nreturn [tags.map(tag => ({...msg, topic:tag.nodeId, datatype:tag.dataType, interval:1000, payload:1000, _tag:tag.tag, _nodeId:tag.nodeId, _dataType:tag.dataType}))];",
+    "func": "const tags = [\n  { tag:'GCT_0', nodeId:'ns=3;s=\"GCT_0\"', dataType:'Boolean', requireServerDataType:true },\n  { tag:'sys_man', nodeId:'ns=3;s=\"sys_man\"', dataType:'Boolean' },\n  { tag:'sys_man2', nodeId:'ns=3;s=\"sys_man2\"', dataType:'Boolean' },\n  { tag:'sys_sup', nodeId:'ns=3;s=\"sys_sup\"', dataType:'Boolean' },\n  { tag:'sys_menu', nodeId:'ns=3;s=\"sys_menu\"', dataType:'Boolean' },\n  { tag:'man_step_0', nodeId:'ns=3;s=\"man_step_0\"', dataType:'Boolean' },\n  { tag:'man_step_1', nodeId:'ns=3;s=\"man_step_1\"', dataType:'Boolean' }\n];\nflow.set('cpslai2_telemetry_by_nodeid', Object.fromEntries(tags.map(t => [t.nodeId, t])));\nreturn [tags.map(tag => ({...msg, topic:tag.nodeId, datatype:tag.dataType, interval:1000, payload:1000, action:tag.requireServerDataType?'info':undefined, _tag:tag.tag, _nodeId:tag.nodeId, _dataType:tag.dataType}))];",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
@@ -133,7 +133,7 @@
     "type": "function",
     "z": "cpslai2_physical_tab",
     "name": "Build guarded OPC UA read batch",
-    "func": "const BATCH_TIMEOUT_MS = 5000;\nconst configured = flow.get('cpslai2_telemetry_by_nodeid') || {};\nconst tags = Object.values(configured);\nif (tags.length !== 6) { node.warn('Periodic read skipped: six-tag mapping is not ready'); return null; }\nconst now = Date.now();\nconst active = flow.get('cpslai2_read_batch');\nif (active && active.receivedNodeIds.length < active.expectedNodeIds.length && now < active.expiresAt) return null;\nif (active && active.receivedNodeIds.length < active.expectedNodeIds.length) {\n  const history = flow.get('cpslai2_read_diagnostics') || [];\n  history.push({ at: new Date(now).toISOString(), type: 'READ_BATCH_TIMEOUT', batchId: active.batchId, missingNodeIds: active.expectedNodeIds.filter(id => !active.receivedNodeIds.includes(id)) });\n  flow.set('cpslai2_read_diagnostics', history.slice(-100));\n}\nconst sequence = Number(flow.get('cpslai2_read_batch_sequence') || 0) + 1;\nflow.set('cpslai2_read_batch_sequence', sequence);\nconst batchId = `cpslai2-read-${now}-${sequence}`;\nconst expectedNodeIds = tags.map(tag => tag.nodeId);\nflow.set('cpslai2_read_batch', { batchId, startedAt: now, expiresAt: now + BATCH_TIMEOUT_MS, expectedNodeIds, receivedNodeIds: [] });\nreturn [tags.map(tag => ({ topic: tag.nodeId, payload: '', datatype: tag.dataType, _tag: tag.tag, _nodeId: tag.nodeId, _dataType: tag.dataType, _batchId: batchId, _readRequestedAt: new Date(now).toISOString() }))];",
+    "func": "const BATCH_TIMEOUT_MS = 5000;\nconst configured = flow.get('cpslai2_telemetry_by_nodeid') || {};\nconst tags = Object.values(configured);\nif (tags.length !== 7) { node.warn('Periodic read skipped: seven-tag mapping is not ready'); return null; }\nconst now = Date.now();\nconst active = flow.get('cpslai2_read_batch');\nif (active && active.receivedNodeIds.length < active.expectedNodeIds.length && now < active.expiresAt) return null;\nif (active && active.receivedNodeIds.length < active.expectedNodeIds.length) {\n  const history = flow.get('cpslai2_read_diagnostics') || [];\n  history.push({ at: new Date(now).toISOString(), type: 'READ_BATCH_TIMEOUT', batchId: active.batchId, missingNodeIds: active.expectedNodeIds.filter(id => !active.receivedNodeIds.includes(id)) });\n  flow.set('cpslai2_read_diagnostics', history.slice(-100));\n}\nconst sequence = Number(flow.get('cpslai2_read_batch_sequence') || 0) + 1;\nflow.set('cpslai2_read_batch_sequence', sequence);\nconst batchId = `cpslai2-read-${now}-${sequence}`;\nconst expectedNodeIds = tags.map(tag => tag.nodeId);\nflow.set('cpslai2_read_batch', { batchId, startedAt: now, expiresAt: now + BATCH_TIMEOUT_MS, expectedNodeIds, receivedNodeIds: [] });\nreturn [tags.map(tag => ({ topic: tag.nodeId, payload: '', datatype: tag.dataType, action:tag.requireServerDataType?'info':undefined, _tag: tag.tag, _nodeId: tag.nodeId, _dataType: tag.dataType, _batchId: batchId, _readRequestedAt: new Date(now).toISOString() }))];",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
@@ -176,7 +176,7 @@
     "y": 220,
     "wires": [
       [
-        "cpslai2_normalize_sample"
+        "cpslai2_init_diag_router"
       ],
       [
         "cpslai2_diagnostics"
@@ -191,7 +191,7 @@
     "type": "function",
     "z": "cpslai2_physical_tab",
     "name": "Validate and cache real OPC UA sample",
-    "func": "const configured = flow.get('cpslai2_telemetry_by_nodeid') || {};\nconst diagnostics = (type, detail) => {\n  const history = flow.get('cpslai2_read_diagnostics') || [];\n  history.push({ at: new Date().toISOString(), type, ...detail });\n  flow.set('cpslai2_read_diagnostics', history.slice(-100));\n  node.warn(type + ': ' + JSON.stringify(detail));\n};\nconst topicNodeId = String(msg.topic || '').split(';datatype=')[0].trim();\nconst requestedNodeId = String(msg._nodeId || '').trim();\nif (requestedNodeId && requestedNodeId !== topicNodeId) { diagnostics('READ_NODEID_MISMATCH', { batchId: msg._batchId || null, requestedNodeId, topicNodeId }); return null; }\nconst meta = configured[topicNodeId];\nif (!meta || (msg._tag && msg._tag !== meta.tag)) { diagnostics('UNEXPECTED_OPCUA_SAMPLE', { batchId: msg._batchId || null, topicNodeId, tag: msg._tag || null }); return null; }\nif (msg._batchId) {\n  const active = flow.get('cpslai2_read_batch');\n  if (!active || active.batchId !== msg._batchId || Date.now() > active.expiresAt) { diagnostics('LATE_OR_UNKNOWN_READ_RESPONSE', { batchId: msg._batchId, topicNodeId }); return null; }\n  if (!active.expectedNodeIds.includes(topicNodeId)) { diagnostics('UNEXPECTED_BATCH_NODEID', { batchId: msg._batchId, topicNodeId }); return null; }\n  if (active.receivedNodeIds.includes(topicNodeId)) { diagnostics('DUPLICATE_READ_RESPONSE', { batchId: msg._batchId, topicNodeId }); return null; }\n  active.receivedNodeIds.push(topicNodeId);\n  if (active.receivedNodeIds.length === active.expectedNodeIds.length) {\n    flow.set('cpslai2_last_read_batch', { ...active, completedAt: Date.now() });\n    flow.set('cpslai2_read_batch', null);\n  } else flow.set('cpslai2_read_batch', active);\n}\nconst reportedDataType = String(msg.datatype || msg.dataType || msg.payload?.dataType || msg.payload?.datatype || msg._dataType || '').replace(/^.*:/, '');\nif (!reportedDataType || reportedDataType.toLowerCase() !== meta.dataType.toLowerCase()) { diagnostics('INVALID_DATATYPE', { batchId: msg._batchId || null, topicNodeId, reportedDataType, expectedDataType: meta.dataType }); return null; }\nlet raw = msg.payload;\nwhile (raw !== null && typeof raw === 'object' && Object.prototype.hasOwnProperty.call(raw, 'value')) raw = raw.value;\nconst statusCode = String(msg.statusCode?.name || msg.statusCode || msg.payload?.statusCode?.name || msg.payload?.statusCode || 'Unknown');\nif (!/^Good/i.test(statusCode) || raw === undefined || raw === null || typeof raw !== 'boolean') { diagnostics('INVALID_OPCUA_READING', { batchId: msg._batchId || null, topicNodeId, statusCode, valueType: typeof raw }); return null; }\nconst toIso = value => { if (!value) return null; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString(); };\nconst sourceTimestamp = toIso(msg.sourceTimestamp || msg.payload?.sourceTimestamp);\nconst serverTimestamp = toIso(msg.serverTimestamp || msg.payload?.serverTimestamp);\nconst collectedAt = new Date().toISOString();\nconst samples = flow.get('cpslai2_samples') || {};\nconst prior = samples[meta.tag];\nconst incomingOrder = Date.parse(serverTimestamp || sourceTimestamp || collectedAt);\nconst priorOrder = Date.parse(prior?.serverTimestamp || prior?.sourceTimestamp || prior?.collectedAt || '');\nif (prior && Number.isFinite(priorOrder) && Number.isFinite(incomingOrder) && incomingOrder < priorOrder) { diagnostics('OLDER_SAMPLE_REJECTED', { batchId: msg._batchId || null, topicNodeId, incomingOrder, priorOrder }); return null; }\nsamples[meta.tag] = { field: meta.tag, value: raw, nodeId: meta.nodeId, dataType: meta.dataType, sourceTimestamp, serverTimestamp, statusCode, quality: statusCode, valid: true, collectedAt, readBatchId: msg._batchId || null, readRequestedAt: msg._readRequestedAt || null, semanticName: null, semanticMappingStatus: ['sys_man', 'sys_sup', 'sys_man2'].includes(meta.tag) ? 'PHYSICALLY_VALIDATED_MODE_MARKER' : 'PRELIMINARY_UNVALIDATED' };\nflow.set('cpslai2_samples', samples);\nreturn null;",
+    "func": "const configured = flow.get('cpslai2_telemetry_by_nodeid') || {};\nconst diagnostics = (type, detail) => {\n  const history = flow.get('cpslai2_read_diagnostics') || [];\n  history.push({ at: new Date().toISOString(), type, ...detail });\n  flow.set('cpslai2_read_diagnostics', history.slice(-100));\n  node.warn(type + ': ' + JSON.stringify(detail));\n};\nconst topicNodeId = String(msg.topic || '').split(';datatype=')[0].trim();\nconst requestedNodeId = String(msg._nodeId || '').trim();\nif (requestedNodeId && requestedNodeId !== topicNodeId) { diagnostics('READ_NODEID_MISMATCH', { batchId: msg._batchId || null, requestedNodeId, topicNodeId }); return null; }\nconst meta = configured[topicNodeId];\nif (!meta || (msg._tag && msg._tag !== meta.tag)) { diagnostics('UNEXPECTED_OPCUA_SAMPLE', { batchId: msg._batchId || null, topicNodeId, tag: msg._tag || null }); return null; }\nif (msg._batchId) {\n  const active = flow.get('cpslai2_read_batch');\n  if (!active || active.batchId !== msg._batchId || Date.now() > active.expiresAt) { diagnostics('LATE_OR_UNKNOWN_READ_RESPONSE', { batchId: msg._batchId, topicNodeId }); return null; }\n  if (!active.expectedNodeIds.includes(topicNodeId)) { diagnostics('UNEXPECTED_BATCH_NODEID', { batchId: msg._batchId, topicNodeId }); return null; }\n  if (active.receivedNodeIds.includes(topicNodeId)) { diagnostics('DUPLICATE_READ_RESPONSE', { batchId: msg._batchId, topicNodeId }); return null; }\n  active.receivedNodeIds.push(topicNodeId);\n  if (active.receivedNodeIds.length === active.expectedNodeIds.length) {\n    flow.set('cpslai2_last_read_batch', { ...active, completedAt: Date.now() });\n    flow.set('cpslai2_read_batch', null);\n  } else flow.set('cpslai2_read_batch', active);\n}\nconst attr=msg.dataType??msg.dataTypeNodeId??msg.attributes?.dataType??msg.payload?.dataTypeNodeId??msg.payload?.attributes?.dataType??msg.datatype??msg.payload?.dataType??msg.payload?.datatype??null; const dataTypeText=typeof attr==='string'?attr:(attr&&Number(attr.namespace??attr.namespaceIndex)===0?'ns=0;i='+String(attr.value??attr.identifier):String(attr||'')); const token=dataTypeText.replace(/\\s/g,'').toLowerCase(); const reportedDataType=['ns=0;i=1','boolean','datatype.boolean'].includes(token)?'Boolean':'';\nif (!reportedDataType || reportedDataType.toLowerCase() !== meta.dataType.toLowerCase()) { diagnostics('INVALID_DATATYPE', { batchId: msg._batchId || null, topicNodeId, reportedDataType, expectedDataType: meta.dataType }); return null; }\nconst own = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);\nlet raw = own(msg, 'value') ? msg.value\n  : own(msg.payload, 'value') ? msg.payload.value\n    : own(msg.payload?.attributes, 'value') ? msg.payload.attributes.value\n      : msg.payload;\nwhile (raw !== null && typeof raw === 'object' && Object.prototype.hasOwnProperty.call(raw, 'value')) raw = raw.value;\nconst statusCode = String(msg.statusCode?.name || msg.statusCode || msg.payload?.statusCode?.name || msg.payload?.statusCode || 'Unknown');\nif (!/^Good/i.test(statusCode) || raw === undefined || raw === null || typeof raw !== 'boolean') { diagnostics('INVALID_OPCUA_READING', { batchId: msg._batchId || null, topicNodeId, statusCode, valueType: typeof raw }); return null; }\nconst toIso = value => { if (!value) return null; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString(); };\nconst sourceTimestamp = toIso(msg.sourceTimestamp || msg.payload?.sourceTimestamp);\nconst serverTimestamp = toIso(msg.serverTimestamp || msg.payload?.serverTimestamp);\nconst collectedAt = new Date().toISOString();\nconst samples = flow.get('cpslai2_samples') || {};\nconst prior = samples[meta.tag];\nconst incomingOrder = Date.parse(serverTimestamp || sourceTimestamp || collectedAt);\nconst priorOrder = Date.parse(prior?.serverTimestamp || prior?.sourceTimestamp || prior?.collectedAt || '');\nif (prior && Number.isFinite(priorOrder) && Number.isFinite(incomingOrder) && incomingOrder < priorOrder) { diagnostics('OLDER_SAMPLE_REJECTED', { batchId: msg._batchId || null, topicNodeId, incomingOrder, priorOrder }); return null; }\nsamples[meta.tag] = { field: meta.tag, value: raw, nodeId: meta.nodeId, dataType: meta.dataType, sourceTimestamp, serverTimestamp, statusCode, quality: statusCode, valid: true, collectedAt, readBatchId: msg._batchId || null, readRequestedAt: msg._readRequestedAt || null, semanticName:null, dataTypeNodeId:meta.requireServerDataType?dataTypeText:null, dataTypeEvidence:meta.requireServerDataType?'OPC_UA_ATTRIBUTE_DATATYPE':null, semanticMappingStatus:meta.tag==='GCT_0'?'PHYSICALLY_VALIDATED_INIT_MARKER':['sys_man','sys_sup','sys_man2'].includes(meta.tag)?'PHYSICALLY_VALIDATED_MODE_MARKER':'PRELIMINARY_UNVALIDATED' };\nflow.set('cpslai2_samples', samples);\nreturn null;",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
@@ -233,7 +233,7 @@
     "type": "function",
     "z": "cpslai2_physical_tab",
     "name": "Build CPS/MQTT snapshot",
-    "func": "const EXPECTED_TAGS = ['sys_man', 'sys_man2', 'sys_sup', 'sys_menu', 'man_step_0', 'man_step_1'];\nconst STALE_AFTER_MS = 6000;\nconst samples = flow.get('cpslai2_samples') || {};\nconst availableTags = EXPECTED_TAGS.filter(tag => samples[tag]);\nif (availableTags.length === 0) return null;\nconst publishedAt = new Date().toISOString();\nconst publishedAtMs = Date.parse(publishedAt);\nconst data = {};\nfor (const tag of availableTags) {\n  const cached = samples[tag];\n  const collectedAtMs = Date.parse(cached.collectedAt);\n  const ageMs = Number.isFinite(collectedAtMs) ? Math.max(0, publishedAtMs - collectedAtMs) : null;\n  const stale = ageMs === null || ageMs > STALE_AFTER_MS;\n  data[tag] = { ...cached, validAtCollection: cached.valid, valid: cached.valid === true && !stale, ageMs, stale };\n}\nmsg.topic = 'cpslai2/data';\nmsg.qos = 1;\nmsg.retain = false;\nmsg.payload = { schemaVersion: '1.2', cpsId: 'cpslai2', formalCpsId: 'CPS-LAI-02', cpsName: 'JoiningStationLAI', displayName: 'CPS-LAI-02 – Joining Station', source: 'OPC_UA', endpoint: 'opc.tcp://192.168.1.20:4840', timestamp: publishedAt, publishedAt, snapshotComplete: availableTags.length === EXPECTED_TAGS.length, availableTagCount: availableTags.length, expectedTagCount: EXPECTED_TAGS.length, staleAfterMs: STALE_AFTER_MS, data };\nreturn msg;",
+    "func": "const EXPECTED_TAGS = ['GCT_0', 'sys_man', 'sys_man2', 'sys_sup', 'sys_menu', 'man_step_0', 'man_step_1'];\nconst STALE_AFTER_MS = 6000;\nconst samples = flow.get('cpslai2_samples') || {};\nconst availableTags = EXPECTED_TAGS.filter(tag => samples[tag]);\nif (availableTags.length === 0) return null;\nconst publishedAt = new Date().toISOString();\nconst publishedAtMs = Date.parse(publishedAt);\nconst data = {};\nfor (const tag of availableTags) {\n  const cached = samples[tag];\n  const collectedAtMs = Date.parse(cached.collectedAt);\n  const ageMs = Number.isFinite(collectedAtMs) ? Math.max(0, publishedAtMs - collectedAtMs) : null;\n  const stale = ageMs === null || ageMs > STALE_AFTER_MS;\n  data[tag] = { ...cached, validAtCollection: cached.valid, valid: cached.valid === true && !stale, ageMs, stale };\n}\nmsg.topic = 'cpslai2/data';\nmsg.qos = 1;\nmsg.retain = false;\nmsg.payload = { schemaVersion: '1.2', cpsId: 'cpslai2', formalCpsId: 'CPS-LAI-02', cpsName: 'JoiningStationLAI', displayName: 'CPS-LAI-02 – Joining Station', source: 'OPC_UA', endpoint: 'opc.tcp://192.168.1.20:4840', timestamp: publishedAt, publishedAt, snapshotComplete: availableTags.length === EXPECTED_TAGS.length, availableTagCount: availableTags.length, expectedTagCount: EXPECTED_TAGS.length, staleAfterMs: STALE_AFTER_MS, data };\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
@@ -252,7 +252,7 @@
     "type": "function",
     "z": "cpslai2_physical_tab",
     "name": "Derive validated physical operationMode",
-    "func": "const MARKERS = [\n  { role: 'MANUAL', tag: 'sys_man', nodeId: 'ns=3;s=\"sys_man\"' },\n  { role: 'AUTOMATIC', tag: 'sys_sup', nodeId: 'ns=3;s=\"sys_sup\"' },\n  { role: 'STEP_BY_STEP', tag: 'sys_man2', nodeId: 'ns=3;s=\"sys_man2\"' }\n];\nconst data = msg.payload?.data || {};\nconst derivedAt = msg.payload?.publishedAt || new Date().toISOString();\nconst result = (operationMode, reason) => ({ operationMode, source: 'PHYSICAL_OPCUA_MARKERS', semanticValidationStatus: 'PHYSICALLY_VALIDATED', reason, derivedAt, tagsUsed: MARKERS });\nconst samples = MARKERS.map(marker => data[marker.tag]);\nlet derived;\nif (samples.some(sample => !sample || typeof sample !== 'object')) derived = result('UNKNOWN', 'MISSING_MODE_MARKER');\nelse if (samples.some(sample => String(sample.dataType || sample.datatype || '').toLowerCase() !== 'boolean')) derived = result('UNKNOWN', 'INCOMPATIBLE_MARKER_DATATYPE');\nelse if (samples.some(sample => sample.stale === true)) derived = result('UNKNOWN', 'STALE_MODE_MARKER');\nelse if (samples.some(sample => sample.valid !== true)) derived = result('UNKNOWN', 'INVALID_MODE_MARKER');\nelse if (samples.some(sample => !/^Good(?:\\b|\\s|\\()/i.test(String(sample.statusCode || sample.quality || '')))) derived = result('UNKNOWN', 'BAD_OPCUA_QUALITY');\nelse if (samples.some(sample => typeof sample.value !== 'boolean')) derived = result('UNKNOWN', 'NON_BOOLEAN_MARKER_VALUE');\nelse {\n  const active = samples.map(sample => sample.value);\n  const activeCount = active.filter(Boolean).length;\n  if (activeCount === 0) derived = result('UNKNOWN', 'NO_ACTIVE_MODE_MARKER');\n  else if (activeCount > 1) derived = result('UNKNOWN', 'NON_EXCLUSIVE_MODE_MARKERS');\n  else if (active[0]) derived = result('MANUAL', 'EXCLUSIVE_MANUAL_MARKER');\n  else if (active[1]) derived = result('AUTOMATIC', 'EXCLUSIVE_AUTOMATIC_MARKER');\n  else if (active[2]) derived = result('STEP_BY_STEP', 'EXCLUSIVE_STEP_BY_STEP_MARKER');\n  else derived = result('UNKNOWN', 'UNCLASSIFIED_MARKER_COMBINATION');\n}\nmsg.payload = { ...msg.payload, derived };\nreturn msg;",
+    "func": "const I={sourceTag:'GCT_0',tag:'GCT_0',nodeId:'ns=3;s=\"GCT_0\"'},M=[{role:'MANUAL',tag:'sys_man',nodeId:'ns=3;s=\"sys_man\"'},{role:'AUTOMATIC',tag:'sys_sup',nodeId:'ns=3;s=\"sys_sup\"'},{role:'STEP_BY_STEP',tag:'sys_man2',nodeId:'ns=3;s=\"sys_man2\"'}],d=msg.payload?.data||{},at=msg.payload?.publishedAt||new Date().toISOString(),i=d.GCT_0,s=M.map(x=>d[x.tag]);const good=(x,n)=>x&&x.nodeId===n&&String(x.dataType||x.datatype||'').toLowerCase()==='boolean'&&x.stale!==true&&x.valid===true&&/^Good(?:\\b|\\s|\\()/i.test(String(x.statusCode||x.quality||''))&&typeof x.value==='boolean'&&Number.isFinite(Date.parse(x.collectedAt));const out=(mode,reason)=>({operationMode:mode,source:'PHYSICAL_OPCUA_MARKERS',semanticValidationStatus:'PHYSICALLY_VALIDATED',reason,derivedAt:at,tagsUsed:[I,...M],initEvidence:{sourceTag:'GCT_0',nodeId:i?.nodeId??null,value:i?.value??null,statusCode:i?.statusCode??i?.quality??null,collectedAt:i?.collectedAt??null,evidenceStatus:good(i,I.nodeId)?'PHYSICALLY_VALIDATED':'INVALID_OR_STALE',reason}});let r;if(!good(i,I.nodeId))r=out('UNKNOWN',!i?'MISSING_INIT_MARKER':i?.stale?'STALE_INIT_MARKER':'INVALID_INIT_MARKER');else if(s.some((x,n)=>!good(x,M[n].nodeId)))r=out('UNKNOWN','INVALID_OR_MISSING_MODE_MARKER');else{const n=s.filter(x=>x.value).length;if(i.value)r=n===0?out('INIT','VALIDATED_GCT_0_ACTIVE'):out('UNKNOWN','INIT_MARKER_CONFLICT');else if(n===0)r=out('UNKNOWN','NO_ACTIVE_MODE_MARKER');else if(n>1)r=out('UNKNOWN','NON_EXCLUSIVE_MODE_MARKERS');else if(s[0].value)r=out('MANUAL','EXCLUSIVE_MANUAL_MARKER');else if(s[1].value)r=out('AUTOMATIC','EXCLUSIVE_AUTOMATIC_MARKER');else r=out('STEP_BY_STEP','EXCLUSIVE_STEP_BY_STEP_MARKER');}msg.payload={...msg.payload,derived:r};return msg;",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
@@ -373,5 +373,321 @@
     "willQos": "0",
     "willPayload": "",
     "willMsg": {}
+  },
+  {
+    "id": "cpslai2_init_diag_start",
+    "type": "inject",
+    "z": "cpslai2_physical_tab",
+    "name": "START INIT diagnostic (manual)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "START",
+    "payloadType": "str",
+    "x": 190,
+    "y": 520,
+    "wires": [
+      [
+        "cpslai2_init_diag_control"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_init_diag_stop",
+    "type": "inject",
+    "z": "cpslai2_physical_tab",
+    "name": "STOP INIT diagnostic (manual)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "STOP",
+    "payloadType": "str",
+    "x": 190,
+    "y": 560,
+    "wires": [
+      [
+        "cpslai2_init_diag_control"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_init_diag_control",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Manual diagnostic gate",
+    "func": "const command=String(msg.payload||'').toUpperCase();\nif(command==='START'){flow.set('cpslai2_init_diag_enabled',true);flow.set('cpslai2_init_diag_batch',null);node.status({fill:'green',shape:'dot',text:'INIT diagnostic running'});return null;}\nif(command==='STOP'){flow.set('cpslai2_init_diag_enabled',false);flow.set('cpslai2_init_diag_batch',null);node.status({fill:'grey',shape:'ring',text:'INIT diagnostic stopped'});return null;}\nreturn null;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 470,
+    "y": 540,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "cpslai2_init_diag_step",
+    "type": "inject",
+    "z": "cpslai2_physical_tab",
+    "name": "Set experimental step (edit payload)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "PLC_STARTING",
+    "payloadType": "str",
+    "x": 210,
+    "y": 600,
+    "wires": [
+      [
+        "cpslai2_init_diag_set_step"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_init_diag_set_step",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Store diagnostic testStep only",
+    "func": "const step=String(msg.payload||'').trim().toUpperCase();\nif(!/^[A-Z][A-Z0-9_]{1,63}$/.test(step)){node.warn('Invalid diagnostic test step');return null;}\nflow.set('cpslai2_init_diag_step',step);node.status({fill:'blue',shape:'dot',text:step});return null;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 500,
+    "y": 600,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "cpslai2_init_diag_tick",
+    "type": "inject",
+    "z": "cpslai2_physical_tab",
+    "name": "Diagnostic READ every 2 s (gated)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "2",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "str",
+    "x": 190,
+    "y": 650,
+    "wires": [
+      [
+        "cpslai2_init_diag_build"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_init_diag_build",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Build four-tag diagnostic batch",
+    "func": "const TIMEOUT_MS=5000;\nconst TAGS=[{tag:'OperatingMode',nodeId:'ns=3;s=OperatingMode',expectedType:'Int32'},{tag:'sys_man',nodeId:'ns=3;s=\"sys_man\"',expectedType:'Boolean'},{tag:'sys_sup',nodeId:'ns=3;s=\"sys_sup\"',expectedType:'Boolean'},{tag:'sys_man2',nodeId:'ns=3;s=\"sys_man2\"',expectedType:'Boolean'}];\nif(flow.get('cpslai2_init_diag_enabled')!==true)return [null,null];\nconst now=Date.now();let expired=null;const active=flow.get('cpslai2_init_diag_batch');\nif(active&&now<active.expiresAt)return [null,null];\nif(active){const missingTags=active.tags.filter(t=>!active.samples[t.tag]).map(t=>t.tag);expired={payload:{schemaVersion:'1.0',recordType:'INIT_PHYSICAL_DIAGNOSTIC',cpsId:'cpslai2',batchId:active.batchId,testStep:active.testStep,readRequestedAt:active.readRequestedAt,completedAt:new Date(now).toISOString(),complete:false,missingTags,failureReason:'BATCH_TIMEOUT',samples:active.samples}};}\nconst seq=Number(flow.get('cpslai2_init_diag_sequence')||0)+1;flow.set('cpslai2_init_diag_sequence',seq);const batchId='cpslai2-init-'+now+'-'+seq;const readRequestedAt=new Date(now).toISOString();const testStep=flow.get('cpslai2_init_diag_step')||'UNSPECIFIED';flow.set('cpslai2_init_diag_batch',{batchId,expiresAt:now+TIMEOUT_MS,readRequestedAt,testStep,tags:TAGS,samples:{}});\nconst reads=TAGS.map(t=>({topic:t.nodeId,payload:'',action:'info',_initDiagnostic:true,_initCpsId:'cpslai2',_initBatchId:batchId,_initTag:t.tag,_initNodeId:t.nodeId,_initExpectedType:t.expectedType}));return [reads,expired];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 480,
+    "y": 650,
+    "wires": [
+      [
+        "cpslai2_opcua_read"
+      ],
+      [
+        "cpslai2_init_diag_jsonl"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_init_diag_router",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Route operational, INIT diagnostic and GCT_0 probe reads",
+    "func": "if(msg?._gct0Probe===true)return [null,null,msg];if(msg?._initDiagnostic===true)return [null,msg,null];return [msg,null,null];",
+    "outputs": 3,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1230,
+    "y": 220,
+    "wires": [
+      [
+        "cpslai2_normalize_sample"
+      ],
+      [
+        "cpslai2_init_diag_collect"
+      ],
+      [
+        "cpslai2_gct0_normalize"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_init_diag_collect",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Validate and assemble diagnostic batch",
+    "func": "const batch=flow.get('cpslai2_init_diag_batch');const now=new Date().toISOString();\nif(!batch||batch.batchId!==msg._initBatchId)return null;const tag=msg._initTag;const meta=batch.tags.find(t=>t.tag===tag);if(!meta||meta.nodeId!==msg._initNodeId||batch.samples[tag])return null;\nconst own=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k);const raw=own(msg,'value')?msg.value:own(msg.payload,'value')?msg.payload.value:own(msg.payload?.attributes,'value')?msg.payload.attributes.value:undefined;const attr=msg.dataType??msg.dataTypeNodeId??msg.attributes?.dataType??msg.payload?.dataTypeNodeId??msg.payload?.attributes?.dataType??null;const typeText=typeof attr==='string'?attr:(attr&&Number(attr.namespace??attr.namespaceIndex)===0?'ns=0;i='+String(attr.value??attr.identifier):String(attr||''));const normalized=String(typeText).replace(/\\s/g,'').toLowerCase();const actualType=(normalized==='ns=0;i=6'||normalized==='int32'||normalized==='datatype.int32')?'Int32':(normalized==='ns=0;i=1'||normalized==='boolean'||normalized==='datatype.boolean')?'Boolean':null;const statusCode=String(msg.statusCode?.name||msg.statusCode||msg.payload?.statusCode?.name||msg.payload?.statusCode||msg.quality||'Unknown');const good=/^Good(?:\\b|\\s|\\()/i.test(statusCode);const valueTypeOk=meta.expectedType==='Int32'?Number.isInteger(raw):typeof raw==='boolean';const typeOk=actualType===meta.expectedType;const failureReason=!actualType?'MISSING_OR_UNSUPPORTED_DATATYPE':!typeOk?'DATATYPE_MISMATCH':!good?'BAD_STATUS_CODE':!valueTypeOk?'VALUE_TYPE_MISMATCH':null;const iso=v=>{if(!v)return null;const d=new Date(v);return Number.isNaN(d.getTime())?null:d.toISOString();};batch.samples[tag]={nodeId:meta.nodeId,value:raw??null,datatype:actualType,datatypeRaw:typeText||null,statusCode,collectedAt:now,sourceTimestamp:iso(msg.sourceTimestamp||msg.payload?.sourceTimestamp),serverTimestamp:iso(msg.serverTimestamp||msg.payload?.serverTimestamp),valid:failureReason===null,failureReason};flow.set('cpslai2_init_diag_batch',batch);if(Object.keys(batch.samples).length<batch.tags.length)return null;flow.set('cpslai2_init_diag_batch',null);const missingTags=batch.tags.filter(t=>!batch.samples[t.tag]).map(t=>t.tag);const failures=Object.entries(batch.samples).filter(([,s])=>!s.valid).map(([name,s])=>({tag:name,reason:s.failureReason}));msg.payload={schemaVersion:'1.0',recordType:'INIT_PHYSICAL_DIAGNOSTIC',cpsId:'cpslai2',batchId:batch.batchId,testStep:batch.testStep,readRequestedAt:batch.readRequestedAt,completedAt:now,complete:missingTags.length===0,missingTags,failureReason:failures.length?'INVALID_SAMPLE':null,failures,samples:batch.samples};return msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1470,
+    "y": 610,
+    "wires": [
+      [
+        "cpslai2_init_diag_jsonl"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_init_diag_jsonl",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Encode INIT diagnostic JSONL",
+    "func": "msg.payload=JSON.stringify(msg.payload)+'\\n';return msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1720,
+    "y": 650,
+    "wires": [
+      [
+        "cpslai2_init_diag_file"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_init_diag_file",
+    "type": "file",
+    "z": "cpslai2_physical_tab",
+    "name": "Append CPS-LAI-02 INIT diagnostic",
+    "filename": "cpslai2-init-diagnostic.jsonl",
+    "filenameType": "str",
+    "appendNewline": false,
+    "createDir": true,
+    "overwriteFile": "false",
+    "encoding": "none",
+    "x": 1980,
+    "y": 650,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "cpslai2_gct0_manual_read",
+    "type": "inject",
+    "z": "cpslai2_physical_tab",
+    "name": "READ GCT_0 once (manual supervised)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "str",
+    "x": 210,
+    "y": 720,
+    "wires": [
+      [
+        "cpslai2_gct0_build_read"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_gct0_build_read",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Build isolated GCT_0 INFO read",
+    "func": "const nodeId='ns=3;s=\"GCT_0\"';const requestedAt=new Date().toISOString();return {topic:nodeId,payload:'',action:'info',_gct0Probe:true,_gct0NodeId:nodeId,_gct0RequestedAt:requestedAt};",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 490,
+    "y": 720,
+    "wires": [
+      [
+        "cpslai2_opcua_read"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_gct0_normalize",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Normalize GCT_0 evidence only",
+    "func": "const expected='ns=3;s=\"GCT_0\"';const returned=String(msg.topic||msg.nodeId||msg._gct0NodeId||'').split(';datatype=')[0].trim();const own=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k);const value=own(msg,'value')?msg.value:own(msg.payload,'value')?msg.payload.value:own(msg.payload?.attributes,'value')?msg.payload.attributes.value:null;const attr=msg.dataType??msg.dataTypeNodeId??msg.attributes?.dataType??msg.payload?.dataTypeNodeId??msg.payload?.attributes?.dataType??null;const datatype=typeof attr==='string'?attr:(attr&&typeof attr.toString==='function'?attr.toString():null);const statusCode=String(msg.statusCode?.name||msg.statusCode||msg.payload?.statusCode?.name||msg.payload?.statusCode||msg.quality||'Unknown');msg.payload={schemaVersion:'1.0',recordType:'CPS_LAI_02_GCT_0_PROBE',cpsId:'cpslai2',requestedNodeId:expected,returnedNodeId:returned||null,nodeIdMatches:returned===expected,value,datatype:datatype||null,statusCode,goodQuality:/^Good(?:\\b|\\s|\\()/i.test(statusCode),requestedAt:msg._gct0RequestedAt||null,collectedAt:new Date().toISOString(),sourceTimestamp:msg.sourceTimestamp||msg.payload?.sourceTimestamp||null,serverTimestamp:msg.serverTimestamp||msg.payload?.serverTimestamp||null,interpretation:'UNVALIDATED_CANDIDATE_ONLY'};return msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1480,
+    "y": 720,
+    "wires": [
+      [
+        "cpslai2_gct0_debug"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_gct0_debug",
+    "type": "debug",
+    "z": "cpslai2_physical_tab",
+    "name": "GCT_0 evidence — Debug only",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1760,
+    "y": 720,
+    "wires": []
   }
 ]

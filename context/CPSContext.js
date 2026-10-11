@@ -1854,6 +1854,9 @@ const parseAASCps = (parsed) => {
   const operationMode =
     getPropertyValueFromElements(smOperational?.submodelElements, 'OperationMode') || null;
 
+  const initialOperationMode =
+    cpsId === 'cpslai2' || cpsId === 'cpslai3' ? 'INIT' : operationMode;
+
   const operationalState =
     getPropertyValueFromElements(smHealth?.submodelElements, 'OperationalState') || 'Unknown';
 
@@ -1992,7 +1995,7 @@ const parseAASCps = (parsed) => {
         ),
         pieceCounter: getPropertyValueFromElements(smOperational?.submodelElements, 'PieceCounter'),
         cycleTimeMs: getPropertyValueFromElements(smOperational?.submodelElements, 'CycleTimeMs'),
-        operationMode,
+        operationMode: initialOperationMode,
       },
       documents: {
         datasheetPdf: getPropertyValueFromElements(smDocs?.submodelElements, 'DatasheetPDF'),

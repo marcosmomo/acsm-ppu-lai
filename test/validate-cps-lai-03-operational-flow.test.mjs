@@ -30,9 +30,10 @@ test('flow is disabled and uses exactly one read-only OPC UA metadata client', (
   assert.doesNotMatch(serialized, /"action":"(?:write|call)"/);
 });
 
-test('read batch contains exactly the three validated NodeIds without configured datatype fallback', () => {
+test('read batch contains GCT_0 and the three validated mode NodeIds without configured datatype fallback', () => {
   const builder = byId.get('c3a0000000000004');
   for (const [tag, nodeId] of [
+    ['GCT_0', 'ns=3;s="GCT_0"'],
     ['sys_man', 'ns=3;s="sys_man"'],
     ['sys_sup', 'ns=3;s="sys_sup"'],
     ['sys_man2', 'ns=3;s="sys_man2"'],
@@ -120,10 +121,64 @@ test('MQTT contract carries evidence, freshness and conservative derivation on c
   assert.match(snapshot, /expectedTagCount/);
   assert.match(snapshot, /communication:\{ dataFresh/);
   assert.match(snapshot, /CPS_LAI_03_PHYSICAL_MODE_MARKERS/);
-  assert.match(snapshot, /INCOMPATIBLE_MARKER_DATATYPE/);
+  assert.match(snapshot, /INVALID_INIT_MARKER/);
+  assert.match(snapshot, /VALIDATED_GCT_0_ACTIVE/);
+  assert.match(snapshot, /initEvidence/);
   assert.match(snapshot, /NON_EXCLUSIVE_MODE_MARKERS/);
   assert.equal(byId.get('c3a000000000000f').topic, 'cpslai3/data');
   assert.equal(byId.get('c3a000000000000f').qos, '1');
+});
+
+const physicalSample = (tag, value, extra = {}) => ({
+  field: tag,
+  nodeId: `ns=3;s="${tag}"`,
+  value,
+  dataType: 'Boolean',
+  dataTypeNodeId: 'ns=0;i=1',
+  dataTypeEvidence: 'OPC_UA_ATTRIBUTE_DATATYPE',
+  statusCode: 'Good',
+  quality: 'Good',
+  valid: true,
+  collectedAt: new Date().toISOString(),
+  ...extra,
+});
+
+const runSnapshot = (values, overrides = {}) => {
+  const samples = {
+    GCT_0: physicalSample('GCT_0', values[0], overrides.GCT_0),
+    sys_man: physicalSample('sys_man', values[1], overrides.sys_man),
+    sys_sup: physicalSample('sys_sup', values[2], overrides.sys_sup),
+    sys_man2: physicalSample('sys_man2', values[3], overrides.sys_man2),
+  };
+  for (const [tag, override] of Object.entries(overrides)) {
+    if (override === null) delete samples[tag];
+  }
+  const flow = { get: (key) => key === 'cpslai3_mode_samples' ? samples : undefined };
+  const result = new Function('msg', 'flow', 'node', byId.get('c3a000000000000e').func)({}, flow, {});
+  return JSON.parse(result[0].payload);
+};
+
+test('snapshot function is valid JavaScript and derives all four physical modes from four tags', () => {
+  assert.doesNotThrow(() => new Function('msg', 'flow', 'node', byId.get('c3a000000000000e').func));
+  for (const [values, expected] of [
+    [[true, false, false, false], 'INIT'],
+    [[false, true, false, false], 'MANUAL'],
+    [[false, false, true, false], 'AUTOMATIC'],
+    [[false, false, false, true], 'STEP_BY_STEP'],
+  ]) {
+    const payload = runSnapshot(values);
+    assert.equal(payload.derived.operationMode, expected);
+    assert.equal(payload.expectedTagCount, 4);
+    assert.equal(payload.availableTagCount, 4);
+    assert.equal(payload.snapshotComplete, true);
+    assert.equal(payload.derived.initEvidence.sourceTag, 'GCT_0');
+  }
+});
+
+test('missing, stale and conflicting GCT_0 evidence produces UNKNOWN', () => {
+  assert.equal(runSnapshot([false, false, false, false], { GCT_0: null }).derived.reason, 'MISSING_INIT_MARKER');
+  assert.equal(runSnapshot([true, false, false, false], { GCT_0: { collectedAt: '2020-01-01T00:00:00.000Z' } }).derived.reason, 'STALE_INIT_MARKER');
+  assert.equal(runSnapshot([true, true, false, false]).derived.reason, 'INIT_MARKER_CONFLICT');
 });
 
 test('adapter does not publish a physical mode as ACSM internal operationalState', () => {

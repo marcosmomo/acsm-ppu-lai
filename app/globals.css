@@ -391,6 +391,17 @@ body,
   border-left: 5px solid #2563eb;
 }
 
+.status-initializing {
+  background-color: #D6EBFF;
+  color: #1F4E79;
+  border-left: 5px solid #B7D7F2;
+}
+
+.status-intervention {
+  background-color: #FFF4CC;
+  border-left: 5px solid #E8D58A;
+}
+
 .status-unknown {
   background-color: #f1f5f9;
   color: #334155;
@@ -1539,9 +1550,31 @@ body,
 .cps-item-play.cps-lai-01-operational-card.status-maintenance,
 .cps-item-play.cps-lai-02-operational-card.status-maintenance,
 .cps-item-play.cps-lai-03-operational-card.status-maintenance {
-  background: #fef3c7;
-  border: 1px solid #d97706;
+  background: #f1f5f9;
+  border: 1px solid #64748b;
   border-left-width: 5px;
+}
+
+.cps-item-play.cps-lai-01-operational-card.status-initializing,
+.cps-item-play.cps-lai-02-operational-card.status-initializing,
+.cps-item-play.cps-lai-03-operational-card.status-initializing {
+  background: #D6EBFF;
+  border: 1px solid #B7D7F2;
+  border-left-width: 5px;
+  color: #1F4E79;
+}
+
+.cps-item-play.cps-lai-01-operational-card.status-intervention,
+.cps-item-play.cps-lai-02-operational-card.status-intervention,
+.cps-item-play.cps-lai-03-operational-card.status-intervention {
+  background: #FFF4CC;
+  border: 1px solid #E8D58A;
+  border-left-width: 5px;
+}
+
+.cps-item-play.status-intervention .operational-state-value {
+  color: #C62828;
+  font-weight: 700;
 }
 
 .cps-item-play.cps-lai-01-operational-card.status-unknown,
@@ -2233,6 +2266,19 @@ body,
 .feat-ready {
   background: #dbeafe;
   color: #1e40af;
+}
+
+.feat-initializing {
+  background: #D6EBFF;
+  color: #1F4E79;
+  border: 1px solid #B7D7F2;
+}
+
+.feat-intervention {
+  background: #FFF4CC;
+  color: #C62828;
+  border: 1px solid #E8D58A;
+  font-weight: 700;
 }
 
 .feat-unknown {

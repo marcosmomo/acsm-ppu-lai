@@ -4,9 +4,18 @@ import {
   applyPhysicalStatus,
   applyRememberedRuntimeMode,
   hasIndependentPhysicalOperationMode,
+  isValidatedPhysicalOperationMode,
   mergeNonStatusOperationalData,
   operationalDataForAcsmState,
 } from '../lib/acsm/cpsOperationMode.mjs';
+
+test('INIT can be a validated physical operation mode while UNKNOWN cannot', () => {
+  assert.equal(isValidatedPhysicalOperationMode('INIT'), true);
+  assert.equal(isValidatedPhysicalOperationMode('UNKNOWN'), false);
+  for (const mode of ['MANUAL', 'AUTOMATIC', 'STEP_BY_STEP']) {
+    assert.equal(isValidatedPhysicalOperationMode(mode), true);
+  }
+});
 
 const physicalStatus = (extra = {}) => ({
   id: 'cpslai1',

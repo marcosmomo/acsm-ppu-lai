@@ -6,6 +6,7 @@ const FLOW_PATH = new URL('../node-red/lai/flows/cps-lai-02-opcua-mqtt.json', im
 const CATALOG_PATH = new URL('../node-red/lai/flows/cps-lai-02-validation-tags.json', import.meta.url);
 const AAS_PATH = new URL('../cps-defs/cps-lai-02-aas-acsm-compatible-revised.json', import.meta.url);
 const EXPECTED = new Map([
+  ['GCT_0', 'ns=3;s="GCT_0"'],
   ['sys_man', 'ns=3;s="sys_man"'],
   ['sys_man2', 'ns=3;s="sys_man2"'],
   ['sys_sup', 'ns=3;s="sys_sup"'],
@@ -60,6 +61,11 @@ for (const forbidden of ['cpslai2/status', 'cpslai2/oee', 'cpslai2/health', 'acs
 assert.equal(catalog.accessMode, 'READ_ONLY');
 const catalogByTag = new Map(catalog.tags.map((entry) => [entry.tag, entry]));
 for (const [tag, nodeId] of EXPECTED) {
+  if (tag === 'GCT_0') {
+    assert.match(functionText, /PHYSICALLY_VALIDATED_INIT_MARKER/);
+    assert.match(functionText, new RegExp(nodeId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    continue;
+  }
   const entry = catalogByTag.get(tag);
   assert.ok(entry, `Missing catalog entry: ${tag}`);
   assert.equal(entry.nodeId, nodeId, `Unexpected NodeId for ${tag}`);
@@ -83,6 +89,7 @@ const readClient = flow.find((node) => node.id === 'cpslai2_opcua_read');
 const snapshotBuilder = flow.find((node) => node.id === 'cpslai2_build_snapshot');
 const modeDeriver = flow.find((node) => node.id === 'cpslai2_derive_operation_mode');
 const mqttOutput = flow.find((node) => node.id === 'cpslai2_data_out');
+const readRouter = flow.find((node) => node.id === 'cpslai2_init_diag_router');
 assert.ok(normalizer && tick && readTick && readBatchBuilder && readClient && snapshotBuilder && modeDeriver && mqttOutput, 'Read/cache/derive/snapshot pipeline is incomplete');
 assert.equal(tick.repeat, '1', 'Snapshot clock must run every second');
 assert.equal(readTick.repeat, '2', 'Real OPC UA reads must run every two seconds');
@@ -91,7 +98,8 @@ assert.equal(readClient.endpoint, 'cpslai2_opcua_endpoint');
 assert.deepEqual(normalizer.wires, [[]], 'Normalizer must not publish individual MQTT messages');
 assert.deepEqual(readTick.wires, [[readBatchBuilder.id]]);
 assert.deepEqual(readBatchBuilder.wires, [[readClient.id]]);
-assert.deepEqual(readClient.wires[0], [normalizer.id]);
+assert.deepEqual(readClient.wires[0], [readRouter.id]);
+assert.deepEqual(readRouter.wires[0], [normalizer.id], 'Operational reads must still reach the original normalizer');
 assert.deepEqual(tick.wires, [[snapshotBuilder.id]], 'Periodic clock must only invoke the snapshot builder');
 assert.deepEqual(snapshotBuilder.wires, [[modeDeriver.id]]);
 assert.deepEqual(modeDeriver.wires, [[mqttOutput.id]], 'Derived mode must preserve the single cpslai2/data publisher');
@@ -123,13 +131,13 @@ const executeFunction = (code, msg) => vm.runInNewContext(`(() => { ${code} })()
 const firstBatchResult = executeFunction(readBatchBuilder.func, { payload: Date.now() });
 assert.equal(firstBatchResult.length, 1);
 const readRequests = firstBatchResult[0];
-assert.equal(readRequests.length, EXPECTED.size, 'Each batch must contain exactly six real reads');
+assert.equal(readRequests.length, EXPECTED.size, 'Each batch must contain exactly seven real reads');
 assert.equal(new Set(readRequests.map((request) => request.topic)).size, EXPECTED.size);
 assert.deepEqual(new Set(readRequests.map((request) => request.topic)), new Set(EXPECTED.values()));
 assert.equal(new Set(readRequests.map((request) => request._batchId)).size, 1);
 assert.equal(executeFunction(readBatchBuilder.func, { payload: Date.now() }), null, 'An active batch must block overlapping reads');
 
-const values = [false, true, true, false, true, false];
+const values = [false, false, true, true, false, true, false];
 const responseFor = (request, value, overrides = {}) => ({
   ...request,
   payload: value,
@@ -147,24 +155,25 @@ assert.equal(cache.get('cpslai2_read_batch').receivedNodeIds.length, 1, 'Duplica
 for (let index = 1; index < readRequests.length; index += 1) {
   executeFunction(normalizer.func, responseFor(readRequests[index], values[index]));
 }
-assert.equal(cache.get('cpslai2_read_batch'), null, 'Six unique responses must release the batch lock');
+assert.equal(cache.get('cpslai2_read_batch'), null, 'Seven unique responses must release the batch lock');
 assert.equal(cache.get('cpslai2_last_read_batch').receivedNodeIds.length, EXPECTED.size);
 for (const [[tag], value] of [...EXPECTED].map((entry, index) => [entry, values[index]])) {
   assert.equal(cache.get('cpslai2_samples')[tag].value, value, `${tag} Boolean value was not preserved`);
 }
 
 const priorSysMan = { ...cache.get('cpslai2_samples').sys_man };
-executeFunction(normalizer.func, responseFor({ ...readRequests[0], _batchId: undefined }, true, {
+const sysManRequest = readRequests.find((request) => request._tag === 'sys_man');
+executeFunction(normalizer.func, responseFor({ ...sysManRequest, _batchId: undefined }, true, {
   statusCode: { name: 'BadNotConnected' },
   serverTimestamp: '2026-10-09T10:01:00.000Z',
 }));
 assert.equal(JSON.stringify(cache.get('cpslai2_samples').sys_man), JSON.stringify(priorSysMan), 'Invalid quality must not erase prior evidence');
-executeFunction(normalizer.func, responseFor({ ...readRequests[0], _batchId: undefined }, true, {
+executeFunction(normalizer.func, responseFor({ ...sysManRequest, _batchId: undefined }, true, {
   datatype: 'Int32',
   serverTimestamp: '2026-10-09T10:01:00.000Z',
 }));
 assert.equal(JSON.stringify(cache.get('cpslai2_samples').sys_man), JSON.stringify(priorSysMan), 'Invalid datatype must not update cache');
-executeFunction(normalizer.func, responseFor({ ...readRequests[0], _batchId: undefined }, true, {
+executeFunction(normalizer.func, responseFor({ ...sysManRequest, _batchId: undefined }, true, {
   serverTimestamp: '2026-10-09T09:59:00.000Z',
 }));
 assert.equal(JSON.stringify(cache.get('cpslai2_samples').sys_man), JSON.stringify(priorSysMan), 'Older reading must not overwrite a newer sample');
@@ -183,7 +192,7 @@ executeFunction(normalizer.func, responseFor(timeoutBatch[0], true, { serverTime
 assert.equal(JSON.stringify(cache.get('cpslai2_samples').sys_man), beforeLateResponse, 'A response from an expired batch must not update cache');
 assert.equal(cache.get('cpslai2_read_diagnostics').some((entry) => entry.type === 'LATE_OR_UNKNOWN_READ_RESPONSE'), true);
 
-executeFunction(normalizer.func, responseFor({ ...readRequests[0], _batchId: undefined }, false, {
+executeFunction(normalizer.func, responseFor({ ...sysManRequest, _batchId: undefined }, false, {
   serverTimestamp: '2026-10-09T10:03:00.000Z',
 }));
 assert.equal(cache.get('cpslai2_samples').sys_man.value, false);
@@ -209,10 +218,11 @@ assert.equal(snapshot.payload.data.sys_man.valid, false, 'A stale sample must no
 const runDerivation = (data) => executeFunction(modeDeriver.func, {
   payload: { publishedAt: '2026-10-09T12:00:00.000Z', data },
 }).payload;
-const modeSample = (value, overrides = {}) => ({ value, dataType: 'Boolean', statusCode: 'Good', quality: 'Good', valid: true, stale: false, ...overrides });
+const modeSample = (tag, value, overrides = {}) => ({ field:tag, nodeId:`ns=3;s="${tag}"`, value, dataType:'Boolean', statusCode:'Good', quality:'Good', valid:true, stale:false, collectedAt:'2026-10-09T12:00:00.000Z', ...overrides });
 const modeData = (manual, automatic, stepByStep) => ({
-  sys_man: modeSample(manual), sys_sup: modeSample(automatic), sys_man2: modeSample(stepByStep),
-  sys_menu: modeSample(true), man_step_0: modeSample(false), man_step_1: modeSample(false),
+  GCT_0: modeSample('GCT_0', false),
+  sys_man: modeSample('sys_man', manual), sys_sup: modeSample('sys_sup', automatic), sys_man2: modeSample('sys_man2', stepByStep),
+  sys_menu: modeSample('sys_menu', true), man_step_0: modeSample('man_step_0', false), man_step_1: modeSample('man_step_1', false),
 });
 for (const [valuesForMode, expectedMode] of [
   [[true, false, false], 'MANUAL'],
@@ -222,18 +232,18 @@ for (const [valuesForMode, expectedMode] of [
   const data = modeData(...valuesForMode);
   const result = runDerivation(data);
   assert.equal(result.derived.operationMode, expectedMode);
-  assert.equal(Object.keys(result.data).length, EXPECTED.size, 'Derivation must preserve all six physical tags');
+  assert.equal(Object.keys(result.data).length, EXPECTED.size, 'Derivation must preserve all seven physical tags');
 }
 assert.equal(runDerivation(modeData(false, false, false)).derived.reason, 'NO_ACTIVE_MODE_MARKER');
 assert.equal(runDerivation(modeData(true, true, false)).derived.reason, 'NON_EXCLUSIVE_MODE_MARKERS');
 const missingMarker = modeData(true, false, false); delete missingMarker.sys_sup;
-assert.equal(runDerivation(missingMarker).derived.reason, 'MISSING_MODE_MARKER');
+assert.equal(runDerivation(missingMarker).derived.reason, 'INVALID_OR_MISSING_MODE_MARKER');
 const badQuality = modeData(true, false, false); badQuality.sys_man.statusCode = 'BadNotConnected';
-assert.equal(runDerivation(badQuality).derived.reason, 'BAD_OPCUA_QUALITY');
+assert.equal(runDerivation(badQuality).derived.reason, 'INVALID_OR_MISSING_MODE_MARKER');
 const staleMarker = modeData(true, false, false); staleMarker.sys_man.stale = true; staleMarker.sys_man.valid = false;
-assert.equal(runDerivation(staleMarker).derived.reason, 'STALE_MODE_MARKER');
+assert.equal(runDerivation(staleMarker).derived.reason, 'INVALID_OR_MISSING_MODE_MARKER');
 const badDatatype = modeData(true, false, false); badDatatype.sys_man.dataType = 'Int32';
-assert.equal(runDerivation(badDatatype).derived.reason, 'INCOMPATIBLE_MARKER_DATATYPE');
+assert.equal(runDerivation(badDatatype).derived.reason, 'INVALID_OR_MISSING_MODE_MARKER');
 assert.equal(JSON.stringify(flow).includes('cpslai2/status'), false);
 assert.equal(JSON.stringify(flow).includes('cpslai2/health'), false);
 assert.equal(JSON.stringify(flow).includes('cpslai2/oee'), false);

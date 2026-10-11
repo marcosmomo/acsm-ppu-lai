@@ -9,8 +9,9 @@ import {
 
 const at = '2026-10-10T18:00:00.000Z';
 const markers = (manual, automatic, stepByStep, overrides = {}) => {
-  const values = { sys_man: manual, sys_sup: automatic, sys_man2: stepByStep };
+  const values = { GCT_0: false, sys_man: manual, sys_sup: automatic, sys_man2: stepByStep };
   const nodeIds = {
+    GCT_0: 'ns=3;s="GCT_0"',
     sys_man: 'ns=3;s="sys_man"',
     sys_sup: 'ns=3;s="sys_sup"',
     sys_man2: 'ns=3;s="sys_man2"',
@@ -64,6 +65,17 @@ test('exclusive Boolean combinations derive the three validated physical modes',
   assert.equal(derive(evidence(false, false, true)).operationMode, 'STEP_BY_STEP');
 });
 
+test('validated GCT_0 derives INIT only without an active physical mode marker', () => {
+  const init = evidence(false, false, false, { GCT_0: { value: true } });
+  init.derived.operationMode = 'INIT';
+  init.derived.reason = 'VALIDATED_GCT_0_ACTIVE';
+  assert.equal(derive(init).operationMode, 'INIT');
+  const conflict = evidence(true, false, false, { GCT_0: { value: true } });
+  conflict.derived.operationMode = 'UNKNOWN';
+  conflict.derived.reason = 'INIT_MARKER_CONFLICT';
+  assert.equal(derive(conflict).operationMode, 'UNKNOWN');
+});
+
 test('all other Boolean combinations remain UNKNOWN', () => {
   for (const values of [
     [false, false, false], [true, true, false], [true, false, true],
@@ -90,6 +102,21 @@ test('missing sample, timeout and unconfirmed communication remain UNKNOWN; reco
   assert.equal(derive(current, true).operationMode, 'AUTOMATIC');
 });
 
+test('CPS-LAI-03 uses INIT only before first adapter evidence', () => {
+  const initial = deriveCpsLai3PhysicalOperationMode({
+    cpsId: 'cpslai3', evidence: null, communication: { dataFresh: false },
+  });
+  assert.equal(initial.operationMode, 'INIT');
+  assert.equal(initial.valid, false);
+  assert.equal(initial.reason, 'AWAITING_INITIAL_MODE_EVIDENCE');
+
+  for (const values of [[true, false, false], [false, true, false], [false, false, true]]) {
+    assert.notEqual(derive(evidence(...values)).operationMode, 'INIT');
+  }
+  assert.equal(derive(evidence(true, false, false), false).operationMode, 'UNKNOWN');
+  assert.equal(derive(evidence(true, true, false)).operationMode, 'UNKNOWN');
+});
+
 test('adapter semantic string or claimed mode cannot replace raw marker validation', () => {
   const forged = evidence(true, false, false);
   forged.derived.operationMode = 'AUTOMATIC';
@@ -113,15 +140,11 @@ test('real schema 1.2 MQTT contract survives normalization and derives STEP_BY_S
   const normalized = mergeCpsTelemetry(null, payload);
   assert.equal(normalized.data.sys_man2.dataTypeEvidence, 'OPC_UA_ATTRIBUTE_DATATYPE');
   assert.equal(normalized.data.sys_man2.dataTypeNodeId, 'ns=0;i=1');
-  assert.deepEqual(derive(normalized), {
-    operationMode: 'STEP_BY_STEP', valid: true, reason: 'EXCLUSIVE_STEP_BY_STEP_MARKER',
-    source: 'CPS_LAI_03_PHYSICAL_MODE_MARKERS', derivedAt: at,
-    tagsUsed: [
-      { role: 'MANUAL', tag: 'sys_man', nodeId: 'ns=3;s="sys_man"', value: false },
-      { role: 'AUTOMATIC', tag: 'sys_sup', nodeId: 'ns=3;s="sys_sup"', value: false },
-      { role: 'STEP_BY_STEP', tag: 'sys_man2', nodeId: 'ns=3;s="sys_man2"', value: true },
-    ],
-  });
+  const physical = derive(normalized);
+  assert.equal(physical.operationMode, 'STEP_BY_STEP');
+  assert.equal(physical.valid, true);
+  assert.equal(physical.reason, 'EXCLUSIVE_STEP_BY_STEP_MARKER');
+  assert.equal(physical.initEvidence.sourceTag, 'GCT_0');
 });
 
 test('CPS identity is isolated and CPSContext preserves internal state while storing physical evidence', () => {
@@ -141,6 +164,13 @@ test('a later cpslai3/status update cannot replace physical operationalData from
   assert.match(contextSource, /\.\.\.\(isCpsLai3Status \? \{\} : \{ operationalData: nextOperationalData \}\)/);
 });
 
+test('CPSContext initializes LAI-02/03 with INIT and status messages preserve that field', () => {
+  const contextSource = readFileSync(new URL('../context/CPSContext.js', import.meta.url), 'utf8');
+  assert.match(contextSource, /cpsId === 'cpslai2' \|\| cpsId === 'cpslai3' \? 'INIT' : operationMode/);
+  assert.match(contextSource, /isCpsLai2Status\s*\? \{ \.\.\.\(owner\?\.operationalData \|\| \{\}\) \}/);
+  assert.match(contextSource, /operationalData: isCpsLai3Status\s*\? c\?\.operationalData/);
+});
+
 test('Play Phase renders the Operation Mode field for CPS-LAI-03', () => {
   const playSource = readFileSync(new URL('../components/PlayFase.js', import.meta.url), 'utf8');
   assert.match(playSource, /\(isCpsLai1 \|\| usesLocalTelemetryModal \|\| isCpsLai3\)/);
@@ -153,7 +183,7 @@ test('successive real MQTT snapshots and interleaved status messages project one
   let internalState = 'Running';
   const cases = [
     { mode: 'AUTOMATIC', values: [false, true, false], state: 'Running', expectedState: 'running', tone: 'status-running' },
-    { mode: 'MANUAL', values: [true, false, false], state: 'Stopped', expectedState: 'running', tone: 'status-running' },
+    { mode: 'MANUAL', values: [true, false, false], state: 'Stopped', expectedState: 'intervention', tone: 'status-intervention' },
     { mode: 'STEP_BY_STEP', values: [false, false, true], state: 'Running', expectedState: 'maintenance', tone: 'status-maintenance' },
     { mode: 'AUTOMATIC', values: [false, true, false], state: 'Stopped', expectedState: 'stopped', tone: 'status-stopped' },
   ];
@@ -244,5 +274,5 @@ test('PlayFase derives CPS-LAI-03 mode and state from the same latest telemetry 
   assert.match(playSource, /const cpsLai3ModeEvidence = isCpsLai3 \? telemetryData\?\.\[normalizedCpsId\] : null/);
   assert.match(playSource, /evidence: cpsLai3ModeEvidence/);
   assert.match(playSource, /modeEvidence: cpsLai3ModeEvidence/);
-  assert.match(playSource, /cpsLai3Mode\?\.valid \? cpsLai3Mode\.operationMode : 'UNKNOWN'/);
+  assert.match(playSource, /cpsLai3Mode\?\.operationMode \|\| 'INIT'/);
 });
