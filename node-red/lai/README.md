@@ -1,6 +1,8 @@
 # Adaptadores Node-RED dos CPS físicos do LAI
 
-Este diretório contém artefatos importáveis para o computador conectado aos CLPs do LAI. Somente o adaptador `CPS-LAI-01` está modelado e registrado atualmente. Não reutilize este fluxo como `cpslai2` ou `cpslai3` sem criar novos AAS, IDs, tópicos, NodeIds e evidências de comissionamento.
+Este diretório contém artefatos importáveis para o computador conectado aos CLPs do LAI. O `CPS-LAI-01` possui o fluxo de referência já comissionado. O `CPS-LAI-02` possui AAS, IDs, mapping preliminar e artefatos próprios de validação somente leitura; seus bindings semânticos de processo ainda aguardam confirmação física. O `CPS-LAI-03` permanece preparado, mas não comissionado. Não reutilize fluxos entre estações sem novos IDs, tópicos, NodeIds e evidências.
+
+Para iniciar a validação da Joining Station, siga `CPS-LAI-02-PHYSICAL-VALIDATION.md`. Durante essa etapa, use apenas `flows/cps-lai-02-dynamic-tag-validation.json`; o fluxo operacional `flows/cps-lai-02-opcua-mqtt.json` continua separado e não deve ser usado para promover semântica automaticamente.
 
 O runtime Node.js em `services/cps-lai-01` é uma alternativa **inativa**. Não o execute ao mesmo tempo que este fluxo: deve existir apenas um publicador para `cpslai1/#`.
 
@@ -109,7 +111,7 @@ Exporte somente a aba do CPS-LAI-01 por **Export → Selected flows**, sem crede
 
 ## 9. Replicação futura
 
-Para CPS-LAI-02 ou CPS-LAI-03 será obrigatório:
+Para uma nova estação ou para ampliar o escopo físico já validado será obrigatório:
 
 - modelar e aprovar um novo AAS;
 - registrar respectivamente `cpslai2` ou `cpslai3` na ACSM;

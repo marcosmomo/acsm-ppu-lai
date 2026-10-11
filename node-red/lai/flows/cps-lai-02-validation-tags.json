@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "1.0",
+  "cpsId": "cpslai2",
+  "formalCpsId": "CPS-LAI-02",
+  "station": "Joining Station",
+  "endpoint": "opc.tcp://192.168.1.20:4840",
+  "accessMode": "READ_ONLY",
+  "tags": [
+    {
+      "tag": "OperatingMode",
+      "candidateSemantic": "StationOperatingMode",
+      "semanticName": null,
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "Int32",
+      "nodeId": "ns=3;s=OperatingMode",
+      "evidenceStatus": "NODEID_AND_DATATYPE_CONFIRMED",
+      "semanticMappingStatus": "PENDING_PHYSICAL_CORRELATION"
+    },
+    {
+      "tag": "sys_man",
+      "candidateSemantic": "PhysicalManualModeMarker",
+      "semanticName": "PhysicalManualModeMarker",
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "Boolean",
+      "nodeId": "ns=3;s=\"sys_man\"",
+      "evidenceStatus": "OPERATOR_CONFIRMED_PHYSICAL_MODE_EXPERIMENTS",
+      "semanticMappingStatus": "PHYSICALLY_VALIDATED_MODE_MARKER"
+    },
+    {
+      "tag": "sys_man2",
+      "candidateSemantic": "PhysicalStepByStepModeMarker",
+      "semanticName": "PhysicalStepByStepModeMarker",
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "Boolean",
+      "nodeId": "ns=3;s=\"sys_man2\"",
+      "evidenceStatus": "OPERATOR_CONFIRMED_PHYSICAL_MODE_EXPERIMENTS",
+      "semanticMappingStatus": "PHYSICALLY_VALIDATED_MODE_MARKER"
+    },
+    {
+      "tag": "sys_sup",
+      "candidateSemantic": "PhysicalAutomaticModeMarker",
+      "semanticName": "PhysicalAutomaticModeMarker",
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "Boolean",
+      "nodeId": "ns=3;s=\"sys_sup\"",
+      "evidenceStatus": "OPERATOR_CONFIRMED_PHYSICAL_MODE_EXPERIMENTS",
+      "semanticMappingStatus": "PHYSICALLY_VALIDATED_MODE_MARKER"
+    },
+    {
+      "tag": "sys_menu",
+      "candidateSemantic": "PhysicalModeInternalStateCandidate",
+      "semanticName": null,
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "Boolean",
+      "nodeId": "ns=3;s=\"sys_menu\"",
+      "evidenceStatus": "OBSERVED_IN_TWO_TRANSITION_EXPERIMENTS",
+      "semanticMappingStatus": "PRELIMINARY_UNVALIDATED"
+    },
+    {
+      "tag": "man_step_0",
+      "candidateSemantic": "PhysicalModeInternalStateCandidate",
+      "semanticName": null,
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "Boolean",
+      "nodeId": "ns=3;s=\"man_step_0\"",
+      "evidenceStatus": "OBSERVED_IN_TWO_TRANSITION_EXPERIMENTS",
+      "semanticMappingStatus": "PRELIMINARY_UNVALIDATED"
+    },
+    {
+      "tag": "man_step_1",
+      "candidateSemantic": "PhysicalModeInternalStateCandidate",
+      "semanticName": null,
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "Boolean",
+      "nodeId": "ns=3;s=\"man_step_1\"",
+      "evidenceStatus": "OBSERVED_IN_TWO_TRANSITION_EXPERIMENTS",
+      "semanticMappingStatus": "PRELIMINARY_UNVALIDATED"
+    },
+    {
+      "tag": "PieceAtEntry",
+      "candidateSemantic": "PieceAtEntry",
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "FIELD_CONFIRMATION_REQUIRED",
+      "nodeId": "FIELD_CONFIRMATION_REQUIRED",
+      "evidenceStatus": "TO_DISCOVER"
+    },
+    {
+      "tag": "PiecePositioned",
+      "candidateSemantic": "PiecePositioned",
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "FIELD_CONFIRMATION_REQUIRED",
+      "nodeId": "FIELD_CONFIRMATION_REQUIRED",
+      "evidenceStatus": "TO_DISCOVER"
+    },
+    {
+      "tag": "PieceAtExit",
+      "candidateSemantic": "PieceAtExit",
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "FIELD_CONFIRMATION_REQUIRED",
+      "nodeId": "FIELD_CONFIRMATION_REQUIRED",
+      "evidenceStatus": "TO_DISCOVER"
+    },
+    {
+      "tag": "JoiningReady",
+      "candidateSemantic": "JoiningReady",
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "FIELD_CONFIRMATION_REQUIRED",
+      "nodeId": "FIELD_CONFIRMATION_REQUIRED",
+      "evidenceStatus": "TO_DISCOVER"
+    },
+    {
+      "tag": "JoiningActive",
+      "candidateSemantic": "JoiningActive",
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "FIELD_CONFIRMATION_REQUIRED",
+      "nodeId": "FIELD_CONFIRMATION_REQUIRED",
+      "evidenceStatus": "TO_DISCOVER"
+    },
+    {
+      "tag": "JoiningCompleted",
+      "candidateSemantic": "JoiningCompleted",
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "FIELD_CONFIRMATION_REQUIRED",
+      "nodeId": "FIELD_CONFIRMATION_REQUIRED",
+      "evidenceStatus": "TO_DISCOVER"
+    },
+    {
+      "tag": "JoiningError",
+      "candidateSemantic": "JoiningError",
+      "logicalAddress": "FIELD_CONFIRMATION_REQUIRED",
+      "dataType": "FIELD_CONFIRMATION_REQUIRED",
+      "nodeId": "FIELD_CONFIRMATION_REQUIRED",
+      "evidenceStatus": "TO_DISCOVER"
+    }
+  ]
+}

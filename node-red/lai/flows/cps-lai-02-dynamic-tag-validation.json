@@ -1,0 +1,406 @@
+[
+  {
+    "id": "cpslai2_validation_tab",
+    "type": "tab",
+    "label": "CPS-LAI-02 Dynamic Tag Validation (READ ONLY)",
+    "disabled": true,
+    "info": "PHYSICAL_SEMANTIC_VALIDATION\nIndependent read-only tab for CPS-LAI-02 in the existing Node-RED runtime. It monitors discovered real NodeIds but assigns no Manual, Automatic or Step-by-Step meaning. Keep disabled outside an approved LAI session. No writes, commands, MQTT, OEE, Health, lifecycle, Governance or HCM.",
+    "env": []
+  },
+  {
+    "id": "cpslai2_validation_endpoint",
+    "type": "OpcUa-Endpoint",
+    "endpoint": "opc.tcp://192.168.1.20:4840",
+    "secpol": "None",
+    "secmode": "None",
+    "none": true,
+    "login": false,
+    "usercert": false,
+    "usercertificate": "",
+    "userprivatekey": ""
+  },
+  {
+    "id": "cpslai2_validation_comment",
+    "type": "comment",
+    "z": "cpslai2_validation_tab",
+    "name": "READ ONLY Ã¢â‚¬â€ candidates require browse confirmation before subscription",
+    "info": "The six internal-state candidates were observed with Good OPC UA reads and transitions in two experiments. Their mode semantics remain preliminary. Browse observations and transitions never promote evidence automatically.",
+    "x": 330,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "cpslai2_start_subscription",
+    "type": "inject",
+    "z": "cpslai2_validation_tab",
+    "name": "Start confirmed-tag subscription",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "1",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 100,
+    "wires": [
+      [
+        "cpslai2_build_subscriptions"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_build_subscriptions",
+    "type": "function",
+    "z": "cpslai2_validation_tab",
+    "name": "Discovered NodeIds; semantics unvalidated",
+    "func": "const tags = [\n  {\n    \"tag\": \"OperatingMode\",\n    \"candidateSemantic\": \"StationOperatingMode\",\n    \"semanticName\": null,\n    \"logicalAddress\": \"FIELD_CONFIRMATION_REQUIRED\",\n    \"dataType\": \"Int32\",\n    \"nodeId\": \"ns=3;s=OperatingMode\",\n    \"evidenceStatus\": \"NODEID_AND_DATATYPE_CONFIRMED\",\n    \"semanticMappingStatus\": \"PENDING_PHYSICAL_CORRELATION\"\n  },\n  {\n    \"tag\": \"sys_man\",\n    \"candidateSemantic\": \"PhysicalModeInternalStateCandidate\",\n    \"semanticName\": null,\n    \"logicalAddress\": \"FIELD_CONFIRMATION_REQUIRED\",\n    \"dataType\": \"Boolean\",\n    \"nodeId\": \"ns=3;s=\\\"sys_man\\\"\",\n    \"evidenceStatus\": \"OBSERVED_IN_TWO_TRANSITION_EXPERIMENTS\",\n    \"semanticMappingStatus\": \"PRELIMINARY_UNVALIDATED\"\n  },\n  {\n    \"tag\": \"sys_man2\",\n    \"candidateSemantic\": \"PhysicalModeInternalStateCandidate\",\n    \"semanticName\": null,\n    \"logicalAddress\": \"FIELD_CONFIRMATION_REQUIRED\",\n    \"dataType\": \"Boolean\",\n    \"nodeId\": \"ns=3;s=\\\"sys_man2\\\"\",\n    \"evidenceStatus\": \"OBSERVED_IN_TWO_TRANSITION_EXPERIMENTS\",\n    \"semanticMappingStatus\": \"PRELIMINARY_UNVALIDATED\"\n  },\n  {\n    \"tag\": \"sys_sup\",\n    \"candidateSemantic\": \"PhysicalModeInternalStateCandidate\",\n    \"semanticName\": null,\n    \"logicalAddress\": \"FIELD_CONFIRMATION_REQUIRED\",\n    \"dataType\": \"Boolean\",\n    \"nodeId\": \"ns=3;s=\\\"sys_sup\\\"\",\n    \"evidenceStatus\": \"OBSERVED_IN_TWO_TRANSITION_EXPERIMENTS\",\n    \"semanticMappingStatus\": \"PRELIMINARY_UNVALIDATED\"\n  },\n  {\n    \"tag\": \"sys_menu\",\n    \"candidateSemantic\": \"PhysicalModeInternalStateCandidate\",\n    \"semanticName\": null,\n    \"logicalAddress\": \"FIELD_CONFIRMATION_REQUIRED\",\n    \"dataType\": \"Boolean\",\n    \"nodeId\": \"ns=3;s=\\\"sys_menu\\\"\",\n    \"evidenceStatus\": \"OBSERVED_IN_TWO_TRANSITION_EXPERIMENTS\",\n    \"semanticMappingStatus\": \"PRELIMINARY_UNVALIDATED\"\n  },\n  {\n    \"tag\": \"man_step_0\",\n    \"candidateSemantic\": \"PhysicalModeInternalStateCandidate\",\n    \"semanticName\": null,\n    \"logicalAddress\": \"FIELD_CONFIRMATION_REQUIRED\",\n    \"dataType\": \"Boolean\",\n    \"nodeId\": \"ns=3;s=\\\"man_step_0\\\"\",\n    \"evidenceStatus\": \"OBSERVED_IN_TWO_TRANSITION_EXPERIMENTS\",\n    \"semanticMappingStatus\": \"PRELIMINARY_UNVALIDATED\"\n  },\n  {\n    \"tag\": \"man_step_1\",\n    \"candidateSemantic\": \"PhysicalModeInternalStateCandidate\",\n    \"semanticName\": null,\n    \"logicalAddress\": \"FIELD_CONFIRMATION_REQUIRED\",\n    \"dataType\": \"Boolean\",\n    \"nodeId\": \"ns=3;s=\\\"man_step_1\\\"\",\n    \"evidenceStatus\": \"OBSERVED_IN_TWO_TRANSITION_EXPERIMENTS\",\n    \"semanticMappingStatus\": \"PRELIMINARY_UNVALIDATED\"\n  }\n];\nconst allowedEvidence = new Set(['NODEID_AND_DATATYPE_CONFIRMED','OBSERVED_IN_TWO_TRANSITION_EXPERIMENTS']);\nflow.set('validationTagByNodeId', Object.fromEntries(tags.map(t => [t.nodeId, t])));\nreturn [tags.filter(t => allowedEvidence.has(t.evidenceStatus) && t.nodeId !== 'FIELD_CONFIRMATION_REQUIRED').map(t => ({...msg, topic:t.nodeId, datatype:t.dataType, tagMetadata:t}))];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 430,
+    "y": 100,
+    "wires": [
+      [
+        "cpslai2_validation_subscribe"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_validation_subscribe",
+    "type": "OpcUa-Client",
+    "z": "cpslai2_validation_tab",
+    "endpoint": "cpslai2_validation_endpoint",
+    "action": "subscribe",
+    "deadbandtype": "a",
+    "deadbandvalue": 0,
+    "time": 250,
+    "timeUnit": "ms",
+    "certificate": "n",
+    "localfile": "",
+    "localkeyfile": "",
+    "securitymode": "None",
+    "securitypolicy": "None",
+    "useTransport": false,
+    "maxChunkCount": 1,
+    "maxMessageSize": 8192,
+    "receiveBufferSize": 8192,
+    "sendBufferSize": 8192,
+    "name": "SUBSCRIBE READ ONLY",
+    "x": 690,
+    "y": 100,
+    "wires": [
+      [
+        "cpslai2_change_detection"
+      ],
+      [
+        "cpslai2_client_event"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "cpslai2_change_detection",
+    "type": "function",
+    "z": "cpslai2_validation_tab",
+    "name": "previous !== current",
+    "func": "const byNodeId = flow.get('validationTagByNodeId') || {};\nconst meta = msg.tagMetadata || byNodeId[msg.topic];\nif (!meta) { node.warn('Ignored sample without confirmed tag metadata: ' + msg.topic); return null; }\nconst current = msg.payload && msg.payload.value !== undefined ? msg.payload.value : msg.payload;\nconst key = 'previous::' + meta.tag;\nconst hadPrevious = flow.get(key + '::seen') === true;\nconst previous = flow.get(key);\nflow.set(key, current);\nflow.set(key + '::seen', true);\nflow.set('lastOpcUaDataAt', Date.now());\nconst wasStale = flow.get('dataIsStale') === true;\nflow.set('dataIsStale', false);\nconst outputs = [];\nif (wasStale || flow.get('dataFreshRecorded') !== true) {\n  flow.set('dataFreshRecorded', true);\n  outputs.push({payload:{timestamp:new Date().toISOString(),cpsId:'cpslai2',testStep:flow.get('testStep') || 'BASELINE',event:'DATA_FRESH',source:'OPC_UA',validationMode:true}});\n}\nif (!hadPrevious || previous !== current) {\n  outputs.push({payload:{timestamp:new Date().toISOString(),cpsId:'cpslai2',testStep:flow.get('testStep') || 'BASELINE',tag:meta.tag,candidateSemantic:meta.candidateSemantic || null,semanticName:meta.semanticName || null,previous:hadPrevious ? previous : null,current,nodeId:meta.nodeId,logicalAddress:meta.logicalAddress,dataType:meta.dataType,source:'OPC_UA',validationMode:true,evidenceStatus:'OBSERVED'}});\n}\nreturn [outputs];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 940,
+    "y": 100,
+    "wires": [
+      [
+        "cpslai2_jsonl_encode"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_set_test_step",
+    "type": "inject",
+    "z": "cpslai2_validation_tab",
+    "name": "Set testStep (edit payload)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "0.2",
+    "topic": "",
+    "payload": "BASELINE",
+    "payloadType": "str",
+    "x": 170,
+    "y": 180,
+    "wires": [
+      [
+        "cpslai2_validate_test_step"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_validate_test_step",
+    "type": "function",
+    "z": "cpslai2_validation_tab",
+    "name": "Validate + store testStep",
+    "func": "const allowed = ['BASELINE','AUTO_MODE','MANUAL_MODE','PIECE_FLOW','START','RUNNING','STOP','RESET','MAGAZINE_EMPTY','EMERGENCY_STOP','ALARM'];\nconst step = String(msg.payload || '').trim().toUpperCase();\nif (!allowed.includes(step)) { node.error('Invalid testStep: ' + step, msg); return null; }\nflow.set('testStep', step);\nnode.status({fill:'blue',shape:'dot',text:step});\nreturn null;",
+    "outputs": 0,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 440,
+    "y": 180,
+    "wires": []
+  },
+  {
+    "id": "cpslai2_candidate_subscription",
+    "type": "inject",
+    "z": "cpslai2_validation_tab",
+    "name": "Add browse-confirmed candidate (edit JSON)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "{\"tag\":\"FIELD_CONFIRMATION_REQUIRED\",\"candidateSemantic\":null,\"logicalAddress\":\"FIELD_CONFIRMATION_REQUIRED\",\"dataType\":\"FIELD_CONFIRMATION_REQUIRED\",\"nodeId\":\"FIELD_CONFIRMATION_REQUIRED\",\"evidenceStatus\":\"TO_VALIDATE\"}",
+    "payloadType": "json",
+    "x": 210,
+    "y": 220,
+    "wires": [
+      [
+        "cpslai2_guard_candidate_subscription"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_guard_candidate_subscription",
+    "type": "function",
+    "z": "cpslai2_validation_tab",
+    "name": "Require browse-confirmed NodeId",
+    "func": "const meta = msg.payload;\nif (!meta || typeof meta.tag !== 'string' || !meta.tag.trim()) { node.error('Explicit candidate tag is required', msg); return null; }\nif (!meta.nodeId || meta.nodeId === 'FIELD_CONFIRMATION_REQUIRED') { node.error('Browse-confirmed nodeId is required; candidate was not subscribed', msg); return null; }\nif (!meta.dataType || meta.dataType === 'FIELD_CONFIRMATION_REQUIRED') { node.error('Browse-confirmed datatype is required; candidate was not subscribed', msg); return null; }\nif (meta.evidenceStatus !== 'TO_VALIDATE') { node.error('Candidate must remain TO_VALIDATE during this experiment', msg); return null; }\nconst byNodeId = flow.get('validationTagByNodeId') || {};\nbyNodeId[meta.nodeId] = meta;\nflow.set('validationTagByNodeId', byNodeId);\nmsg.topic = meta.nodeId;\nmsg.datatype = meta.dataType;\nmsg.tagMetadata = meta;\nmsg.payload = '';\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 520,
+    "y": 220,
+    "wires": [
+      [
+        "cpslai2_validation_subscribe"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_subscription_status",
+    "type": "status",
+    "z": "cpslai2_validation_tab",
+    "name": "Subscription connection status",
+    "scope": [
+      "cpslai2_validation_subscribe"
+    ],
+    "x": 180,
+    "y": 260,
+    "wires": [
+      [
+        "cpslai2_client_event"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_client_event",
+    "type": "function",
+    "z": "cpslai2_validation_tab",
+    "name": "Connected / disconnected transitions",
+    "func": "const text = String((msg.status && msg.status.text) || msg.status || msg.error || '').toLowerCase();\nlet state = null;\nif (text.includes('connected') && !text.includes('disconnected')) state = 'OPCUA_CONNECTED';\nif (text.includes('disconnected') || text.includes('error') || text.includes('reconnect')) state = 'OPCUA_DISCONNECTED';\nif (!state || flow.get('opcuaConnectionEvent') === state) return null;\nflow.set('opcuaConnectionEvent', state);\nif (state === 'OPCUA_DISCONNECTED') { flow.set('dataIsStale', true); flow.set('dataFreshRecorded', false); }\nmsg.payload = {timestamp:new Date().toISOString(),cpsId:'cpslai2',testStep:flow.get('testStep') || 'BASELINE',event:state,source:'OPC_UA',validationMode:true};\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 490,
+    "y": 260,
+    "wires": [
+      [
+        "cpslai2_jsonl_encode"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_stale_tick",
+    "type": "inject",
+    "z": "cpslai2_validation_tab",
+    "name": "Check stale every 5 s",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "5",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "5",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 320,
+    "wires": [
+      [
+        "cpslai2_stale_detection"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_stale_detection",
+    "type": "function",
+    "z": "cpslai2_validation_tab",
+    "name": "DATA_STALE after 10 s",
+    "func": "const last = flow.get('lastOpcUaDataAt');\nconst stale = !last || Date.now() - last > 10000;\nif (!stale || flow.get('dataIsStale') === true) return null;\nflow.set('dataIsStale', true);\nflow.set('dataFreshRecorded', false);\nmsg.payload = {timestamp:new Date().toISOString(),cpsId:'cpslai2',testStep:flow.get('testStep') || 'BASELINE',event:'DATA_STALE',source:'OPC_UA',validationMode:true};\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 430,
+    "y": 320,
+    "wires": [
+      [
+        "cpslai2_jsonl_encode"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_browse_comment",
+    "type": "comment",
+    "z": "cpslai2_validation_tab",
+    "name": "DISCOVERY ONLY Ã¢â‚¬â€ browse one level, then edit nodeId to navigate deeper",
+    "info": "DISCOVERY ONLY â€” browse one level at a time, starting at ns=3;s=PLC or a confirmed structural root. Results are appended to JSONL and never subscribed or promoted automatically.",
+    "x": 320,
+    "y": 400,
+    "wires": []
+  },
+  {
+    "id": "cpslai2_browse_inject",
+    "type": "inject",
+    "z": "cpslai2_validation_tab",
+    "name": "Browse nodeId (manual; start at PLC)",
+    "props": [
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "ns=3;s=PLC",
+    "x": 160,
+    "y": 460,
+    "wires": [
+      [
+        "cpslai2_browse"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_browse",
+    "type": "OpcUa-Browser",
+    "z": "cpslai2_validation_tab",
+    "endpoint": "cpslai2_validation_endpoint",
+    "item": "",
+    "datatype": "",
+    "topic": "ns=0;i=85",
+    "items": [],
+    "name": "Browse OPC UA (read only)",
+    "x": 420,
+    "y": 460,
+    "wires": [
+      [
+        "cpslai2_format_browse"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_format_browse",
+    "type": "function",
+    "z": "cpslai2_validation_tab",
+    "name": "Record discovery (no promotion)",
+    "func": "const text = v => v == null ? null : (typeof v === 'string' ? v : (v.name || v.text || v.toString()));\nconst items = Array.isArray(msg.payload) ? msg.payload : [];\nreturn [items.map(item => ({payload:{timestamp:new Date().toISOString(),cpsId:'cpslai2',testStep:flow.get('testStep') || 'BASELINE',event:'OPCUA_BROWSE_OBSERVATION',browseName:text(item.browseName),displayName:text(item.displayName),nodeId:text(item.nodeId),namespaceIndex:item.nodeId && item.nodeId.namespace !== undefined ? item.nodeId.namespace : null,nodeClass:item.nodeClass || null,dataType:item.dataType || null,evidenceStatus:'TO_DISCOVER',source:'OPC_UA',validationMode:true}}))];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 700,
+    "y": 460,
+    "wires": [
+      [
+        "cpslai2_jsonl_encode"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_jsonl_encode",
+    "type": "function",
+    "z": "cpslai2_validation_tab",
+    "name": "JSONL: one event per line",
+    "func": "msg.payload = JSON.stringify(msg.payload);\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 980,
+    "y": 260,
+    "wires": [
+      [
+        "cpslai2_jsonl_file"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_jsonl_file",
+    "type": "file",
+    "z": "cpslai2_validation_tab",
+    "name": "Append cpslai2-dynamic-validation.jsonl",
+    "filename": "cpslai2-dynamic-validation.jsonl",
+    "filenameType": "str",
+    "appendNewline": true,
+    "createDir": false,
+    "overwriteFile": "false",
+    "encoding": "none",
+    "x": 1270,
+    "y": 260,
+    "wires": [
+      []
+    ]
+  }
+]

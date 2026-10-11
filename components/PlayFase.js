@@ -4,6 +4,20 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCPSContext } from '../context/CPSContext';
 import { getActiveAcsmConfig, normalizeCpsId } from '../lib/acsm/config';
+import {
+  getOperationalStateForPresentation,
+  getOperationalStatePresentation,
+  operationModeBadgeClass,
+  operationalStateBadgeClass,
+  operationalStateCardClass,
+} from '../lib/acsm/cpsStatusPresentation.mjs';
+import {
+  buildTelemetryRows,
+  formatTelemetryValue,
+  getCpsLai2PhysicalOperationMode,
+  shouldUseLocalTelemetryModal,
+} from '../lib/acsm/cpsTelemetry.mjs';
+import { deriveCpsLai3PhysicalOperationMode } from '../lib/acsm/cpsLai3OperationMode.mjs';
 import GovernanceApproval from './GovernanceApproval';
 
 // ===== Status helpers (EN) =====
@@ -450,6 +464,8 @@ const PlayFase = () => {
     getCanonicalOperationalState,
     pendingGovernanceActions,
     decidePendingGovernanceAction,
+    telemetryData,
+    telemetryCommunication,
   } =
     useCPSContext();
 
@@ -469,6 +485,7 @@ const PlayFase = () => {
     error: null,
   });
   const [playApiCopyFeedback, setPlayApiCopyFeedback] = useState('');
+  const [telemetryModalCps, setTelemetryModalCps] = useState(null);
   const [unpluggingCpsId, setUnpluggingCpsId] = useState(null);
   const [unplugError, setUnplugError] = useState('');
   const [unplugSuccess, setUnplugSuccess] = useState('');
@@ -478,6 +495,19 @@ const PlayFase = () => {
       ? acsmConfig.managedCpsIds.length
       : visibleCPS.length;
   const activeCpsCount = visibleCPS.filter((cps) => getLifecyclePhase(cps) === 'play').length;
+  const telemetryModalCpsId = normalizeCpsId(
+    telemetryModalCps?.id || telemetryModalCps?.cpsId || telemetryModalCps?.topic
+  );
+  const telemetryRows = useMemo(
+    () => buildTelemetryRows(telemetryData?.[telemetryModalCpsId]),
+    [telemetryData, telemetryModalCpsId]
+  );
+  const telemetryModalEntry = telemetryData?.[telemetryModalCpsId] || null;
+  const physicalOperationMode = telemetryModalEntry?.derived || null;
+  const physicalOperationModeDisplay = getCpsLai2PhysicalOperationMode(
+    telemetryModalEntry,
+    telemetryCommunication?.[telemetryModalCpsId] === true
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -581,6 +611,16 @@ const PlayFase = () => {
     setModalStatus(null);
     setModalLastUpdate(null);
   };
+
+  const openCpsData = (cps, dataUrl) => {
+    if (shouldUseLocalTelemetryModal(cps)) {
+      setTelemetryModalCps(cps);
+      return;
+    }
+    openExternalUrl(dataUrl, 'No IndicatorsEndpoint, SummaryEndpoint or APIData found in the AAS.');
+  };
+
+  const closeTelemetryModal = () => setTelemetryModalCps(null);
 
   const loadPlayApiInspection = async () => {
     setPlayApiInspection((current) => ({ ...current, state: 'loading', error: null }));
@@ -751,6 +791,27 @@ const PlayFase = () => {
 
               const descriptionUrl = getDescriptionUrl(cps);
               const dataUrl = getDataUrl(cps);
+              const usesLocalTelemetryModal = shouldUseLocalTelemetryModal(cps);
+              const normalizedCpsId = normalizeCpsId(cps?.id || cps?.cpsId || cps?.topic);
+              const isCpsLai3 = normalizedCpsId === 'cpslai3';
+              const physicalTelemetryConnected =
+                telemetryCommunication?.[normalizedCpsId] === true;
+              const cpsLai3ModeEvidence = isCpsLai3 ? telemetryData?.[normalizedCpsId] : null;
+              const cpsLai3Mode = isCpsLai3
+                ? deriveCpsLai3PhysicalOperationMode({
+                    cpsId: normalizedCpsId,
+                    evidence: cpsLai3ModeEvidence,
+                    communication: { dataFresh: physicalTelemetryConnected },
+                  })
+                : null;
+              const operationModeText = usesLocalTelemetryModal
+                ? getCpsLai2PhysicalOperationMode(
+                    telemetryData?.[normalizedCpsId],
+                    physicalTelemetryConnected
+                  )
+                : isCpsLai3
+                  ? (cpsLai3Mode?.valid ? cpsLai3Mode.operationMode : 'UNKNOWN')
+                  : humanizeOperationMode(cps?.operationalData?.operationMode);
               const historyUrl = getHistoryUrl(cps);
               const healthUrl = getHealthUrl(cps);
               const datasheetUrl = getDatasheetUrl(cps);
@@ -762,16 +823,59 @@ const PlayFase = () => {
               const isStopped = ['parado', 'stopped', 'stop', 'paused'].includes(normalizedCpsStatus);
               const isRunning = ['rodando', 'running', 'active'].includes(normalizedCpsStatus);
 
-              const globalStateValue = canonicalOperationalState;
-              const globalStateText = humanizeGlobalState(globalStateValue);
-              const globalStateBadgeCls = mapGlobalStateBadgeClass(globalStateValue);
+              const globalStateValue = getOperationalStateForPresentation(
+                cps,
+                canonicalOperationalState,
+                usesLocalTelemetryModal
+                  ? {
+                      operationMode: operationModeText,
+                      valid: physicalTelemetryConnected && operationModeText !== 'UNKNOWN',
+                    }
+                  : isCpsLai3
+                    ? {
+                        modeEvidence: cpsLai3ModeEvidence,
+                        communication: { dataFresh: physicalTelemetryConnected },
+                      }
+                    : undefined
+              );
+              const globalStateText = getOperationalStatePresentation(globalStateValue).label;
+              const globalStateBadgeCls = operationalStateBadgeClass(globalStateValue);
               const globalStateWhen = formatDateTime(cps.globalState?.lastUpdate);
-              const operationModeText = humanizeOperationMode(cps?.operationalData?.operationMode);
 
               const healthScore = cps.health?.score ?? null;
               const healthLabel = cps.health?.label ?? null;
-              const healthText = humanizeHealthLabel(healthLabel, healthScore);
-              const healthBadgeCls = mapHealthBadgeClass(healthLabel, healthScore);
+              const cpsLai2TechnicalHealthLabel =
+                normalizedCpsId === 'cpslai2' &&
+                cps.health?.healthType === 'CPS_LAI_02_TECHNICAL_HEALTH'
+                  ? ({ DEGRADED: 'warning', COMMUNICATION_LOST: 'failure' }[healthLabel] ?? healthLabel)
+                  : healthLabel;
+              const cpsLai3TechnicalHealthLabel =
+                isCpsLai3 && cps.health?.healthType === 'CPS_LAI_03_TECHNICAL_HEALTH'
+                  ? ({ DEGRADED: 'warning', COMMUNICATION_LOST: 'failure' }[healthLabel] ?? healthLabel)
+                  : healthLabel;
+              const cpsLai2HealthNotComputed =
+                normalizedCpsId === 'cpslai2' &&
+                cps.health?.healthType === 'CPS_LAI_02_TECHNICAL_HEALTH' &&
+                healthLabel === 'NOT_COMPUTED';
+              const cpsLai3HealthNotComputed =
+                isCpsLai3 &&
+                cps.health?.healthType === 'CPS_LAI_03_TECHNICAL_HEALTH' &&
+                healthLabel === 'NOT_COMPUTED';
+              const healthNotComputed = cpsLai2HealthNotComputed || cpsLai3HealthNotComputed;
+              const effectiveHealthLabel = isCpsLai3
+                ? cpsLai3TechnicalHealthLabel
+                : cpsLai2TechnicalHealthLabel;
+              const healthText = cpsLai2HealthNotComputed
+                ? 'Unavailable'
+                : cpsLai3HealthNotComputed
+                  ? 'Unavailable'
+                  : humanizeHealthLabel(effectiveHealthLabel, healthScore);
+              const healthBadgeCls = healthNotComputed
+                ? 'feat-badge'
+                : mapHealthBadgeClass(effectiveHealthLabel, healthScore);
+              const healthIndicatorValue = isCpsLai3 && cps.health?.healthType === 'CPS_LAI_03_TECHNICAL_HEALTH'
+                ? (healthScore === null ? '—' : `${healthScore}%`)
+                : (healthScore ?? '—');
               const healthWhen = formatDateTime(cps.health?.lastUpdate);
 
               const oeeValue = cps.oee?.value ?? null;
@@ -781,8 +885,11 @@ const PlayFase = () => {
               const oeeText = humanizeOeeLabel(oeeValue);
               const oeeBadgeCls = mapOeeBadgeClass(oeeValue);
               const oeeWhen = formatDateTime(cps.oee?.lastUpdate);
+              const oeeTitle = isCpsLai3 ? 'Experimental OEE' : 'Local OEE';
               const isCpsLai1 =
                 normalizeCpsId(cps?.id || cps?.cpsId || cps?.topic) === 'cpslai1';
+              const experimentalMetrics = isCpsLai3 ? cps?.experimentalMetrics : null;
+              const experimentalMetricValues = experimentalMetrics?.metrics || {};
               const production = isCpsLai1 ? cps?.production : null;
               const governanceStatus = String(
                 cps?.governanceStatus || cps?.governanceProfile?.status || 'NOT_DEFINED'
@@ -792,7 +899,7 @@ const PlayFase = () => {
               return (
                 <li
                   key={cps.id}
-                  className={`cps-item-play status-${String(cps.status || '').toLowerCase()}`}
+                  className={operationalStateCardClass(globalStateValue, cps.id)}
                 >
                   <div className="cps-header">
                     <span className="cps-name">
@@ -847,19 +954,16 @@ const PlayFase = () => {
                           </button>
 
                           <button
-                            onClick={() =>
-                              openExternalUrl(
-                                dataUrl,
-                                'No IndicatorsEndpoint, SummaryEndpoint or APIData found in the AAS.'
-                              )
-                            }
+                            onClick={() => openCpsData(cps, dataUrl)}
                             className="desc-btn"
                             title={
-                              dataUrl
-                                ? `Open CPS data endpoint: ${dataUrl}`
-                                : 'Data endpoint not available'
+                              usesLocalTelemetryModal
+                                ? 'Inspect aggregated real MQTT telemetry'
+                                : dataUrl
+                                  ? `Open CPS data endpoint: ${dataUrl}`
+                                  : 'Data endpoint not available'
                             }
-                            disabled={!dataUrl}
+                            disabled={!usesLocalTelemetryModal && !dataUrl}
                           >
                             Data
                           </button>
@@ -954,19 +1058,16 @@ const PlayFase = () => {
                           </button>
 
                           <button
-                            onClick={() =>
-                              openExternalUrl(
-                                dataUrl,
-                                'No IndicatorsEndpoint, SummaryEndpoint or APIData found in the AAS.'
-                              )
-                            }
+                            onClick={() => openCpsData(cps, dataUrl)}
                             className="desc-btn"
                             title={
-                              dataUrl
-                                ? `Open CPS data endpoint: ${dataUrl}`
-                                : 'Data endpoint not available'
+                              usesLocalTelemetryModal
+                                ? 'Inspect aggregated real MQTT telemetry'
+                                : dataUrl
+                                  ? `Open CPS data endpoint: ${dataUrl}`
+                                  : 'Data endpoint not available'
                             }
-                            disabled={!dataUrl}
+                            disabled={!usesLocalTelemetryModal && !dataUrl}
                           >
                             Data
                           </button>
@@ -1057,19 +1158,16 @@ const PlayFase = () => {
                           </button>
 
                           <button
-                            onClick={() =>
-                              openExternalUrl(
-                                dataUrl,
-                                'No IndicatorsEndpoint, SummaryEndpoint or APIData found in the AAS.'
-                              )
-                            }
+                            onClick={() => openCpsData(cps, dataUrl)}
                             className="desc-btn"
                             title={
-                              dataUrl
-                                ? `Open CPS data endpoint: ${dataUrl}`
-                                : 'Data endpoint not available'
+                              usesLocalTelemetryModal
+                                ? 'Inspect aggregated real MQTT telemetry'
+                                : dataUrl
+                                  ? `Open CPS data endpoint: ${dataUrl}`
+                                  : 'Data endpoint not available'
                             }
-                            disabled={!dataUrl}
+                            disabled={!usesLocalTelemetryModal && !dataUrl}
                           >
                             Data
                           </button>
@@ -1150,7 +1248,7 @@ const PlayFase = () => {
                     </div>
                   </div>
 
-                  {isCpsLai1 && (
+                  {(isCpsLai1 || usesLocalTelemetryModal || isCpsLai3) && (
                     <div className="single-feature-card" style={{ marginBottom: 12 }}>
                       <div className="single-feature-row" style={{ marginBottom: 0 }}>
                         <div className="single-feature-title">
@@ -1158,7 +1256,9 @@ const PlayFase = () => {
                         </div>
 
                         <div className="single-feature-status">
-                          <span className="feat-badge">{operationModeText}</span>
+                          <span className={operationModeBadgeClass(operationModeText)}>
+                            {operationModeText}
+                          </span>
                         </div>
 
                         <div className="single-feature-meta">
@@ -1173,7 +1273,7 @@ const PlayFase = () => {
                   <div className="single-feature-card" style={{ marginBottom: 12 }}>
                     <div className="single-feature-row" style={{ marginBottom: 0 }}>
                       <div className="single-feature-title">
-                        Health Indicator: <strong>{healthScore ?? '—'}</strong>
+                        Health Indicator: <strong>{healthIndicatorValue}</strong>
                       </div>
 
                       <div className="single-feature-status">
@@ -1191,7 +1291,7 @@ const PlayFase = () => {
                   <div className="single-feature-card" style={{ marginBottom: 12 }}>
                     <div className="single-feature-row" style={{ marginBottom: 8 }}>
                       <div className="single-feature-title">
-                        Local OEE: <strong>{formatPercent(oeeValue)}</strong>
+                        {oeeTitle}: <strong>{formatPercent(oeeValue)}</strong>
                       </div>
 
                       <div className="single-feature-status">
@@ -1202,6 +1302,12 @@ const PlayFase = () => {
                         <div className="single-feature-time">
                           Last OEE update: <span>{oeeWhen}</span>
                         </div>
+                        {isCpsLai3 && (
+                          <div className="single-feature-time">
+                            Calculation: <span>{cps.oee?.calculationState || 'NOT_COMPUTED'}</span>
+                            {cps.oee?.windowId ? <> · Window: <span>{cps.oee.windowId}</span></> : null}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1251,6 +1357,43 @@ const PlayFase = () => {
                             Average Cycle Time:{' '}
                             <strong>{formatCycleTimeMs(production?.averageCycleTimeMs)}</strong>
                           </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {isCpsLai3 && (
+                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e2e8f0' }}>
+                        <div className="single-feature-title" style={{ marginBottom: 4 }}>
+                          <strong>Experimental Metrics</strong>
+                        </div>
+                        <div className="single-feature-time" style={{ marginBottom: 8 }}>
+                          Signal evidence only — not validated production counts or OEE.
+                          {' '}Session: {experimentalMetrics?.metricSessionId || 'Not started'}
+                          {' '}({experimentalMetrics?.sessionStatus || 'NOT_STARTED'}).
+                          {' '}Quality: {experimentalMetrics?.evidenceQuality || 'Unavailable'}.
+                        </div>
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                            gap: 8,
+                          }}
+                        >
+                          <div className="single-feature-title">
+                            B1BG1 activations: <strong>{formatProductionCount(experimentalMetricValues.pieceSensorActivationCount)}</strong>
+                          </div>
+                          <div className="single-feature-title">
+                            G1BG3 signal active: <strong>{formatCycleTimeMs(experimentalMetricValues.conveyorSignalActiveTimeMs)}</strong>
+                          </div>
+                          <div className="single-feature-title">
+                            G1MB1 activations: <strong>{formatProductionCount(experimentalMetricValues.separator1ActivationCount)}</strong>
+                          </div>
+                          <div className="single-feature-title">
+                            G1MB2 activations: <strong>{formatProductionCount(experimentalMetricValues.separator2ActivationCount)}</strong>
+                          </div>
+                        </div>
+                        <div className="single-feature-time" style={{ marginTop: 8 }}>
+                          Last experimental update: <span>{formatDateTime(experimentalMetrics?.updatedAt)}</span>
                         </div>
                       </div>
                     )}
@@ -1350,6 +1493,98 @@ const PlayFase = () => {
           )}
         </ul>
       </div>
+
+      {telemetryModalCps && (
+        <div className="modal-overlay" role="presentation" onClick={closeTelemetryModal}>
+          <div
+            className="modal telemetry-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="telemetry-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 id="telemetry-modal-title" className="details-modal-title">
+              Physical Telemetry — {telemetryModalCps.nome || telemetryModalCps.displayName || 'CPS-LAI-02'}
+            </h3>
+            <p className="telemetry-modal-note">
+              Real OPC UA samples received through <code>cpslai2/data</code>. The physical mode is
+              derived separately from validated markers and never changes Health, OEE, lifecycle
+              or PPU state.
+            </p>
+
+            <div className="physical-operation-mode" role="status">
+              <div>
+                <strong>Physical Operation Mode:</strong>{' '}
+                <span>{physicalOperationModeDisplay}</span>
+              </div>
+              <div>
+                Source: {physicalOperationMode?.source || 'PHYSICAL_OPCUA_MARKERS'}
+              </div>
+              <div>
+                Semantic status: {physicalOperationMode?.semanticValidationStatus || 'UNAVAILABLE'}
+              </div>
+              {physicalOperationMode?.reason && (
+                <div>Reason: {physicalOperationMode.reason}</div>
+              )}
+              {physicalOperationMode?.derivedAt && (
+                <div>Derived at: {formatDateTime(physicalOperationMode.derivedAt)}</div>
+              )}
+              <div className="physical-operation-mode-separation">
+                Independent from ACSM PPU operational state and lifecycle phase.
+              </div>
+            </div>
+
+            {telemetryRows.length ? (
+              <div className="telemetry-table-wrap">
+                <table className="telemetry-table">
+                  <thead>
+                    <tr>
+                      <th>Tag</th>
+                      <th>Value</th>
+                      <th>Quality</th>
+                      <th>Datatype</th>
+                      <th>NodeId</th>
+                      <th>Timestamps</th>
+                      <th>Semantic status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {telemetryRows.map((sample) => (
+                      <tr key={sample.tag}>
+                        <td><code>{sample.tag}</code></td>
+                        <td className={sample.valid ? '' : 'telemetry-invalid'}>
+                          {formatTelemetryValue(sample)}
+                        </td>
+                        <td>{sample.quality || sample.statusCode || 'Unknown'}</td>
+                        <td>{sample.dataType || '—'}</td>
+                        <td><code>{sample.nodeId || '—'}</code></td>
+                        <td>
+                          <div>Collected: {formatDateTime(sample.collectedAt)}</div>
+                          <div>Source: {formatDateTime(sample.sourceTimestamp)}</div>
+                          <div>Server: {formatDateTime(sample.serverTimestamp)}</div>
+                        </td>
+                        <td>
+                          <span className="telemetry-semantic-status">
+                            {sample.semanticMappingStatus || 'UNSPECIFIED'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="play-api-message" role="status">
+                No physical telemetry samples are available for CPS-LAI-02 yet.
+              </div>
+            )}
+
+            <div className="modal-footer">
+              <button className="modal-cancel-btn" onClick={closeTelemetryModal}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modalOpen && (
         <div className="modal-overlay" role="presentation" onClick={closeModal}>

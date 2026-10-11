@@ -2,15 +2,15 @@
     {
         "id":  "c3a0000000000001",
         "type":  "tab",
-        "label":  "CPS-LAI-03 – Sorting Station",
+        "label":  "CPS-LAI-03 â€“ Sorting Station",
         "disabled":  true,
-        "info":  "READY_FOR_LAI_ACTIVATION\nIndependent read-only adapter for CPS-LAI-03. Only ns=3;s=OperatingMode is read as an operational scalar. Structural roots are metadata only; APPLICATION_TAGS_NOT_EXPOSED_BY_CURRENT_BROWSE. No process-state inference, production metrics, command path, or physical governance binding is implemented."
+        "info":  "READY_FOR_LAI_ACTIVATION\nIndependent read-only adapter for CPS-LAI-03. The physically correlated mode markers sys_man, sys_sup and sys_man2 are read through the single existing OPC UA client. Datatype, quality and freshness remain mandatory evidence. No process-state inference, production metrics, command path, or physical governance binding is implemented."
     },
     {
         "id":  "c3a0000000000002",
         "type":  "comment",
         "z":  "c3a0000000000001",
-        "name":  "1. OPC UA READ ONLY – confirmed scalar only",
+        "name":  "1. OPC UA READ ONLY â€“ confirmed scalar only",
         "info":  "Structural evidence only; never poll as scalar values: PLC=ns=3;s=PLC, Inputs=ns=3;s=Inputs, Outputs=ns=3;s=Outputs, Memory=ns=3;s=Memory, Counters=ns=3;s=Counters, Timers=ns=3;s=Timers, DataBlocksGlobal=ns=3;s=DataBlocksGlobal, DataBlocksInstance=ns=3;s=DataBlocksInstance.",
         "x":  260,
         "y":  60,
@@ -22,7 +22,7 @@
         "id":  "c3a0000000000003",
         "type":  "inject",
         "z":  "c3a0000000000001",
-        "name":  "READ OperatingMode every 10 s – activate only at LAI",
+        "name":  "READ OperatingMode every 10 s â€“ activate only at LAI",
         "props":  [
                       {
                           "p":  "payload"
@@ -32,7 +32,7 @@
                           "vt":  "str"
                       }
                   ],
-        "repeat":  "10",
+        "repeat":  "2",
         "crontab":  "",
         "once":  false,
         "onceDelay":  0.1,
@@ -43,18 +43,25 @@
         "y":  140,
         "wires":  [
                       [
-                          "c3a0000000000004"
+                          "c3a0000000000004",
+                          "c3a000000000001a"
                       ]
                   ]
     },
     {
         "id":  "c3a0000000000004",
-        "type":  "OpcUa-Item",
+        "type":  "function",
         "z":  "c3a0000000000001",
-        "item":  "ns=3;s=OperatingMode",
-        "datatype":  "opcua.DataType.Int32",
-        "value":  "",
-        "name":  "OperatingMode → OperationModeRaw [confirmed read only]",
+        "func":  "const TAGS = [\n  { tag:\u0027sys_man\u0027, nodeId:\u0027ns=3;s=\\\"sys_man\\\"\u0027 },\n  { tag:\u0027sys_sup\u0027, nodeId:\u0027ns=3;s=\\\"sys_sup\\\"\u0027 },\n  { tag:\u0027sys_man2\u0027, nodeId:\u0027ns=3;s=\\\"sys_man2\\\"\u0027 }\n];\nconst now = Date.now();\nconst active = flow.get(\u0027cpslai3_mode_read_batch\u0027);\nif (active \u0026\u0026 now \u003c= active.expiresAt \u0026\u0026 active.received.length \u003c TAGS.length) return null;\nconst batchId = `cpslai3-mode-${now}`;\nflow.set(\u0027cpslai3_mode_read_batch\u0027, { batchId, expiresAt:now + 6000, received:[], expected:TAGS.map(tag =\u003e tag.nodeId) });\nflow.set(\u0027cpslai3_mode_tags\u0027, Object.fromEntries(TAGS.map(tag =\u003e [tag.nodeId, tag])));\nreturn [TAGS.map(tag =\u003e ({ topic:tag.nodeId, payload:\u0027\u0027, _tag:tag.tag, _nodeId:tag.nodeId, _batchId:batchId, _readRequestedAt:new Date(now).toISOString() }))];",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [
+
+                 ],
+        "name":  "OperatingMode â†’ OperationModeRaw [confirmed read only]",
         "x":  650,
         "y":  140,
         "wires":  [
@@ -68,7 +75,7 @@
         "type":  "OpcUa-Client",
         "z":  "c3a0000000000001",
         "endpoint":  "c3a0000000000015",
-        "action":  "read",
+        "action":  "info",
         "deadbandtype":  "a",
         "deadbandvalue":  0,
         "time":  10,
@@ -92,7 +99,7 @@
         "y":  140,
         "wires":  [
                       [
-                          "c3a0000000000006"
+                          "c3a000000000001b"
                       ],
                       [
                           "c3a0000000000013"
@@ -106,8 +113,8 @@
         "id":  "c3a0000000000006",
         "type":  "function",
         "z":  "c3a0000000000001",
-        "name":  "Normalize + cache OperatingMode",
-        "func":  "const expectedNodeId = \u0027ns=3;s=OperatingMode\u0027;\nconst rawTopic = String(msg.topic || \u0027\u0027).trim();\nconst nodeId = rawTopic.split(\u0027;datatype=\u0027)[0].trim();\nif (nodeId !== expectedNodeId) {\n    node.warn(\u0027Rejected unexpected OPC UA NodeId: \u0027 + nodeId);\n    return null;\n}\nif (msg.payload === null || msg.payload === undefined) {\n    node.warn(\u0027Rejected null OPC UA value for OperatingMode\u0027);\n    return null;\n}\nconst statusValue = typeof msg.statusCode === \u0027number\u0027\n    ? msg.statusCode\n    : (msg.statusCode \u0026\u0026 typeof msg.statusCode.value === \u0027number\u0027 ? msg.statusCode.value : null);\nif (statusValue !== null \u0026\u0026 statusValue !== 0) {\n    node.warn(\u0027Rejected OPC UA StatusCode for OperatingMode: \u0027 + statusValue);\n    return null;\n}\nlet value = msg.payload;\nwhile (value !== null \u0026\u0026 typeof value === \u0027object\u0027 \u0026\u0026 Object.prototype.hasOwnProperty.call(value, \u0027value\u0027)) {\n    value = value.value;\n}\nconst numericValue = typeof value === \u0027number\u0027 ? value : Number(value);\nif (!Number.isInteger(numericValue) || numericValue \u003c -2147483648 || numericValue \u003e 2147483647) {\n    node.warn(\u0027Rejected non-Int32 OperatingMode value: \u0027 + JSON.stringify(value));\n    return null;\n}\nconst nowMs = Date.now();\nconst nowIso = new Date(nowMs).toISOString();\nconst toIsoOrNull = (input) =\u003e {\n    if (!input) return null;\n    const parsed = new Date(input);\n    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();\n};\nconst sample = {\n    field: \u0027OperationModeRaw\u0027,\n    nodeId,\n    dataType: \u0027Int32\u0027,\n    value: numericValue,\n    timestamp: nowIso,\n    sourceTimestamp: toIsoOrNull(msg.sourceTimestamp),\n    serverTimestamp: toIsoOrNull(msg.serverTimestamp),\n    evidenceStatus: \u0027CONFIRMED\u0027,\n    semanticMappingStatus: \u0027PENDING\u0027\n};\nlet latest = global.get(\u0027cpslai3_latest\u0027);\nif (!latest || typeof latest !== \u0027object\u0027 || Array.isArray(latest)) latest = {};\nlatest.OperationModeRaw = sample;\nglobal.set(\u0027cpslai3_latest\u0027, latest);\nglobal.set(\u0027cpslai3_last_update_ms\u0027, nowMs);\nmsg.payload = { cpsId: \u0027cpslai3\u0027, ...sample };\nreturn msg;",
+        "name":  "Validate and cache physical mode marker",
+        "func":  "const configured = flow.get('cpslai3_mode_tags') || {};\nconst nodeId = String(msg._nodeId || msg.topic || '').split(';datatype=')[0].trim();\nconst meta = configured[nodeId];\nif (!meta || (msg._tag && msg._tag !== meta.tag)) { node.warn('Rejected unexpected CPS-LAI-03 OPC UA sample: ' + nodeId); return null; }\nconst batch = flow.get('cpslai3_mode_read_batch');\nif (!batch || batch.batchId !== msg._batchId || Date.now() > batch.expiresAt || batch.received.includes(nodeId)) { node.warn('Rejected late, unknown or duplicate CPS-LAI-03 read response: ' + nodeId); return null; }\nbatch.received.push(nodeId);\nflow.set('cpslai3_mode_read_batch', batch.received.length === batch.expected.length ? null : batch);\n\nconst hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);\nconst raw = hasOwn(msg, 'value') ? msg.value\n  : hasOwn(msg.payload, 'value') ? msg.payload.value\n    : hasOwn(msg.payload?.attributes, 'value') ? msg.payload.attributes.value\n      : undefined;\nconst dataTypeAttribute = msg.dataType ?? msg.dataTypeNodeId ?? msg.attributes?.dataType\n  ?? msg.payload?.dataTypeNodeId ?? msg.payload?.attributes?.dataType ?? null;\nconst dataTypeNodeId = (() => {\n  if (dataTypeAttribute === null || dataTypeAttribute === undefined || dataTypeAttribute === '') return null;\n  if (typeof dataTypeAttribute === 'string') return dataTypeAttribute.trim();\n  if (typeof dataTypeAttribute?.toString === 'function') {\n    const text = dataTypeAttribute.toString();\n    if (text && text !== '[object Object]') return text.trim();\n  }\n  const namespace = dataTypeAttribute.namespace ?? dataTypeAttribute.namespaceIndex;\n  const value = dataTypeAttribute.value ?? dataTypeAttribute.identifier;\n  if (Number(namespace) === 0 && value !== undefined) return 'ns=0;i=' + String(value);\n  return null;\n})();\nconst normalizedTypeToken = String(dataTypeNodeId || '').replace(/\\s/g, '').toLowerCase();\nconst booleanDataTypeProven = normalizedTypeToken === 'ns=0;i=1'\n  || normalizedTypeToken === 'boolean'\n  || normalizedTypeToken === 'datatype.boolean';\nconst statusCode = String(msg.statusCode?.name || msg.statusCode || msg.payload?.statusCode?.name || msg.payload?.statusCode || msg.quality || 'Unknown');\nconst toIso = value => { if (!value) return null; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString(); };\nconst collectedAt = new Date().toISOString();\nconst sourceTimestamp = toIso(msg.sourceTimestamp || msg.payload?.sourceTimestamp);\nconst serverTimestamp = toIso(msg.serverTimestamp || msg.payload?.serverTimestamp);\nconst good = /^Good(?:\\b|\\s|\\()/i.test(statusCode);\nconst valid = booleanDataTypeProven && typeof raw === 'boolean' && good;\nconst invalidReason = !dataTypeNodeId ? 'MISSING_DATATYPE_ATTRIBUTE'\n  : !booleanDataTypeProven ? 'INCOMPATIBLE_DATATYPE_ATTRIBUTE'\n    : typeof raw !== 'boolean' ? 'NON_BOOLEAN_VALUE'\n      : !good ? 'BAD_OPCUA_QUALITY' : null;\nconst sample = {\n  field:meta.tag, nodeId:meta.nodeId, value:raw ?? null,\n  dataType:booleanDataTypeProven ? 'Boolean' : null,\n  dataTypeNodeId, dataTypeEvidence:dataTypeNodeId ? 'OPC_UA_ATTRIBUTE_DATATYPE' : null,\n  statusCode, quality:statusCode, valid, timestamp:collectedAt, collectedAt,\n  sourceTimestamp, serverTimestamp,\n  semanticMappingStatus:'PHYSICALLY_VALIDATED_MODE_MARKER', invalidReason\n};\nconst samples = flow.get('cpslai3_mode_samples') || {};\nconst prior = samples[meta.tag];\nconst order = value => Date.parse(value?.serverTimestamp || value?.sourceTimestamp || value?.collectedAt || '');\nif (!prior || !Number.isFinite(order(prior)) || !Number.isFinite(order(sample)) || order(sample) >= order(prior)) { samples[meta.tag] = sample; flow.set('cpslai3_mode_samples', samples); }\nmsg.payload = { cpsId:'cpslai3', ...sample };\nreturn msg;",
         "outputs":  1,
         "timeout":  0,
         "noerr":  0,
@@ -158,7 +165,8 @@
         "y":  220,
         "wires":  [
                       [
-                          "c3a0000000000014"
+                          "c3a0000000000014",
+                          "c3a0000000000025"
                       ]
                   ]
     },
@@ -222,7 +230,7 @@
         "type":  "comment",
         "z":  "c3a0000000000001",
         "name":  "3. Build evidence-only MQTT payloads",
-        "info":  "Data is emitted only after a real validated OperatingMode sample. Status remains UNKNOWN. OEE remains NOT_INITIALIZED.",
+        "info":  "Data is emitted only after a real validated OperatingMode sample. Status remains UNKNOWN. OEE remains NOT_COMPUTED until validated production evidence is available.",
         "x":  260,
         "y":  500,
         "wires":  [
@@ -233,7 +241,7 @@
         "id":  "c3a000000000000d",
         "type":  "inject",
         "z":  "c3a0000000000001",
-        "name":  "PUBLISH evidence snapshot every 10 s – activate only at LAI",
+        "name":  "PUBLISH evidence snapshot every 10 s â€“ activate only at LAI",
         "props":  [
                       {
                           "p":  "payload"
@@ -243,7 +251,7 @@
                           "vt":  "str"
                       }
                   ],
-        "repeat":  "10",
+        "repeat":  "2",
         "crontab":  "",
         "once":  false,
         "onceDelay":  0.1,
@@ -263,7 +271,7 @@
         "type":  "function",
         "z":  "c3a0000000000001",
         "name":  "Build CPS-LAI-03 MQTT snapshot",
-        "func":  "const latest = global.get(\u0027cpslai3_latest\u0027) || {};\nconst lastUpdateMs = global.get(\u0027cpslai3_last_update_ms\u0027) || null;\nconst operationModeEvidence = latest.OperationModeRaw || null;\nconst communication = flow.get(\u0027cpslai3_opcua_status\u0027) || { connected: false, status: {}, timestamp: null };\nconst lifecyclePhase = flow.get(\u0027cpslai3_lifecycle_phase\u0027) || null;\nconst nowMs = Date.now();\nconst nowIso = new Date(nowMs).toISOString();\nconst dataAgeMs = lastUpdateMs === null ? null : Math.max(0, nowMs - Number(lastUpdateMs));\nconst dataPayload = operationModeEvidence ? {\n    schemaVersion: \u00271.0\u0027,\n    cpsId: \u0027cpslai3\u0027,\n    assetName: \u0027SortingStationLAI\u0027,\n    displayName: \u0027CPS-LAI-03 – Sorting Station\u0027,\n    source: \u0027OPC_UA\u0027,\n    endpoint: \u0027opc.tcp://192.168.1.30:4840\u0027,\n    timestamp: nowIso,\n    operationModeRaw: operationModeEvidence.value,\n    operationMode: \u0027UNKNOWN\u0027,\n    operationModeSemanticStatus: \u0027PENDING\u0027,\n    evidence: { OperatingMode: operationModeEvidence }\n} : null;\nconst statusPayload = {\n    schemaVersion: \u00271.0\u0027,\n    cpsId: \u0027cpslai3\u0027,\n    timestamp: nowIso,\n    lifecyclePhase,\n    operationModeRaw: operationModeEvidence ? operationModeEvidence.value : null,\n    operationMode: \u0027UNKNOWN\u0027,\n    operationModeSemanticStatus: \u0027PENDING\u0027,\n    operationalState: \u0027UNKNOWN\u0027,\n    operationalStateReason: \u0027INSUFFICIENT_PHYSICAL_EVIDENCE\u0027,\n    communication: { connected: communication.connected === true, status: communication.status || {}, statusTimestamp: communication.timestamp || null, lastValidatedSampleAt: operationModeEvidence ? operationModeEvidence.timestamp : null, dataAgeMs },\n    evidenceStatus: operationModeEvidence ? \u0027PARTIAL_CONFIRMED_EVIDENCE\u0027 : \u0027INSUFFICIENT_PHYSICAL_EVIDENCE\u0027\n};\nconst oeePayload = {\n    schemaVersion: \u00271.0\u0027,\n    cpsId: \u0027cpslai3\u0027,\n    timestamp: nowIso,\n    calculationState: \u0027NOT_INITIALIZED\u0027,\n    oee: { current: null, availability: null, performance: null, quality: null },\n    evidenceStatus: \u0027INSUFFICIENT_PROCESS_DATA\u0027\n};\nreturn [\n    dataPayload ? { payload: JSON.stringify(dataPayload) } : null,\n    { payload: JSON.stringify(statusPayload) },\n    { payload: JSON.stringify(oeePayload) }\n];",
+        "func":  "const MARKERS = [\n  { role:'MANUAL', tag:'sys_man', nodeId:'ns=3;s=\"sys_man\"' },\n  { role:'AUTOMATIC', tag:'sys_sup', nodeId:'ns=3;s=\"sys_sup\"' },\n  { role:'STEP_BY_STEP', tag:'sys_man2', nodeId:'ns=3;s=\"sys_man2\"' }\n];\nconst STALE_AFTER_MS = 6000;\nconst samples = flow.get('cpslai3_mode_samples') || {};\nconst communicationStatus = flow.get('cpslai3_opcua_status') || { connected:false, status:{}, timestamp:null };\nconst lifecyclePhase = flow.get('cpslai3_lifecycle_phase') || null;\nconst publishedAt = new Date().toISOString();\nconst nowMs = Date.parse(publishedAt);\nconst data = {};\nfor (const marker of MARKERS) {\n  const cached = samples[marker.tag];\n  if (!cached) continue;\n  const collectedAtMs = Date.parse(cached.collectedAt);\n  const ageMs = Number.isFinite(collectedAtMs) ? Math.max(0, nowMs - collectedAtMs) : null;\n  const stale = ageMs === null || ageMs > STALE_AFTER_MS;\n  data[marker.tag] = { ...cached, validAtCollection:cached.valid, valid:cached.valid === true && !stale, ageMs, stale };\n}\nconst entries = MARKERS.map(marker => data[marker.tag]);\nconst result = (operationMode, reason) => ({ operationMode, source:'CPS_LAI_03_PHYSICAL_MODE_MARKERS', semanticValidationStatus:'PHYSICALLY_VALIDATED', reason, derivedAt:publishedAt, tagsUsed:MARKERS });\nlet derived;\nif (entries.some(sample => !sample)) derived = result('UNKNOWN', 'MISSING_MODE_MARKER');\nelse if (entries.some(sample => String(sample.dataType || '').toLowerCase() !== 'boolean')) derived = result('UNKNOWN', 'INCOMPATIBLE_MARKER_DATATYPE');\nelse if (entries.some(sample => sample.stale === true)) derived = result('UNKNOWN', 'STALE_MODE_MARKER');\nelse if (entries.some(sample => sample.valid !== true)) derived = result('UNKNOWN', 'INVALID_MODE_MARKER');\nelse if (entries.some(sample => !/^Good(?:\\b|\\s|\\()/i.test(String(sample.statusCode || sample.quality || '')))) derived = result('UNKNOWN', 'BAD_OPCUA_QUALITY');\nelse if (entries.some(sample => typeof sample.value !== 'boolean')) derived = result('UNKNOWN', 'NON_BOOLEAN_MARKER_VALUE');\nelse {\n  const active = entries.map(sample => sample.value);\n  const activeCount = active.filter(Boolean).length;\n  if (activeCount === 0) derived = result('UNKNOWN', 'NO_ACTIVE_MODE_MARKER');\n  else if (activeCount > 1) derived = result('UNKNOWN', 'NON_EXCLUSIVE_MODE_MARKERS');\n  else if (active[0]) derived = result('MANUAL', 'EXCLUSIVE_MANUAL_MARKER');\n  else if (active[1]) derived = result('AUTOMATIC', 'EXCLUSIVE_AUTOMATIC_MARKER');\n  else derived = result('STEP_BY_STEP', 'EXCLUSIVE_STEP_BY_STEP_MARKER');\n}\nconst currentSamples = entries.filter(sample => sample && sample.stale !== true);\nconst dataFresh = currentSamples.length > 0;\nconst dataPayload = {\n  schemaVersion:'1.2', cpsId:'cpslai3', formalCpsId:'CPS-LAI-03', assetName:'SortingStationLAI',\n  displayName:'CPS-LAI-03 – Sorting Station', source:'OPC_UA',\n  endpoint:'opc.tcp://192.168.1.30:4840', timestamp:publishedAt, publishedAt,\n  snapshotComplete:entries.every(Boolean), availableTagCount:entries.filter(Boolean).length,\n  expectedTagCount:MARKERS.length, staleAfterMs:STALE_AFTER_MS,\n  communication:{ dataFresh, connected:communicationStatus.connected === true },\n  data, derived\n};\nconst statusPayload = {\n  schemaVersion:'1.1', cpsId:'cpslai3', timestamp:publishedAt, lifecyclePhase,\n  communication:{ dataFresh, connected:communicationStatus.connected === true, status:communicationStatus.status || {}, statusTimestamp:communicationStatus.timestamp || null },\n  evidenceStatus:derived.operationMode === 'UNKNOWN' ? 'INSUFFICIENT_OR_INVALID_MODE_EVIDENCE' : 'PHYSICALLY_VALIDATED_MODE_MARKERS'\n};\nconst oeePayload = { schemaVersion:'1.0', cpsId:'cpslai3', timestamp:publishedAt, calculationState:'NOT_INITIALIZED', oee:{ current:null, availability:null, performance:null, quality:null }, evidenceStatus:'INSUFFICIENT_PROCESS_DATA' };\nreturn [\n  { topic:'cpslai3/data', qos:1, retain:false, payload:JSON.stringify(dataPayload) },\n  { payload:JSON.stringify(statusPayload) },\n  { payload:JSON.stringify(oeePayload) }\n];",
         "outputs":  3,
         "timeout":  0,
         "noerr":  0,
@@ -282,7 +290,7 @@
                           "c3a0000000000010"
                       ],
                       [
-                          "c3a0000000000011"
+                          "c3a0000000000019"
                       ]
                   ]
     },
@@ -292,7 +300,7 @@
         "z":  "c3a0000000000001",
         "name":  "MQTT cpslai3/data",
         "topic":  "cpslai3/data",
-        "qos":  "0",
+        "qos":  "1",
         "retain":  "false",
         "respTopic":  "",
         "contentType":  "application/json",
@@ -324,6 +332,26 @@
         "y":  580,
         "wires":  [
 
+                  ]
+    },
+    {
+        "id":  "c3a0000000000019",
+        "type":  "function",
+        "z":  "c3a0000000000001",
+        "name":  "Publish CPS1-compatible OEE contract; preserve NOT_COMPUTED without production evidence",
+        "func":  "const session=flow.get('cpslai3_exp_session')||null; const timestamp=new Date().toISOString(); const metrics=flow.get('cpslai3_exp_metrics')||{pieceSensorActivationCount:null,conveyorSignalActiveTimeMs:null,separator1ActivationCount:null,separator2ActivationCount:null}; const oee={current:null,availability:null,performance:null,quality:null}; const missing=['PLANNED_PRODUCTION_TIME_NOT_AVAILABLE','VALIDATED_PRODUCTIVE_TIME_NOT_AVAILABLE','COMPLETED_PIECE_COUNT_NOT_AVAILABLE','GOOD_PIECE_COUNT_NOT_AVAILABLE','IDEAL_CYCLE_TIME_NOT_CONFIGURED']; let payload=msg.payload; if(Buffer.isBuffer(payload))payload=payload.toString('utf8'); if(typeof payload==='string'){try{payload=JSON.parse(payload);}catch(_){payload={};}} if(!payload||payload.cpsId!=='cpslai3')payload={schemaVersion:'1.2',cpsId:'cpslai3'}; payload={...payload,timestamp,windowId:session?.id||null,metricSessionId:session?.id||null,windowStartedAt:session?.startedAt||null,windowEndedAt:session?.stoppedAt||null,windowStatus:session?.status||'NOT_STARTED',calculationState:'NOT_COMPUTED',sourceStatus:'NOT_COMPUTED',evidenceStatus:'INSUFFICIENT_PROCESS_DATA',source:'CPS_LAI_03_EXPERIMENTAL_OEE',reason:'CPS_LAI_03_SIGNALS_DO_NOT_YET_PROVE_THE_CPS_LAI_01_OEE_INPUT_SEMANTICS',missingInputs:missing,componentStatus:{availability:'NOT_COMPUTED',performance:'NOT_COMPUTED',quality:'NOT_COMPUTED'},experimentalEvidence:metrics,parameterEvidence:{idealCycleTimeMs:null,idealCycleTimeSource:null},oee}; msg.payload=JSON.stringify(payload); return msg;",
+        "outputs":  1,
+        "timeout":  0,
+        "noerr":  0,
+        "initialize":  "",
+        "finalize":  "",
+        "libs":  [],
+        "x":  890,
+        "y":  660,
+        "wires":  [
+                      [
+                          "c3a0000000000011"
+                      ]
                   ]
     },
     {
@@ -430,7 +458,7 @@
         "type":  "function",
         "z":  "c3a0000000000001",
         "name":  "Clear CPS-LAI-03 context only",
-        "func":  "global.set(\u0027cpslai3_latest\u0027, {});\nglobal.set(\u0027cpslai3_last_update_ms\u0027, 0);\nflow.set(\u0027cpslai3_opcua_status\u0027, { connected: false, status: {}, timestamp: null });\nflow.set(\u0027cpslai3_lifecycle_phase\u0027, null);\nflow.set(\u0027cpslai3_lifecycle_phase_ts\u0027, null);\nflow.set(\u0027cpslai3_lifecycle_phase_source\u0027, null);\nflow.set(\u0027cpslai3_lifecycle_phase_message_ts\u0027, null);\nnode.warn(\u0027CPS-LAI-03 context cleared\u0027);\nreturn null;",
+        "func":  "flow.set('cpslai3_mode_samples', {});\nflow.set('cpslai3_mode_read_batch', null);\nflow.set('cpslai3_mode_tags', {});\nflow.set('cpslai3_opcua_status', { connected: false, status: {}, timestamp: null });\nflow.set('cpslai3_lifecycle_phase', null);\nflow.set('cpslai3_lifecycle_phase_ts', null);\nflow.set('cpslai3_lifecycle_phase_source', null);\nflow.set('cpslai3_lifecycle_phase_message_ts', null);\nnode.warn('CPS-LAI-03 context cleared');\nreturn null;",
         "outputs":  1,
         "timeout":  0,
         "noerr":  0,
@@ -448,6 +476,181 @@
                   ]
     },
     {
+        "id": "c3a000000000001a",
+        "type": "function",
+        "z": "c3a0000000000001",
+        "name": "Read experimental signals through existing OPC UA client",
+        "func": "const tags=[['B1BG1','ns=3;s=\\\"B1BG1\\\"'],['G1BG3','ns=3;s=\\\"G1BG3\\\"'],['G1MB1','ns=3;s=\\\"G1MB1\\\"'],['G1MB2','ns=3;s=\\\"G1MB2\\\"']]; const now=Date.now(), old=flow.get('cpslai3_exp_batch'), max=Number(flow.get('cpslai3_exp_max_gap_ms'))||6000; if(old&&now<=old.expiresAt)return null; if(old){flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_quality','BATCH_TIMEOUT_BASELINE_RESET');} const id='exp-'+now; flow.set('cpslai3_exp_batch',{id,expiresAt:now+max,expected:tags.map(x=>x[1]),received:[]}); return [tags.map(([tag,nodeId])=>({topic:nodeId,payload:'',_nodeId:nodeId,_tag:tag,_expBatchId:id,_experimental:true}))];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 220,
+        "wires": [["c3a0000000000005"]]
+    },
+    {
+        "id": "c3a000000000001b",
+        "type": "function",
+        "z": "c3a0000000000001",
+        "name": "Route mode and experimental OPC UA reads",
+        "func": "if(msg?._experimental)return [null,msg]; return [msg,null];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1190,
+        "y": 140,
+        "wires": [["c3a0000000000006"],["c3a000000000001c"]]
+    },
+    {
+        "id": "c3a000000000001c",
+        "type": "function",
+        "z": "c3a0000000000001",
+        "name": "Experimental event/time aggregator (not production or OEE)",
+        "func": "const ids={B1BG1:'ns=3;s=\\\"B1BG1\\\"',G1BG3:'ns=3;s=\\\"G1BG3\\\"',G1MB1:'ns=3;s=\\\"G1MB1\\\"',G1MB2:'ns=3;s=\\\"G1MB2\\\"'}; const tag=msg._tag,nodeId=String(msg._nodeId||msg.topic||'').split(';datatype=')[0].trim(), batch=flow.get('cpslai3_exp_batch'); if(!ids[tag]||ids[tag]!==nodeId||!batch||batch.id!==msg._expBatchId||Date.now()>batch.expiresAt||batch.received.some(x=>x.tag===tag))return null; const own=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k), raw=own(msg,'value')?msg.value:own(msg.payload,'value')?msg.payload.value:msg.payload?.attributes?.value, dt=msg.dataType??msg.dataTypeNodeId??msg.attributes?.dataType??msg.payload?.dataTypeNodeId??msg.payload?.attributes?.dataType, dtid=typeof dt==='string'?dt:(dt&&Number(dt.namespace??dt.namespaceIndex)===0?'ns=0;i='+String(dt.value??dt.identifier):String(dt||'')), sc=String(msg.statusCode?.name||msg.statusCode||msg.payload?.statusCode?.name||msg.payload?.statusCode||msg.quality||'Unknown'), good=/^Good(?:\\b|\\s|\\()/i.test(sc), sample={tag,nodeId,value:raw,dataType:dtid||null,statusCode:sc,quality:sc,valid:typeof raw==='boolean'&&good&&(dtid==='ns=0;i=1'||/^boolean$/i.test(dtid)),collectedAt:new Date().toISOString(),sourceTimestamp:msg.sourceTimestamp||msg.payload?.sourceTimestamp||null,serverTimestamp:msg.serverTimestamp||msg.payload?.serverTimestamp||null}; batch.received.push(sample); if(batch.received.length<4){flow.set('cpslai3_exp_batch',batch);return null;} flow.set('cpslai3_exp_batch',null); const session=flow.get('cpslai3_exp_session'); if(!session||session.status!=='RUNNING')return null; const all=['B1BG1','G1BG3','G1MB1','G1MB2'].map(t=>batch.received.find(x=>x.tag===t)), times=all.map(x=>Date.parse(x.collectedAt)), now=Date.now(), max=Number(flow.get('cpslai3_exp_max_gap_ms'))||6000, valid=all.every(x=>x?.valid)&&Math.max(...times)-Math.min(...times)<=max&&now-Math.min(...times)<=max; let m=flow.get('cpslai3_exp_metrics')||{pieceSensorActivationCount:0,conveyorSignalActiveTimeMs:0,separator1ActivationCount:0,separator2ActivationCount:0}, prev=flow.get('cpslai3_exp_baseline'), quality='CURRENT', last=flow.get('cpslai3_exp_last_event')||null; if(!valid){prev=null;quality='INVALID_OR_STALE_SAMPLE';} else if(!prev||now-prev.at>max){prev={at:now,v:Object.fromEntries(all.map(x=>[x.tag,x.value]))};quality='BASELINE_ONLY';} else {const gap=now-prev.at, v=Object.fromEntries(all.map(x=>[x.tag,x.value])); if(gap>max){quality='BASELINE_ONLY_AFTER_GAP';} else {if(prev.v.B1BG1===false&&v.B1BG1===true){m.pieceSensorActivationCount++;last={type:'PIECE_SENSOR_ACTIVATION',tag:'B1BG1',at:new Date(now).toISOString()};} if(prev.v.G1MB1===false&&v.G1MB1===true){m.separator1ActivationCount++;last={type:'SEPARATOR_1_ACTIVATION',tag:'G1MB1',at:new Date(now).toISOString()};} if(prev.v.G1MB2===false&&v.G1MB2===true){m.separator2ActivationCount++;last={type:'SEPARATOR_2_ACTIVATION',tag:'G1MB2',at:new Date(now).toISOString()};} if(prev.v.G1BG3===true&&v.G1BG3===true)m.conveyorSignalActiveTimeMs+=gap;} prev={at:now,v};} flow.set('cpslai3_exp_baseline',valid?prev:null); flow.set('cpslai3_exp_metrics',m); flow.set('cpslai3_exp_quality',quality); flow.set('cpslai3_exp_last_event',last); msg.payload={schemaVersion:'1.0',cpsId:'cpslai3',metricSessionId:session.id,sessionStatus:session.status,startedAt:session.startedAt,updatedAt:new Date(now).toISOString(),source:'CPS_LAI_03_EXPERIMENTAL_SIGNAL_AGGREGATOR',evidenceOrigin:'OPC_UA_READ',evidenceQuality:quality,maxSampleGapMs:max,lastEvent:last,metrics:m,measuredSignals:all,interpretation:{pieceSensorActivationCount:'B1BG1 rising edges; not completed pieces',conveyorSignalActiveTimeMs:'bounded consecutive true intervals; not planned production time',separator1ActivationCount:'G1MB1 rising edges; not classification result',separator2ActivationCount:'G1MB2 rising edges; not classification result',oee:'NOT_COMPUTED'}}; return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1530,
+        "y": 340,
+        "wires": [["c3a000000000001d"]]
+    },
+    {
+        "id": "c3a000000000001d",
+        "type": "mqtt out",
+        "z": "c3a0000000000001",
+        "name": "MQTT cpslai3/experimental-metrics",
+        "topic": "cpslai3/experimental-metrics",
+        "qos": "1",
+        "retain": "false",
+        "broker": "c3a0000000000016",
+        "x": 1830,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "c3a000000000001e",
+        "type": "inject",
+        "z": "c3a0000000000001",
+        "name": "Start experimental metrics session (manual)",
+        "props": [{"p":"payload"}],
+        "repeat": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "payload": "",
+        "payloadType": "date",
+        "x": 260,
+        "y": 900,
+        "wires": [["c3a000000000001f"]]
+    },
+    {
+        "id": "c3a000000000001f",
+        "type": "function",
+        "z": "c3a0000000000001",
+        "name": "Start or reset experimental metrics session",
+        "func": "const now=new Date().toISOString(), id='cpslai3-exp-'+Date.now()+'-'+Math.random().toString(36).slice(2,8), session={id,status:'RUNNING',startedAt:now}, metrics={pieceSensorActivationCount:0,conveyorSignalActiveTimeMs:0,separator1ActivationCount:0,separator2ActivationCount:0}; flow.set('cpslai3_exp_session',session);flow.set('cpslai3_exp_metrics',metrics);flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_last_event',null);msg.payload={schemaVersion:'1.0',cpsId:'cpslai3',metricSessionId:id,sessionStatus:'RUNNING',startedAt:now,updatedAt:now,source:'CPS_LAI_03_EXPERIMENTAL_SIGNAL_AGGREGATOR',evidenceOrigin:'OPC_UA_READ',evidenceQuality:'BASELINE_PENDING',maxSampleGapMs:Number(flow.get('cpslai3_exp_max_gap_ms'))||6000,lastEvent:null,metrics,measuredSignals:[],interpretation:{oee:'NOT_COMPUTED'}};return msg;",
+        "outputs": 1,
+        "x": 650,
+        "y": 900,
+        "wires": [["c3a000000000001d", "c3a0000000000019"]]
+    },
+    {
+        "id": "c3a0000000000020",
+        "type": "inject",
+        "z": "c3a0000000000001",
+        "name": "Reset experimental metrics (new session)",
+        "props": [{"p":"payload"}],
+        "repeat": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "payload": "",
+        "payloadType": "date",
+        "x": 260,
+        "y": 960,
+        "wires": [["c3a000000000001f"]]
+    },
+    {
+        "id": "c3a0000000000021",
+        "type": "inject",
+        "z": "c3a0000000000001",
+        "name": "Stop experimental metrics session",
+        "props": [{"p":"payload"}],
+        "repeat": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "payload": "",
+        "payloadType": "date",
+        "x": 260,
+        "y": 1020,
+        "wires": [["c3a0000000000022"]]
+    },
+    {
+        "id": "c3a0000000000022",
+        "type": "function",
+        "z": "c3a0000000000001",
+        "name": "Stop experimental metrics session",
+        "func": "const s=flow.get('cpslai3_exp_session');if(!s)return null;s.status='STOPPED';s.stoppedAt=new Date().toISOString();flow.set('cpslai3_exp_session',s);msg.payload={schemaVersion:'1.0',cpsId:'cpslai3',metricSessionId:s.id,sessionStatus:s.status,startedAt:s.startedAt,updatedAt:s.stoppedAt,source:'CPS_LAI_03_EXPERIMENTAL_SIGNAL_AGGREGATOR',evidenceOrigin:'OPC_UA_READ',evidenceQuality:'SESSION_STOPPED',maxSampleGapMs:Number(flow.get('cpslai3_exp_max_gap_ms'))||6000,lastEvent:flow.get('cpslai3_exp_last_event')||null,metrics:flow.get('cpslai3_exp_metrics'),measuredSignals:[],interpretation:{oee:'NOT_COMPUTED'}};return msg;",
+        "outputs": 1,
+        "x": 650,
+        "y": 1020,
+        "wires": [["c3a000000000001d"]]
+    },
+    {
+        "id": "c3a0000000000023",
+        "type": "inject",
+        "z": "c3a0000000000001",
+        "name": "Reset experimental baseline on Node-RED start/deploy",
+        "props": [{"p":"payload"}],
+        "repeat": "",
+        "once": true,
+        "onceDelay": 0.2,
+        "payload": "",
+        "payloadType": "date",
+        "x": 270,
+        "y": 1080,
+        "wires": [["c3a0000000000024", "c3a0000000000019"]]
+    },
+    {
+        "id": "c3a0000000000024",
+        "type": "function",
+        "z": "c3a0000000000001",
+        "name": "Interrupt any previous experimental session safely",
+        "func": "const session=flow.get('cpslai3_exp_session');if(session&&session.status==='RUNNING'){session.status='INTERRUPTED_BY_RUNTIME_RESTART';session.stoppedAt=new Date().toISOString();flow.set('cpslai3_exp_session',session);}flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_batch',null);flow.set('cpslai3_exp_quality','BASELINE_PENDING');return null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 1080,
+        "wires": [[]]
+    },
+    {
+        "id": "c3a0000000000025",
+        "type": "function",
+        "z": "c3a0000000000001",
+        "name": "Reset experimental baseline on OPC UA disconnect/reconnect",
+        "func": "const connected=msg.payload?.communication?.connected;if(typeof connected!=='boolean')return null;const prior=flow.get('cpslai3_exp_connected');if(prior!==connected){flow.set('cpslai3_exp_baseline',null);flow.set('cpslai3_exp_batch',null);flow.set('cpslai3_exp_quality',connected?'BASELINE_PENDING':'COMMUNICATION_LOST');}flow.set('cpslai3_exp_connected',connected);return null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1120,
+        "y": 220,
+        "wires": [[]]
+    },
+    {
         "id":  "c3a0000000000015",
         "type":  "OpcUa-Endpoint",
         "endpoint":  "opc.tcp://192.168.1.30:4840",
@@ -459,7 +662,7 @@
     {
         "id":  "c3a0000000000016",
         "type":  "mqtt-broker",
-        "name":  "ACSM Mosquitto localhost – cpslai3",
+        "name":  "ACSM Mosquitto localhost â€“ cpslai3",
         "broker":  "localhost",
         "port":  "1883",
         "clientid":  "nodered-cpslai3-adapter",

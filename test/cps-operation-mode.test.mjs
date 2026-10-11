@@ -3,7 +3,9 @@ import test from 'node:test';
 import {
   applyPhysicalStatus,
   applyRememberedRuntimeMode,
+  hasIndependentPhysicalOperationMode,
   mergeNonStatusOperationalData,
+  operationalDataForAcsmState,
 } from '../lib/acsm/cpsOperationMode.mjs';
 
 const physicalStatus = (extra = {}) => ({
@@ -90,3 +92,95 @@ for (const id of ['cps1', 'cps5', 'cps7']) {
     assert.equal(updated.currentRPM, 20);
   });
 }
+
+const physicalModes = ['MANUAL', 'AUTOMATIC', 'STEP_BY_STEP', 'UNKNOWN'];
+
+for (const id of ['cpslai1', 'CPS-LAI-02']) {
+  for (const operationMode of physicalModes) {
+    test(`${id} Start preserves physical operationMode=${operationMode}`, () => {
+      const cps = {
+        id,
+        operationalState: 'stopped',
+        lifecyclePhase: 'play',
+        operationalData: { operationMode, marker: 'preserved' },
+      };
+      const updated = {
+        ...cps,
+        operationalState: 'running',
+        lifecyclePhase: 'play',
+        operationalData: operationalDataForAcsmState(cps, 'running'),
+      };
+
+      assert.equal(updated.operationalData.operationMode, operationMode);
+      assert.equal(updated.operationalData.marker, 'preserved');
+      assert.equal(updated.operationalState, 'running');
+      assert.equal(updated.lifecyclePhase, 'play');
+    });
+
+    test(`${id} Stop preserves physical operationMode=${operationMode}`, () => {
+      const cps = {
+        id,
+        operationalState: 'running',
+        lifecyclePhase: 'play',
+        operationalData: { operationMode },
+      };
+      const updated = {
+        ...cps,
+        operationalState: 'stopped',
+        lifecyclePhase: 'play',
+        operationalData: operationalDataForAcsmState(cps, 'stopped'),
+      };
+
+      assert.equal(updated.operationalData.operationMode, operationMode);
+      assert.equal(updated.operationalState, 'stopped');
+      assert.equal(updated.lifecyclePhase, 'play');
+    });
+  }
+}
+
+test('Maintenance preserves physical mode while retaining existing unplug lifecycle semantics', () => {
+  for (const id of ['cpslai1', 'cpslai2', 'cpslai3']) {
+    const cps = { id, lifecyclePhase: 'play', operationalData: { operationMode: 'UNKNOWN' } };
+    const updated = {
+      ...cps,
+      operationalState: 'maintenance',
+      lifecyclePhase: 'unplug',
+      operationalData: operationalDataForAcsmState(cps, 'maintenance'),
+    };
+    assert.equal(updated.operationalData.operationMode, 'UNKNOWN');
+    assert.equal(updated.operationalState, 'maintenance');
+    assert.equal(updated.lifecyclePhase, 'unplug');
+  }
+});
+
+test('CPS-LAI-03 has an independent physical mode that generic state changes cannot overwrite', () => {
+  assert.equal(hasIndependentPhysicalOperationMode('CPS-LAI-01'), true);
+  assert.equal(hasIndependentPhysicalOperationMode('cpslai2'), true);
+  assert.equal(hasIndependentPhysicalOperationMode('cpslai3'), true);
+
+  const cpsLai3 = {
+    id: 'cpslai3',
+    lifecyclePhase: 'play',
+    operationalState: 'stopped',
+    operationalData: {
+      operationMode: 'running',
+      operationModeRaw: 8,
+      operationModeSemanticStatus: 'PENDING',
+    },
+  };
+  assert.equal(operationalDataForAcsmState(cpsLai3, 'running').operationMode, 'UNKNOWN');
+  assert.equal(operationalDataForAcsmState(cpsLai3, 'stopped').operationMode, 'UNKNOWN');
+  assert.equal(applyRememberedRuntimeMode(cpsLai3, 'running').operationalData.operationMode, 'UNKNOWN');
+  assert.equal(
+    mergeNonStatusOperationalData(cpsLai3, { operationMode: 'AUTOMATIC', operationModeRaw: 8 })
+      .operationMode,
+    'UNKNOWN'
+  );
+  assert.equal(operationalDataForAcsmState(cpsLai3, 'running').operationModeRaw, 8);
+  assert.equal(
+    operationalDataForAcsmState(cpsLai3, 'running').operationModeSemanticStatus,
+    'PENDING'
+  );
+  assert.equal(cpsLai3.operationalState, 'stopped');
+  assert.equal(cpsLai3.lifecyclePhase, 'play');
+});

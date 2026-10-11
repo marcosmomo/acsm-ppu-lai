@@ -1,59 +1,78 @@
 [
   {
-    "id": "c2a0000000000001",
+    "id": "cpslai2_physical_tab",
     "type": "tab",
-    "label": "CPS-LAI-02 – Joining Station",
+    "label": "CPS-LAI-02 Physical Telemetry (READ ONLY)",
     "disabled": true,
-    "info": "READY_FOR_LAI_ACTIVATION\nIndependent read-only adapter for CPS-LAI-02. Only ns=3;s=OperatingMode is read as an operational scalar. Structural roots are metadata only. No process-state inference, production metrics, command path, or physical governance binding is implemented."
+    "info": "PHYSICAL TELEMETRY INTEGRATION\nSix persistent read-only subscriptions and an independent non-overlapping 2-second OPC UA read cycle feed an isolated CPS-LAI-02 cache. A separate 1-second clock publishes real cached snapshots to cpslai2/data. Collection and publication timestamps remain distinct; samples become stale after 6 seconds. No writes, commands, inferred modes, status, OEE, Health, lifecycle, PPU, Governance or HCM."
   },
   {
-    "id": "c2a0000000000002",
+    "id": "cpslai2_scope_note",
     "type": "comment",
-    "z": "c2a0000000000001",
-    "name": "1. OPC UA READ ONLY – confirmed scalar only",
-    "info": "Structural evidence only; never poll as scalar values: PLC=ns=3;s=PLC, Inputs=ns=3;s=Inputs, Outputs=ns=3;s=Outputs, Memory=ns=3;s=Memory, Counters=ns=3;s=Counters, Timers=ns=3;s=Timers, DataBlocksGlobal=ns=3;s=DataBlocksGlobal, DataBlocksInstance=ns=3;s=DataBlocksInstance.",
-    "x": 260,
+    "z": "cpslai2_physical_tab",
+    "name": "READ ONLY — real telemetry; mode semantics remain unvalidated",
+    "info": "Six NodeIds were observed with Good OPC UA quality and transitions in two physical experiments (311 and 106 events across 352 monitored tags). This evidence confirms addressability and change, not Manual/Automatic/Step-by-Step semantics.",
+    "x": 390,
     "y": 60,
     "wires": []
   },
   {
-    "id": "c2a0000000000003",
+    "id": "cpslai2_start",
     "type": "inject",
-    "z": "c2a0000000000001",
-    "name": "READ OperatingMode every 10 s – activate only at LAI",
-    "props": [{ "p": "payload" }, { "p": "topic", "vt": "str" }],
-    "repeat": "10",
+    "z": "cpslai2_physical_tab",
+    "name": "Start six confirmed subscriptions after enabling tab",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
     "crontab": "",
-    "once": false,
-    "onceDelay": 0.1,
+    "once": true,
+    "onceDelay": 2,
     "topic": "",
     "payload": "",
     "payloadType": "date",
-    "x": 260,
+    "x": 280,
     "y": 140,
-    "wires": [["c2a0000000000004"]]
+    "wires": [
+      [
+        "cpslai2_build_subscriptions"
+      ]
+    ]
   },
   {
-    "id": "c2a0000000000004",
-    "type": "OpcUa-Item",
-    "z": "c2a0000000000001",
-    "item": "ns=3;s=OperatingMode",
-    "datatype": "opcua.DataType.Int32",
-    "value": "",
-    "name": "OperatingMode → OperationModeRaw [confirmed read only]",
+    "id": "cpslai2_build_subscriptions",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Build read-only candidate subscriptions",
+    "func": "const tags = [\n  { tag:'sys_man', nodeId:'ns=3;s=\"sys_man\"', dataType:'Boolean' },\n  { tag:'sys_man2', nodeId:'ns=3;s=\"sys_man2\"', dataType:'Boolean' },\n  { tag:'sys_sup', nodeId:'ns=3;s=\"sys_sup\"', dataType:'Boolean' },\n  { tag:'sys_menu', nodeId:'ns=3;s=\"sys_menu\"', dataType:'Boolean' },\n  { tag:'man_step_0', nodeId:'ns=3;s=\"man_step_0\"', dataType:'Boolean' },\n  { tag:'man_step_1', nodeId:'ns=3;s=\"man_step_1\"', dataType:'Boolean' }\n];\nflow.set('cpslai2_telemetry_by_nodeid', Object.fromEntries(tags.map(t => [t.nodeId, t])));\nreturn [tags.map(tag => ({...msg, topic:tag.nodeId, datatype:tag.dataType, interval:1000, payload:1000, _tag:tag.tag, _nodeId:tag.nodeId, _dataType:tag.dataType}))];",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
     "x": 650,
     "y": 140,
-    "wires": [["c2a0000000000005"]]
+    "wires": [
+      [
+        "cpslai2_opcua_subscribe"
+      ]
+    ]
   },
   {
-    "id": "c2a0000000000005",
+    "id": "cpslai2_opcua_subscribe",
     "type": "OpcUa-Client",
-    "z": "c2a0000000000001",
-    "endpoint": "c2a0000000000015",
-    "action": "read",
+    "z": "cpslai2_physical_tab",
+    "endpoint": "cpslai2_opcua_endpoint",
+    "action": "subscribe",
     "deadbandtype": "a",
     "deadbandvalue": 0,
-    "time": 10,
+    "time": 1,
     "timeUnit": "s",
     "certificate": "n",
     "localfile": "",
@@ -67,115 +86,134 @@
     "sendBufferSize": 8192,
     "setstatusandtime": true,
     "keepsessionalive": true,
-    "name": "CPS-LAI-02 OPC UA READ",
+    "name": "Subscribe CPS-LAI-02 candidates (READ ONLY)",
     "applicationName": "",
     "applicationUri": "",
-    "x": 970,
+    "x": 1010,
     "y": 140,
-    "wires": [["c2a0000000000006"], ["c2a0000000000013"], ["c2a0000000000013"]]
+    "wires": [
+      [
+        "cpslai2_normalize_sample"
+      ],
+      [
+        "cpslai2_diagnostics"
+      ],
+      [
+        "cpslai2_diagnostics"
+      ]
+    ]
   },
   {
-    "id": "c2a0000000000006",
-    "type": "function",
-    "z": "c2a0000000000001",
-    "name": "Normalize + cache OperatingMode",
-    "func": "const expectedNodeId = 'ns=3;s=OperatingMode';\nconst rawTopic = String(msg.topic || '').trim();\nconst nodeId = rawTopic.split(';datatype=')[0].trim();\nif (nodeId !== expectedNodeId) {\n    node.warn('Rejected unexpected OPC UA NodeId: ' + nodeId);\n    return null;\n}\nif (msg.payload === null || msg.payload === undefined) {\n    node.warn('Rejected null OPC UA value for OperatingMode');\n    return null;\n}\nconst statusValue = typeof msg.statusCode === 'number'\n    ? msg.statusCode\n    : (msg.statusCode && typeof msg.statusCode.value === 'number' ? msg.statusCode.value : null);\nif (statusValue !== null && statusValue !== 0) {\n    node.warn('Rejected OPC UA StatusCode for OperatingMode: ' + statusValue);\n    return null;\n}\nlet value = msg.payload;\nwhile (value !== null && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, 'value')) {\n    value = value.value;\n}\nconst numericValue = typeof value === 'number' ? value : Number(value);\nif (!Number.isInteger(numericValue) || numericValue < -2147483648 || numericValue > 2147483647) {\n    node.warn('Rejected non-Int32 OperatingMode value: ' + JSON.stringify(value));\n    return null;\n}\nconst nowMs = Date.now();\nconst nowIso = new Date(nowMs).toISOString();\nconst toIsoOrNull = (input) => {\n    if (!input) return null;\n    const parsed = new Date(input);\n    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();\n};\nconst sample = {\n    field: 'OperationModeRaw',\n    nodeId,\n    dataType: 'Int32',\n    value: numericValue,\n    timestamp: nowIso,\n    sourceTimestamp: toIsoOrNull(msg.sourceTimestamp),\n    serverTimestamp: toIsoOrNull(msg.serverTimestamp),\n    evidenceStatus: 'CONFIRMED',\n    semanticMappingStatus: 'PENDING'\n};\nlet latest = global.get('cpslai2_latest');\nif (!latest || typeof latest !== 'object' || Array.isArray(latest)) latest = {};\nlatest.OperationModeRaw = sample;\nglobal.set('cpslai2_latest', latest);\nglobal.set('cpslai2_last_update_ms', nowMs);\nmsg.payload = { cpsId: 'cpslai2', ...sample };\nreturn msg;",
-    "outputs": 1,
-    "timeout": 0,
-    "noerr": 0,
-    "initialize": "",
-    "finalize": "",
-    "libs": [],
-    "x": 1260,
-    "y": 140,
-    "wires": [["c2a0000000000014"]]
-  },
-  {
-    "id": "c2a0000000000007",
-    "type": "status",
-    "z": "c2a0000000000001",
-    "name": "CPS-LAI-02 OPC UA connection status",
-    "scope": ["c2a0000000000005"],
-    "x": 280,
-    "y": 220,
-    "wires": [["c2a0000000000008"]]
-  },
-  {
-    "id": "c2a0000000000008",
-    "type": "function",
-    "z": "c2a0000000000001",
-    "name": "Store CPS-LAI-02 OPC UA status",
-    "func": "const status = msg.status && typeof msg.status === 'object' ? msg.status : {};\nconst text = String(status.text || '').trim();\nconst normalized = text.toLowerCase();\nconst connected = !/(disconnected|error|failed|closed)/.test(normalized) && /(connected|active|session)/.test(normalized);\nconst record = { connected, status, timestamp: new Date().toISOString() };\nflow.set('cpslai2_opcua_status', record);\nmsg.payload = { cpsId: 'cpslai2', communication: record };\nreturn msg;",
-    "outputs": 1,
-    "timeout": 0,
-    "noerr": 0,
-    "initialize": "",
-    "finalize": "",
-    "libs": [],
-    "x": 670,
-    "y": 220,
-    "wires": [["c2a0000000000014"]]
-  },
-  {
-    "id": "c2a0000000000009",
-    "type": "comment",
-    "z": "c2a0000000000001",
-    "name": "2. ACSM lifecycle is authoritative",
-    "info": "Accepted phases: plug, play, stop, maintenance, return, unplug. Lifecycle never derives physical state.",
-    "x": 250,
-    "y": 320,
-    "wires": []
-  },
-  {
-    "id": "c2a000000000000a",
-    "type": "mqtt in",
-    "z": "c2a0000000000001",
-    "name": "MQTT ACSM lifecycle cpslai2",
-    "topic": "acsm/cpslai2/lifecycle",
-    "qos": "1",
-    "datatype": "auto",
-    "broker": "c2a0000000000016",
-    "nl": false,
-    "rap": true,
-    "rh": 0,
-    "inputs": 0,
-    "x": 250,
-    "y": 380,
-    "wires": [["c2a000000000000b"]]
-  },
-  {
-    "id": "c2a000000000000b",
-    "type": "function",
-    "z": "c2a0000000000001",
-    "name": "Store ACSM lifecyclePhase for cpslai2",
-    "func": "let data = msg.payload;\nif (Buffer.isBuffer(data)) data = data.toString('utf8');\nif (typeof data === 'string') {\n    try { data = JSON.parse(data); } catch (error) {\n        node.warn('Rejected invalid lifecycle JSON');\n        return null;\n    }\n}\nif (!data || typeof data !== 'object' || Array.isArray(data)) return null;\nif (data.cpsId && String(data.cpsId).trim().toLowerCase() !== 'cpslai2') {\n    node.warn('Rejected lifecycle for unexpected cpsId');\n    return null;\n}\nconst allowed = ['plug', 'play', 'stop', 'maintenance', 'return', 'unplug'];\nconst phase = String(data.lifecyclePhase || '').trim().toLowerCase();\nif (!allowed.includes(phase)) {\n    node.warn('Rejected unsupported lifecycle phase: ' + phase);\n    return null;\n}\nconst nowMs = Date.now();\nflow.set('cpslai2_lifecycle_phase', phase);\nflow.set('cpslai2_lifecycle_phase_ts', nowMs);\nflow.set('cpslai2_lifecycle_phase_source', String(data.source || 'ACSM'));\nflow.set('cpslai2_lifecycle_phase_message_ts', data.timestamp || null);\nmsg.payload = { cpsId: 'cpslai2', lifecyclePhase: phase, source: String(data.source || 'ACSM'), sourceTimestamp: data.timestamp || null, receivedAt: new Date(nowMs).toISOString() };\nreturn msg;",
-    "outputs": 1,
-    "timeout": 0,
-    "noerr": 0,
-    "initialize": "",
-    "finalize": "",
-    "libs": [],
-    "x": 620,
-    "y": 380,
-    "wires": [["c2a0000000000014"]]
-  },
-  {
-    "id": "c2a000000000000c",
-    "type": "comment",
-    "z": "c2a0000000000001",
-    "name": "3. Build evidence-only MQTT payloads",
-    "info": "Data is emitted only after a real validated OperatingMode sample. Status remains UNKNOWN. OEE remains NOT_INITIALIZED.",
-    "x": 260,
-    "y": 500,
-    "wires": []
-  },
-  {
-    "id": "c2a000000000000d",
+    "id": "cpslai2_read_tick",
     "type": "inject",
-    "z": "c2a0000000000001",
-    "name": "PUBLISH evidence snapshot every 10 s – activate only at LAI",
-    "props": [{ "p": "payload" }, { "p": "topic", "vt": "str" }],
-    "repeat": "10",
+    "z": "cpslai2_physical_tab",
+    "name": "Read six real tags every 2 seconds",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "2",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.2,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 300,
+    "y": 220,
+    "wires": [
+      [
+        "cpslai2_build_read_batch"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_build_read_batch",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Build guarded OPC UA read batch",
+    "func": "const BATCH_TIMEOUT_MS = 5000;\nconst configured = flow.get('cpslai2_telemetry_by_nodeid') || {};\nconst tags = Object.values(configured);\nif (tags.length !== 6) { node.warn('Periodic read skipped: six-tag mapping is not ready'); return null; }\nconst now = Date.now();\nconst active = flow.get('cpslai2_read_batch');\nif (active && active.receivedNodeIds.length < active.expectedNodeIds.length && now < active.expiresAt) return null;\nif (active && active.receivedNodeIds.length < active.expectedNodeIds.length) {\n  const history = flow.get('cpslai2_read_diagnostics') || [];\n  history.push({ at: new Date(now).toISOString(), type: 'READ_BATCH_TIMEOUT', batchId: active.batchId, missingNodeIds: active.expectedNodeIds.filter(id => !active.receivedNodeIds.includes(id)) });\n  flow.set('cpslai2_read_diagnostics', history.slice(-100));\n}\nconst sequence = Number(flow.get('cpslai2_read_batch_sequence') || 0) + 1;\nflow.set('cpslai2_read_batch_sequence', sequence);\nconst batchId = `cpslai2-read-${now}-${sequence}`;\nconst expectedNodeIds = tags.map(tag => tag.nodeId);\nflow.set('cpslai2_read_batch', { batchId, startedAt: now, expiresAt: now + BATCH_TIMEOUT_MS, expectedNodeIds, receivedNodeIds: [] });\nreturn [tags.map(tag => ({ topic: tag.nodeId, payload: '', datatype: tag.dataType, _tag: tag.tag, _nodeId: tag.nodeId, _dataType: tag.dataType, _batchId: batchId, _readRequestedAt: new Date(now).toISOString() }))];",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 650,
+    "y": 220,
+    "wires": [
+      [
+        "cpslai2_opcua_read"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_opcua_read",
+    "type": "OpcUa-Client",
+    "z": "cpslai2_physical_tab",
+    "endpoint": "cpslai2_opcua_endpoint",
+    "action": "read",
+    "deadbandtype": "a",
+    "deadbandvalue": 0,
+    "time": 1,
+    "timeUnit": "s",
+    "certificate": "n",
+    "localfile": "",
+    "localkeyfile": "",
+    "securitymode": "None",
+    "securitypolicy": "None",
+    "useTransport": false,
+    "maxChunkCount": 1,
+    "maxMessageSize": 8192,
+    "receiveBufferSize": 8192,
+    "sendBufferSize": 8192,
+    "setstatusandtime": true,
+    "keepsessionalive": true,
+    "name": "Read CPS-LAI-02 candidates (READ ONLY)",
+    "applicationName": "",
+    "applicationUri": "",
+    "x": 1010,
+    "y": 220,
+    "wires": [
+      [
+        "cpslai2_normalize_sample"
+      ],
+      [
+        "cpslai2_diagnostics"
+      ],
+      [
+        "cpslai2_diagnostics"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_normalize_sample",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Validate and cache real OPC UA sample",
+    "func": "const configured = flow.get('cpslai2_telemetry_by_nodeid') || {};\nconst diagnostics = (type, detail) => {\n  const history = flow.get('cpslai2_read_diagnostics') || [];\n  history.push({ at: new Date().toISOString(), type, ...detail });\n  flow.set('cpslai2_read_diagnostics', history.slice(-100));\n  node.warn(type + ': ' + JSON.stringify(detail));\n};\nconst topicNodeId = String(msg.topic || '').split(';datatype=')[0].trim();\nconst requestedNodeId = String(msg._nodeId || '').trim();\nif (requestedNodeId && requestedNodeId !== topicNodeId) { diagnostics('READ_NODEID_MISMATCH', { batchId: msg._batchId || null, requestedNodeId, topicNodeId }); return null; }\nconst meta = configured[topicNodeId];\nif (!meta || (msg._tag && msg._tag !== meta.tag)) { diagnostics('UNEXPECTED_OPCUA_SAMPLE', { batchId: msg._batchId || null, topicNodeId, tag: msg._tag || null }); return null; }\nif (msg._batchId) {\n  const active = flow.get('cpslai2_read_batch');\n  if (!active || active.batchId !== msg._batchId || Date.now() > active.expiresAt) { diagnostics('LATE_OR_UNKNOWN_READ_RESPONSE', { batchId: msg._batchId, topicNodeId }); return null; }\n  if (!active.expectedNodeIds.includes(topicNodeId)) { diagnostics('UNEXPECTED_BATCH_NODEID', { batchId: msg._batchId, topicNodeId }); return null; }\n  if (active.receivedNodeIds.includes(topicNodeId)) { diagnostics('DUPLICATE_READ_RESPONSE', { batchId: msg._batchId, topicNodeId }); return null; }\n  active.receivedNodeIds.push(topicNodeId);\n  if (active.receivedNodeIds.length === active.expectedNodeIds.length) {\n    flow.set('cpslai2_last_read_batch', { ...active, completedAt: Date.now() });\n    flow.set('cpslai2_read_batch', null);\n  } else flow.set('cpslai2_read_batch', active);\n}\nconst reportedDataType = String(msg.datatype || msg.dataType || msg.payload?.dataType || msg.payload?.datatype || msg._dataType || '').replace(/^.*:/, '');\nif (!reportedDataType || reportedDataType.toLowerCase() !== meta.dataType.toLowerCase()) { diagnostics('INVALID_DATATYPE', { batchId: msg._batchId || null, topicNodeId, reportedDataType, expectedDataType: meta.dataType }); return null; }\nlet raw = msg.payload;\nwhile (raw !== null && typeof raw === 'object' && Object.prototype.hasOwnProperty.call(raw, 'value')) raw = raw.value;\nconst statusCode = String(msg.statusCode?.name || msg.statusCode || msg.payload?.statusCode?.name || msg.payload?.statusCode || 'Unknown');\nif (!/^Good/i.test(statusCode) || raw === undefined || raw === null || typeof raw !== 'boolean') { diagnostics('INVALID_OPCUA_READING', { batchId: msg._batchId || null, topicNodeId, statusCode, valueType: typeof raw }); return null; }\nconst toIso = value => { if (!value) return null; const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString(); };\nconst sourceTimestamp = toIso(msg.sourceTimestamp || msg.payload?.sourceTimestamp);\nconst serverTimestamp = toIso(msg.serverTimestamp || msg.payload?.serverTimestamp);\nconst collectedAt = new Date().toISOString();\nconst samples = flow.get('cpslai2_samples') || {};\nconst prior = samples[meta.tag];\nconst incomingOrder = Date.parse(serverTimestamp || sourceTimestamp || collectedAt);\nconst priorOrder = Date.parse(prior?.serverTimestamp || prior?.sourceTimestamp || prior?.collectedAt || '');\nif (prior && Number.isFinite(priorOrder) && Number.isFinite(incomingOrder) && incomingOrder < priorOrder) { diagnostics('OLDER_SAMPLE_REJECTED', { batchId: msg._batchId || null, topicNodeId, incomingOrder, priorOrder }); return null; }\nsamples[meta.tag] = { field: meta.tag, value: raw, nodeId: meta.nodeId, dataType: meta.dataType, sourceTimestamp, serverTimestamp, statusCode, quality: statusCode, valid: true, collectedAt, readBatchId: msg._batchId || null, readRequestedAt: msg._readRequestedAt || null, semanticName: null, semanticMappingStatus: ['sys_man', 'sys_sup', 'sys_man2'].includes(meta.tag) ? 'PHYSICALLY_VALIDATED_MODE_MARKER' : 'PRELIMINARY_UNVALIDATED' };\nflow.set('cpslai2_samples', samples);\nreturn null;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 350,
+    "y": 280,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "cpslai2_snapshot_tick",
+    "type": "inject",
+    "z": "cpslai2_physical_tab",
+    "name": "Publish cached snapshot every 1 second",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "1",
     "crontab": "",
     "once": false,
     "onceDelay": 0.1,
@@ -183,154 +221,126 @@
     "payload": "",
     "payloadType": "date",
     "x": 300,
-    "y": 580,
-    "wires": [["c2a000000000000e"]]
+    "y": 300,
+    "wires": [
+      [
+        "cpslai2_build_snapshot"
+      ]
+    ]
   },
   {
-    "id": "c2a000000000000e",
+    "id": "cpslai2_build_snapshot",
     "type": "function",
-    "z": "c2a0000000000001",
-    "name": "Build CPS-LAI-02 MQTT snapshot",
-    "func": "const latest = global.get('cpslai2_latest') || {};\nconst lastUpdateMs = global.get('cpslai2_last_update_ms') || null;\nconst operationModeEvidence = latest.OperationModeRaw || null;\nconst communication = flow.get('cpslai2_opcua_status') || { connected: false, status: {}, timestamp: null };\nconst lifecyclePhase = flow.get('cpslai2_lifecycle_phase') || null;\nconst nowMs = Date.now();\nconst nowIso = new Date(nowMs).toISOString();\nconst dataAgeMs = lastUpdateMs === null ? null : Math.max(0, nowMs - Number(lastUpdateMs));\nconst dataPayload = operationModeEvidence ? {\n    schemaVersion: '1.0',\n    cpsId: 'cpslai2',\n    assetName: 'JoiningStationLAI',\n    displayName: 'CPS-LAI-02 – Joining Station',\n    source: 'OPC_UA',\n    endpoint: 'opc.tcp://192.168.1.20:4840',\n    timestamp: nowIso,\n    operationModeRaw: operationModeEvidence.value,\n    operationMode: 'UNKNOWN',\n    operationModeSemanticStatus: 'PENDING',\n    evidence: { OperatingMode: operationModeEvidence }\n} : null;\nconst statusPayload = {\n    schemaVersion: '1.0',\n    cpsId: 'cpslai2',\n    timestamp: nowIso,\n    lifecyclePhase,\n    operationModeRaw: operationModeEvidence ? operationModeEvidence.value : null,\n    operationMode: 'UNKNOWN',\n    operationModeSemanticStatus: 'PENDING',\n    operationalState: 'UNKNOWN',\n    operationalStateReason: 'INSUFFICIENT_PHYSICAL_EVIDENCE',\n    communication: { connected: communication.connected === true, status: communication.status || {}, statusTimestamp: communication.timestamp || null, lastValidatedSampleAt: operationModeEvidence ? operationModeEvidence.timestamp : null, dataAgeMs },\n    evidenceStatus: operationModeEvidence ? 'PARTIAL_CONFIRMED_EVIDENCE' : 'INSUFFICIENT_PHYSICAL_EVIDENCE'\n};\nconst oeePayload = {\n    schemaVersion: '1.0',\n    cpsId: 'cpslai2',\n    timestamp: nowIso,\n    calculationState: 'NOT_INITIALIZED',\n    oee: { current: null, availability: null, performance: null, quality: null },\n    evidenceStatus: 'INSUFFICIENT_PROCESS_DATA'\n};\nreturn [\n    dataPayload ? { payload: JSON.stringify(dataPayload) } : null,\n    { payload: JSON.stringify(statusPayload) },\n    { payload: JSON.stringify(oeePayload) }\n];",
-    "outputs": 3,
-    "timeout": 0,
+    "z": "cpslai2_physical_tab",
+    "name": "Build CPS/MQTT snapshot",
+    "func": "const EXPECTED_TAGS = ['sys_man', 'sys_man2', 'sys_sup', 'sys_menu', 'man_step_0', 'man_step_1'];\nconst STALE_AFTER_MS = 6000;\nconst samples = flow.get('cpslai2_samples') || {};\nconst availableTags = EXPECTED_TAGS.filter(tag => samples[tag]);\nif (availableTags.length === 0) return null;\nconst publishedAt = new Date().toISOString();\nconst publishedAtMs = Date.parse(publishedAt);\nconst data = {};\nfor (const tag of availableTags) {\n  const cached = samples[tag];\n  const collectedAtMs = Date.parse(cached.collectedAt);\n  const ageMs = Number.isFinite(collectedAtMs) ? Math.max(0, publishedAtMs - collectedAtMs) : null;\n  const stale = ageMs === null || ageMs > STALE_AFTER_MS;\n  data[tag] = { ...cached, validAtCollection: cached.valid, valid: cached.valid === true && !stale, ageMs, stale };\n}\nmsg.topic = 'cpslai2/data';\nmsg.qos = 1;\nmsg.retain = false;\nmsg.payload = { schemaVersion: '1.2', cpsId: 'cpslai2', formalCpsId: 'CPS-LAI-02', cpsName: 'JoiningStationLAI', displayName: 'CPS-LAI-02 – Joining Station', source: 'OPC_UA', endpoint: 'opc.tcp://192.168.1.20:4840', timestamp: publishedAt, publishedAt, snapshotComplete: availableTags.length === EXPECTED_TAGS.length, availableTagCount: availableTags.length, expectedTagCount: EXPECTED_TAGS.length, staleAfterMs: STALE_AFTER_MS, data };\nreturn msg;",
+    "outputs": 1,
     "noerr": 0,
     "initialize": "",
     "finalize": "",
     "libs": [],
-    "x": 720,
-    "y": 580,
-    "wires": [["c2a000000000000f"], ["c2a0000000000010"], ["c2a0000000000011"]]
+    "x": 660,
+    "y": 340,
+    "wires": [
+      [
+        "cpslai2_derive_operation_mode"
+      ]
+    ]
   },
   {
-    "id": "c2a000000000000f",
+    "id": "cpslai2_derive_operation_mode",
+    "type": "function",
+    "z": "cpslai2_physical_tab",
+    "name": "Derive validated physical operationMode",
+    "func": "const MARKERS = [\n  { role: 'MANUAL', tag: 'sys_man', nodeId: 'ns=3;s=\"sys_man\"' },\n  { role: 'AUTOMATIC', tag: 'sys_sup', nodeId: 'ns=3;s=\"sys_sup\"' },\n  { role: 'STEP_BY_STEP', tag: 'sys_man2', nodeId: 'ns=3;s=\"sys_man2\"' }\n];\nconst data = msg.payload?.data || {};\nconst derivedAt = msg.payload?.publishedAt || new Date().toISOString();\nconst result = (operationMode, reason) => ({ operationMode, source: 'PHYSICAL_OPCUA_MARKERS', semanticValidationStatus: 'PHYSICALLY_VALIDATED', reason, derivedAt, tagsUsed: MARKERS });\nconst samples = MARKERS.map(marker => data[marker.tag]);\nlet derived;\nif (samples.some(sample => !sample || typeof sample !== 'object')) derived = result('UNKNOWN', 'MISSING_MODE_MARKER');\nelse if (samples.some(sample => String(sample.dataType || sample.datatype || '').toLowerCase() !== 'boolean')) derived = result('UNKNOWN', 'INCOMPATIBLE_MARKER_DATATYPE');\nelse if (samples.some(sample => sample.stale === true)) derived = result('UNKNOWN', 'STALE_MODE_MARKER');\nelse if (samples.some(sample => sample.valid !== true)) derived = result('UNKNOWN', 'INVALID_MODE_MARKER');\nelse if (samples.some(sample => !/^Good(?:\\b|\\s|\\()/i.test(String(sample.statusCode || sample.quality || '')))) derived = result('UNKNOWN', 'BAD_OPCUA_QUALITY');\nelse if (samples.some(sample => typeof sample.value !== 'boolean')) derived = result('UNKNOWN', 'NON_BOOLEAN_MARKER_VALUE');\nelse {\n  const active = samples.map(sample => sample.value);\n  const activeCount = active.filter(Boolean).length;\n  if (activeCount === 0) derived = result('UNKNOWN', 'NO_ACTIVE_MODE_MARKER');\n  else if (activeCount > 1) derived = result('UNKNOWN', 'NON_EXCLUSIVE_MODE_MARKERS');\n  else if (active[0]) derived = result('MANUAL', 'EXCLUSIVE_MANUAL_MARKER');\n  else if (active[1]) derived = result('AUTOMATIC', 'EXCLUSIVE_AUTOMATIC_MARKER');\n  else if (active[2]) derived = result('STEP_BY_STEP', 'EXCLUSIVE_STEP_BY_STEP_MARKER');\n  else derived = result('UNKNOWN', 'UNCLASSIFIED_MARKER_COMBINATION');\n}\nmsg.payload = { ...msg.payload, derived };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1020,
+    "y": 340,
+    "wires": [
+      [
+        "cpslai2_data_out"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_data_out",
     "type": "mqtt out",
-    "z": "c2a0000000000001",
-    "name": "MQTT cpslai2/data",
-    "topic": "cpslai2/data",
-    "qos": "0",
+    "z": "cpslai2_physical_tab",
+    "name": "Publish periodic cpslai2/data snapshots only",
+    "topic": "",
+    "qos": "1",
     "retain": "false",
     "respTopic": "",
     "contentType": "application/json",
     "userProps": "",
     "correl": "",
     "expiry": "",
-    "broker": "c2a0000000000016",
-    "x": 1110,
-    "y": 540,
+    "broker": "cpslai2_mqtt_broker",
+    "x": 1370,
+    "y": 300,
     "wires": []
   },
   {
-    "id": "c2a0000000000010",
-    "type": "mqtt out",
-    "z": "c2a0000000000001",
-    "name": "MQTT cpslai2/status",
-    "topic": "cpslai2/status",
-    "qos": "0",
-    "retain": "false",
-    "respTopic": "",
-    "contentType": "application/json",
-    "userProps": "",
-    "correl": "",
-    "expiry": "",
-    "broker": "c2a0000000000016",
-    "x": 1110,
-    "y": 580,
-    "wires": []
+    "id": "cpslai2_status_watch",
+    "type": "status",
+    "z": "cpslai2_physical_tab",
+    "name": "Local OPC UA diagnostics only",
+    "scope": [
+      "cpslai2_opcua_subscribe",
+      "cpslai2_opcua_read"
+    ],
+    "x": 300,
+    "y": 400,
+    "wires": [
+      [
+        "cpslai2_diagnostics"
+      ]
+    ]
   },
   {
-    "id": "c2a0000000000011",
-    "type": "mqtt out",
-    "z": "c2a0000000000001",
-    "name": "MQTT cpslai2/oee",
-    "topic": "cpslai2/oee",
-    "qos": "0",
-    "retain": "false",
-    "respTopic": "",
-    "contentType": "application/json",
-    "userProps": "",
-    "correl": "",
-    "expiry": "",
-    "broker": "c2a0000000000016",
-    "x": 1100,
-    "y": 620,
-    "wires": []
-  },
-  {
-    "id": "c2a0000000000012",
+    "id": "cpslai2_error_catch",
     "type": "catch",
-    "z": "c2a0000000000001",
+    "z": "cpslai2_physical_tab",
     "name": "CPS-LAI-02 adapter errors",
-    "scope": ["c2a0000000000005", "c2a0000000000006", "c2a0000000000008", "c2a000000000000b", "c2a000000000000e"],
+    "scope": [
+      "cpslai2_opcua_subscribe",
+      "cpslai2_opcua_read",
+      "cpslai2_build_read_batch",
+      "cpslai2_normalize_sample",
+      "cpslai2_build_snapshot"
+    ],
     "uncaught": false,
-    "x": 260,
-    "y": 720,
-    "wires": [["c2a0000000000013"]]
+    "x": 300,
+    "y": 460,
+    "wires": [
+      [
+        "cpslai2_diagnostics"
+      ]
+    ]
   },
   {
-    "id": "c2a0000000000013",
+    "id": "cpslai2_diagnostics",
     "type": "debug",
-    "z": "c2a0000000000001",
-    "name": "CPS-LAI-02 OPC UA / adapter errors",
+    "z": "cpslai2_physical_tab",
+    "name": "Local diagnostics — never MQTT",
     "active": true,
     "tosidebar": true,
     "console": false,
     "tostatus": false,
     "complete": "true",
     "targetType": "full",
-    "x": 650,
-    "y": 720,
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 700,
+    "y": 410,
     "wires": []
   },
   {
-    "id": "c2a0000000000014",
-    "type": "debug",
-    "z": "c2a0000000000001",
-    "name": "CPS-LAI-02 evidence diagnostics",
-    "active": false,
-    "tosidebar": true,
-    "console": false,
-    "tostatus": false,
-    "complete": "payload",
-    "targetType": "msg",
-    "x": 1450,
-    "y": 260,
-    "wires": []
-  },
-  {
-    "id": "c2a0000000000017",
-    "type": "inject",
-    "z": "c2a0000000000001",
-    "name": "RESET CPS-LAI-02 CONTEXT",
-    "props": [{ "p": "payload" }],
-    "repeat": "",
-    "crontab": "",
-    "once": false,
-    "onceDelay": 0.1,
-    "payload": "",
-    "payloadType": "date",
-    "x": 250,
-    "y": 800,
-    "wires": [["c2a0000000000018"]]
-  },
-  {
-    "id": "c2a0000000000018",
-    "type": "function",
-    "z": "c2a0000000000001",
-    "name": "Clear CPS-LAI-02 context only",
-    "func": "global.set('cpslai2_latest', {});\nglobal.set('cpslai2_last_update_ms', 0);\nflow.set('cpslai2_opcua_status', { connected: false, status: {}, timestamp: null });\nflow.set('cpslai2_lifecycle_phase', null);\nflow.set('cpslai2_lifecycle_phase_ts', null);\nflow.set('cpslai2_lifecycle_phase_source', null);\nflow.set('cpslai2_lifecycle_phase_message_ts', null);\nnode.warn('CPS-LAI-02 context cleared');\nreturn null;",
-    "outputs": 1,
-    "timeout": 0,
-    "noerr": 0,
-    "initialize": "",
-    "finalize": "",
-    "libs": [],
-    "x": 590,
-    "y": 800,
-    "wires": [[]]
-  },
-  {
-    "id": "c2a0000000000015",
+    "id": "cpslai2_opcua_endpoint",
     "type": "OpcUa-Endpoint",
     "endpoint": "opc.tcp://192.168.1.20:4840",
     "secpol": "None",
@@ -339,12 +349,12 @@
     "login": false
   },
   {
-    "id": "c2a0000000000016",
+    "id": "cpslai2_mqtt_broker",
     "type": "mqtt-broker",
     "name": "ACSM Mosquitto localhost – cpslai2",
     "broker": "localhost",
     "port": "1883",
-    "clientid": "nodered-cpslai2-adapter",
+    "clientid": "nodered-cpslai2-physical-telemetry",
     "autoConnect": true,
     "usetls": false,
     "protocolVersion": "4",

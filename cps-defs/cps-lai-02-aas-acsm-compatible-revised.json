@@ -80,7 +80,21 @@
       "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:operational-data",
       "idShort": "OperationalData",
       "submodelElements": [
-        { "modelType": "Property", "idShort": "OperationMode", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+        {
+          "modelType": "Property",
+          "idShort": "OperationMode",
+          "valueType": "xs:string",
+          "value": "DERIVED_AT_RUNTIME",
+          "description": [
+            { "language": "en", "text": "Physical operation mode derived exclusively from the validated OPC UA Boolean markers sys_man, sys_sup and sys_man2. It is independent from operationalState and lifecyclePhase." }
+          ],
+          "qualifiers": [
+            { "type": "DerivationSource", "valueType": "xs:string", "value": "PHYSICAL_OPCUA_MARKERS" },
+            { "type": "SemanticValidationStatus", "valueType": "xs:string", "value": "PHYSICALLY_VALIDATED" },
+            { "type": "AllowedValues", "valueType": "xs:string", "value": "MANUAL,AUTOMATIC,STEP_BY_STEP,UNKNOWN" },
+            { "type": "LifecycleEffect", "valueType": "xs:string", "value": "NONE" }
+          ]
+        },
         { "modelType": "Property", "idShort": "PieceAtEntry", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
         { "modelType": "Property", "idShort": "PiecePositioned", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
         { "modelType": "Property", "idShort": "PieceAtExit", "valueType": "xs:boolean", "value": "", "qualifiers": [{ "type": "BindingStatus", "valueType": "xs:string", "value": "OPCUA_NODEID_CONFIRMATION_REQUIRED" }] },
@@ -235,8 +249,68 @@
       "id": "urn:ufsc:lai:ppu:cps-lai-02:submodel:field-io-mapping",
       "idShort": "FieldIOMapping",
       "submodelElements": [
-        { "modelType": "Property", "idShort": "MappingStatus", "valueType": "xs:string", "value": "FIELD_CONFIRMATION_REQUIRED" },
+        { "modelType": "Property", "idShort": "MappingStatus", "valueType": "xs:string", "value": "PARTIALLY_PHYSICALLY_VALIDATED" },
         { "modelType": "Property", "idShort": "WriteEnabled", "valueType": "xs:boolean", "value": "false" },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "PhysicalOperationModeMarkers",
+          "description": [
+            { "language": "en", "text": "Experimentally validated physical selectors used only to derive operationMode. No ECLASS or external semantic identifier is asserted because none is established in this project." }
+          ],
+          "value": [
+            {
+              "modelType": "SubmodelElementCollection",
+              "idShort": "ManualModeMarker",
+              "value": [
+                { "modelType": "Property", "idShort": "OriginalTagName", "valueType": "xs:string", "value": "sys_man" },
+                { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "ns=3;s=\"sys_man\"" },
+                { "modelType": "Property", "idShort": "DataType", "valueType": "xs:string", "value": "Boolean" },
+                { "modelType": "Property", "idShort": "Source", "valueType": "xs:string", "value": "OPC_UA" },
+                { "modelType": "Property", "idShort": "SemanticMeaning", "valueType": "xs:string", "value": "PHYSICAL_MANUAL_MODE_MARKER" },
+                { "modelType": "Property", "idShort": "ExperimentalEvidence", "valueType": "xs:string", "value": "Manual selection and repeated operator-confirmed return to Manual produced sys_man=true exclusively among the three principal markers." },
+                { "modelType": "Property", "idShort": "ValidationStatus", "valueType": "xs:string", "value": "PHYSICALLY_VALIDATED_MODE_MARKER" }
+              ]
+            },
+            {
+              "modelType": "SubmodelElementCollection",
+              "idShort": "AutomaticModeMarker",
+              "value": [
+                { "modelType": "Property", "idShort": "OriginalTagName", "valueType": "xs:string", "value": "sys_sup" },
+                { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "ns=3;s=\"sys_sup\"" },
+                { "modelType": "Property", "idShort": "DataType", "valueType": "xs:string", "value": "Boolean" },
+                { "modelType": "Property", "idShort": "Source", "valueType": "xs:string", "value": "OPC_UA" },
+                { "modelType": "Property", "idShort": "SemanticMeaning", "valueType": "xs:string", "value": "PHYSICAL_AUTOMATIC_MODE_MARKER" },
+                { "modelType": "Property", "idShort": "ExperimentalEvidence", "valueType": "xs:string", "value": "Automatic selection produced sys_sup=true exclusively among the three principal markers." },
+                { "modelType": "Property", "idShort": "ValidationStatus", "valueType": "xs:string", "value": "PHYSICALLY_VALIDATED_MODE_MARKER" }
+              ]
+            },
+            {
+              "modelType": "SubmodelElementCollection",
+              "idShort": "StepByStepModeMarker",
+              "value": [
+                { "modelType": "Property", "idShort": "OriginalTagName", "valueType": "xs:string", "value": "sys_man2" },
+                { "modelType": "Property", "idShort": "OPCUANodeId", "valueType": "xs:string", "value": "ns=3;s=\"sys_man2\"" },
+                { "modelType": "Property", "idShort": "DataType", "valueType": "xs:string", "value": "Boolean" },
+                { "modelType": "Property", "idShort": "Source", "valueType": "xs:string", "value": "OPC_UA" },
+                { "modelType": "Property", "idShort": "SemanticMeaning", "valueType": "xs:string", "value": "PHYSICAL_STEP_BY_STEP_MODE_MARKER" },
+                { "modelType": "Property", "idShort": "ExperimentalEvidence", "valueType": "xs:string", "value": "Step-by-Step selection produced sys_man2=true exclusively among the three principal markers." },
+                { "modelType": "Property", "idShort": "ValidationStatus", "valueType": "xs:string", "value": "PHYSICALLY_VALIDATED_MODE_MARKER" }
+              ]
+            }
+          ]
+        },
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "ComplementaryPhysicalEvidence",
+          "description": [
+            { "language": "en", "text": "Observed physical tags retained as complementary evidence; no definitive operation-mode semantics are assigned." }
+          ],
+          "value": [
+            { "modelType": "Property", "idShort": "sys_menu", "valueType": "xs:string", "value": "ns=3;s=\"sys_menu\"", "qualifiers": [{ "type": "SemanticMappingStatus", "valueType": "xs:string", "value": "PRELIMINARY_UNVALIDATED" }] },
+            { "modelType": "Property", "idShort": "man_step_0", "valueType": "xs:string", "value": "ns=3;s=\"man_step_0\"", "qualifiers": [{ "type": "SemanticMappingStatus", "valueType": "xs:string", "value": "PRELIMINARY_UNVALIDATED" }] },
+            { "modelType": "Property", "idShort": "man_step_1", "valueType": "xs:string", "value": "ns=3;s=\"man_step_1\"", "qualifiers": [{ "type": "SemanticMappingStatus", "valueType": "xs:string", "value": "PRELIMINARY_UNVALIDATED" }] }
+          ]
+        },
         {
           "modelType": "SubmodelElementCollection",
           "idShort": "ConfirmedOPCUAStructures",

@@ -31,13 +31,24 @@ import {
 import {
   applyPhysicalStatus,
   applyRememberedRuntimeMode,
+  hasIndependentPhysicalOperationMode,
+  operationalDataForAcsmState,
   isPhysicalCps,
   mergeNonStatusOperationalData,
 } from '../lib/acsm/cpsOperationMode.mjs';
+import {
+  applyCpsLai2PhysicalOperationMode,
+  getCpsLai2PhysicalOperationMode,
+  isCpsLai2SnapshotEquivalent,
+  mergeCpsTelemetry,
+} from '../lib/acsm/cpsTelemetry.mjs';
+import { deriveCpsLai3PhysicalOperationMode } from '../lib/acsm/cpsLai3OperationMode.mjs';
 import { publishUnplugNotificationIfAvailable } from '../lib/acsm/unplugNotification.mjs';
 import {
-  buildCpsLai1OperationalHealth,
-  publishCpsLai1OperationalHealth,
+  buildCpsLai2TechnicalHealth,
+  buildCpsLai3TechnicalHealth,
+  buildCpsOperationalHealth,
+  publishCpsOperationalHealth,
 } from '../lib/acsm/cpsOperationalHealth.mjs';
 import {
   CPSLAI1_LIFECYCLE_TOPIC,
@@ -1515,7 +1526,7 @@ const getStatusOperationalState = (payload) =>
   payload?.operationalState ?? payload?.state ?? payload?.status ?? null;
 
 const operationalDataWithMode = (cps, mode) =>
-  isPhysicalCps(cps)
+  hasIndependentPhysicalOperationMode(cps)
     ? { ...(cps?.operationalData || {}) }
     : {
         ...(cps?.operationalData || {}),
@@ -1943,7 +1954,10 @@ const parseAASCps = (parsed) => {
       operationalState: initialGlobalState || canonicalOperationMode(operationMode),
       health: {
         score: null,
-        label: healthState || null,
+        label: cpsId === 'cpslai3' ? 'NOT_COMPUTED' : healthState || null,
+        ...(cpsId === 'cpslai3'
+          ? { healthType: 'CPS_LAI_03_TECHNICAL_HEALTH', evidence: { evidenceStatus: 'INSUFFICIENT_EVIDENCE' } }
+          : {}),
         sourceStatus: availability || operationalState || null,
         lastUpdate: Number.isFinite(parsedHeartbeatTs) ? parsedHeartbeatTs : null,
       },
@@ -2015,6 +2029,8 @@ const buildSubscriptionTopicsForCps = (cps) => {
 
   const oeeNo = joinTopic(baseNo, OEE_TOPIC_SUFFIX);
   const oeeWith = joinTopic(baseWith, OEE_TOPIC_SUFFIX);
+  const experimentalMetricsNo = joinTopic(baseNo, 'experimental-metrics');
+  const experimentalMetricsWith = joinTopic(baseWith, 'experimental-metrics');
 
   const alarmNo = joinTopic(baseNo, ALARM_TOPIC_SUFFIX);
   const alarmWith = joinTopic(baseWith, ALARM_TOPIC_SUFFIX);
@@ -2047,6 +2063,9 @@ const buildSubscriptionTopicsForCps = (cps) => {
     healthWith,
     oeeNo,
     oeeWith,
+    ...(normalizeCpsId(cps?.id ?? cps?.cpsId) === 'cpslai3'
+      ? [experimentalMetricsNo, experimentalMetricsWith]
+      : []),
     alarmNo,
     alarmWith,
     adaptiveNo,
@@ -3138,6 +3157,12 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   }, [publishCpsLai1LifecyclePhase]);
   const lastLevel2IntelligencePublishRef = useRef('');
   const [mqttData, setMqttData] = useState({});
+  const [telemetryData, setTelemetryData] = useState({});
+  const telemetryDataRef = useRef({});
+  const [telemetryCommunication, setTelemetryCommunication] = useState({});
+  const telemetryCommunicationTimersRef = useRef({});
+  const telemetryCommunicationReceivedAtRef = useRef({});
+  const cpsLai3StatusCommunicationRef = useRef(null);
   const [alerts, setAlerts] = useState([]);
   const [cpsAnalytics, setCpsAnalyticsState] = useState({});
   const [ingestionBuffer, setIngestionBuffer] = useState([]);
@@ -3146,6 +3171,10 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   const [multiAcsmInputs, setMultiAcsmInputs] = useState(emptyMultiAcsmInputs());
   const [coordinatorSnapshots, setCoordinatorSnapshots] = useState(emptyCoordinatorSnapshots());
   const coordinatorSnapshotsRef = useRef(emptyCoordinatorSnapshots());
+  useEffect(() => () => {
+    Object.values(telemetryCommunicationTimersRef.current).forEach((timer) => clearTimeout(timer));
+    telemetryCommunicationTimersRef.current = {};
+  }, []);
   const [level3RuntimeStatus, setLevel3RuntimeStatus] = useState({
     level3Mode: 'partial',
     activeParticipantsCount: 0,
@@ -3252,12 +3281,14 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   const operationModeByCpsRef = useRef({});
   const rememberOperationMode = useCallback((cps, mode) => {
     if (!cps?.id || mode === undefined || mode === null) return;
+    if (hasIndependentPhysicalOperationMode(cps)) return;
     operationModeByCpsRef.current = {
       ...operationModeByCpsRef.current,
       [cps.id]: canonicalOperationMode(mode),
     };
   }, []);
   const withRememberedOperationMode = useCallback((cps) => {
+    if (hasIndependentPhysicalOperationMode(cps)) return cps;
     const remembered = cps?.id ? operationModeByCpsRef.current[cps.id] : null;
     return applyRememberedRuntimeMode(cps, remembered);
   }, []);
@@ -5746,31 +5777,42 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 
         if (owner) {
           const isCpsLai1Owner = normalizeCpsId(owner?.id) === 'cpslai1';
+          const isCpsLai3Owner = normalizeCpsId(owner?.id) === 'cpslai3';
+          const hasExplicitCpsLai3CalculationState =
+            isCpsLai3Owner && Object.prototype.hasOwnProperty.call(normalized, 'calculationState');
           const oeeNotComputed =
             String(normalized?.sourceStatus || normalized?.oee?.status || '').toUpperCase() ===
-            'NOT_COMPUTED';
+              'NOT_COMPUTED' && !hasExplicitCpsLai3CalculationState;
           const productionPatch =
             isCpsLai1Owner &&
             Object.prototype.hasOwnProperty.call(normalized, 'production')
               ? { production: normalized.production }
               : {};
           const nextOwnerOee = {
-            availability: oeeNotComputed
+            availability: hasExplicitCpsLai3CalculationState
+              ? normalized?.oee?.availability ?? null
+              : oeeNotComputed
               ? null
               : isCpsLai1Owner
                 ? normalized?.oee?.availability ?? null
                 : normalized?.oee?.availability ?? owner?.oee?.availability ?? null,
-            performance: oeeNotComputed
+            performance: hasExplicitCpsLai3CalculationState
+              ? normalized?.oee?.performance ?? null
+              : oeeNotComputed
               ? null
               : isCpsLai1Owner
                 ? normalized?.oee?.performance ?? null
                 : normalized?.oee?.performance ?? owner?.oee?.performance ?? null,
-            quality: oeeNotComputed
+            quality: hasExplicitCpsLai3CalculationState
+              ? normalized?.oee?.quality ?? null
+              : oeeNotComputed
               ? null
               : isCpsLai1Owner
                 ? normalized?.oee?.quality ?? null
                 : normalized?.oee?.quality ?? owner?.oee?.quality ?? null,
-            value: oeeNotComputed
+            value: hasExplicitCpsLai3CalculationState
+              ? normalized?.oee?.oee ?? normalized?.oee?.value ?? normalized?.oee?.current ?? null
+              : oeeNotComputed
               ? null
               : isCpsLai1Owner
                 ? normalized?.oee?.oee ?? normalized?.oee?.value ?? normalized?.oee?.current ?? null
@@ -5781,6 +5823,10 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                   null,
             totals: normalized?.totals ?? owner?.oee?.totals ?? null,
             sourceStatus: normalized?.sourceStatus ?? owner?.oee?.sourceStatus ?? null,
+            calculationState: normalized?.calculationState ?? owner?.oee?.calculationState ?? null,
+            evidenceStatus: normalized?.evidenceStatus ?? owner?.oee?.evidenceStatus ?? null,
+            reason: normalized?.reason ?? owner?.oee?.reason ?? null,
+            windowId: normalized?.windowId ?? owner?.oee?.windowId ?? null,
             lastUpdate: normalized?.ts ?? owner?.oee?.lastUpdate ?? Date.now(),
           };
 
@@ -6616,7 +6662,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
           summary: payload?.summary || 'CPS returned automatically after maintenance.',
           lastUpdate: completedTs,
         },
-        operationalData: operationalDataWithMode(governedCps, 'running'),
+        operationalData: operationalDataForAcsmState(governedCps, 'running'),
       };
 
       rememberOperationMode(governedCps, 'running');
@@ -6643,7 +6689,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
           summary: payload?.summary || 'CPS returned automatically after maintenance.',
           lastUpdate: completedTs,
         },
-        operationalData: operationalDataWithMode(governedCps, 'running'),
+        operationalData: operationalDataForAcsmState(governedCps, 'running'),
       });
 
       appendRegistryHistory(governedCps, maintenanceCompletedEntry);
@@ -7066,7 +7112,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                   summary: payload?.summary || 'CPS unplugged from Play Phase.',
                   lastUpdate: payload?.ts || Date.now(),
                 },
-                operationalData: operationalDataWithMode(target, nextState),
+                operationalData: operationalDataForAcsmState(target, nextState),
               });
               publishCpsLai1LifecyclePhaseRef.current?.(target, 'unplug');
             }, 0);
@@ -7170,6 +7216,10 @@ export const CPSProvider = ({ children, acsmId, config }) => {
             normIncoming.endsWith(`/${OEE_TOPIC_SUFFIX}`) ||
             normIncoming.includes(`/${OEE_TOPIC_SUFFIX}/`);
 
+          const isExperimentalMetrics =
+            normIncoming.endsWith('/experimental-metrics') ||
+            normIncoming.includes('/experimental-metrics/');
+
           const isAlarm =
             normIncoming.endsWith(`/${ALARM_TOPIC_SUFFIX}`) ||
             normIncoming.includes(`/${ALARM_TOPIC_SUFFIX}/`);
@@ -7239,6 +7289,8 @@ export const CPSProvider = ({ children, acsmId, config }) => {
           }
 
           if (isHealth) {
+            const healthOwnerId = normalizeCpsId(owner?.id ?? owner?.cpsId);
+            if (healthOwnerId === 'cpslai2' || healthOwnerId === 'cpslai3') return;
             const data = safeParseJson(message);
             if (!data) {
               setLog((prev) => [
@@ -7294,14 +7346,47 @@ export const CPSProvider = ({ children, acsmId, config }) => {
             return;
           }
 
+          if (isExperimentalMetrics) {
+            if (normalizeCpsId(owner?.id ?? owner?.cpsId) !== 'cpslai3') return;
+            const data = safeParseJson(message);
+            if (!data || normalizeCpsId(data?.cpsId) !== 'cpslai3') return;
+            const updateAt = data?.updatedAt ?? data?.timestamp;
+            if (!isNewerSnapshot(updateAt, owner?.experimentalMetrics?.updatedAt)) return;
+
+            const experimentalMetrics = {
+              ...data,
+              updatedAt: updateAt ?? new Date().toISOString(),
+            };
+            setAddedCPS((prev) => prev.map((c) =>
+              normalizeCpsId(c?.id ?? c?.cpsId) === 'cpslai3'
+                ? { ...c, experimentalMetrics }
+                : c
+            ));
+            patchRegistryCpsRef.current?.(owner, { experimentalMetrics });
+            return;
+          }
+
           if (isStatus) {
             const data = safeParseJson(message);
             if (!data) return;
 
+            if (
+              normalizeCpsId(owner?.id ?? owner?.cpsId) === 'cpslai3' &&
+              data?.communication && typeof data.communication.connected === 'boolean'
+            ) {
+              cpsLai3StatusCommunicationRef.current = {
+                connected: data.communication.connected,
+                statusTimestamp: data.communication.statusTimestamp ?? null,
+                receivedAt: Date.now(),
+              };
+            }
+
             if (!isNewerSnapshot(data?.ts ?? data?.timestamp, owner?.globalState?.lastUpdate)) return;
 
             const isCpsLai1Status = normalizeCpsId(owner?.id) === 'cpslai1';
-            const explicitOperationalState = isCpsLai1Status
+            const isCpsLai2Status = normalizeCpsId(owner?.id) === 'cpslai2';
+            const isCpsLai3Status = normalizeCpsId(owner?.id) === 'cpslai3';
+            const explicitOperationalState = isCpsLai1Status || isCpsLai2Status || isCpsLai3Status
               ? getStatusOperationalState(data)
               : getExplicitOperationMode(data);
             const explicitCanonicalState =
@@ -7330,7 +7415,8 @@ export const CPSProvider = ({ children, acsmId, config }) => {
               explicitCanonicalState ?? nextGlobalState.state ?? nextGlobalState.status
             );
             const operationalHealth = isCpsLai1Status
-              ? buildCpsLai1OperationalHealth({
+              ? buildCpsOperationalHealth({
+                  cpsId: owner.id,
                   communication: data?.communication,
                   operationalState: nextCanonicalState,
                   timestamp: data?.timestamp ?? data?.ts ?? new Date(),
@@ -7345,8 +7431,22 @@ export const CPSProvider = ({ children, acsmId, config }) => {
             }
             const nextOperationalData = isCpsLai1Status
               ? applyPhysicalStatus(owner, data)
+              : isCpsLai2Status
+                ? { ...(owner?.operationalData || {}) }
+              : isCpsLai3Status
+                ? {
+                    ...(owner?.operationalData || {}),
+                    operationModeRaw:
+                      data?.operationModeRaw ?? owner?.operationalData?.operationModeRaw ?? null,
+                    operationModeSemanticStatus:
+                      data?.operationModeSemanticStatus ??
+                      owner?.operationalData?.operationModeSemanticStatus ??
+                      'PENDING',
+                  }
               : operationalDataWithMode(owner, nextCanonicalState);
-            if (!isCpsLai1Status) rememberOperationMode(owner, nextCanonicalState);
+            if (!isCpsLai1Status && !isCpsLai2Status && !isCpsLai3Status) {
+              rememberOperationMode(owner, nextCanonicalState);
+            }
             const nextLifecyclePhase = isCpsLai1Status ? null : getCpsLifecyclePhase(data);
             const lifecyclePatch = nextLifecyclePhase
               ? {
@@ -7364,7 +7464,12 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                       status: mapOperationalStateToDisplayStatus(nextCanonicalState),
                       operationalState: nextCanonicalState,
                       globalState: nextGlobalState,
-                      operationalData: nextOperationalData,
+                      // cpslai3/data is the sole source of its physical mode evidence.
+                      // A near-simultaneous /status message may hold a pre-render owner
+                      // snapshot and must not replace the evidence just stored by /data.
+                      operationalData: isCpsLai3Status
+                        ? c?.operationalData
+                        : nextOperationalData,
                       ...(operationalHealth
                         ? {
                             health: {
@@ -7387,7 +7492,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
               status: mapOperationalStateToDisplayStatus(nextCanonicalState),
               operationalState: nextCanonicalState,
               globalState: nextGlobalState,
-              operationalData: nextOperationalData,
+              ...(isCpsLai3Status ? {} : { operationalData: nextOperationalData }),
               ...(operationalHealth
                 ? {
                     health: {
@@ -7402,15 +7507,18 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                   }
                 : {}),
             });
-            publishCpsLai1OperationalHealth({
-              client,
-              topic: joinTopic(owner.topic, HEALTH_TOPIC_SUFFIX),
-              status: {
-                communication: data?.communication,
-                operationalState: nextCanonicalState,
-                timestamp: data?.timestamp ?? data?.ts ?? new Date(),
-              },
-            });
+            if (isCpsLai1Status) {
+              publishCpsOperationalHealth({
+                client,
+                topic: joinTopic(owner.topic, HEALTH_TOPIC_SUFFIX),
+                cpsId: owner.id,
+                status: {
+                  communication: data?.communication,
+                  operationalState: nextCanonicalState,
+                  timestamp: data?.timestamp ?? data?.ts ?? new Date(),
+                },
+              });
+            }
             return;
           }
 
@@ -7419,9 +7527,12 @@ export const CPSProvider = ({ children, acsmId, config }) => {
             if (!data) return;
 
             const isCpsLai1Data = isPhysicalCps(owner);
+            const isCpsLai2Data = normalizeCpsId(owner?.id || owner?.cpsId) === 'cpslai2';
+            const isCpsLai3Data = normalizeCpsId(owner?.id || owner?.cpsId) === 'cpslai3';
             const explicitDataOperationMode = getExplicitOperationMode(data);
             const runtimeDataOperationMode =
-              !isCpsLai1Data && isRuntimeOperationMode(explicitDataOperationMode)
+              !isCpsLai1Data && !isCpsLai2Data && !isCpsLai3Data &&
+              isRuntimeOperationMode(explicitDataOperationMode)
               ? canonicalOperationMode(explicitDataOperationMode)
               : null;
             const ownerForDataCheck =
@@ -7431,6 +7542,268 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                     operationalData: operationalDataWithMode(owner, runtimeDataOperationMode),
                   }
                 : owner;
+
+            if (isCpsLai2Data && data?.data && typeof data.data === 'object') {
+              const cpsId = 'cpslai2';
+              const receivedAt = Date.now();
+              const timeoutMs = Number(data?.staleAfterMs) > 0
+                ? Number(data.staleAfterMs)
+                : 6000;
+              const previousTelemetry = telemetryDataRef.current[cpsId] || null;
+              const mergedTelemetry = mergeCpsTelemetry(previousTelemetry, data);
+              const physicalOperationMode = getCpsLai2PhysicalOperationMode(mergedTelemetry, true);
+              const updateCpsLai2TechnicalHealth = (dataFresh, timestamp = new Date()) => {
+                const currentOwner = Object.values(registryRef.current || {}).find(
+                  (entry) => normalizeCpsId(entry?.id || entry?.cpsId) === cpsId
+                ) || owner;
+                const operationalHealth = buildCpsLai2TechnicalHealth({
+                  cpsId,
+                  communication: { dataFresh, dataAgeMs: dataFresh ? 0 : timeoutMs },
+                  telemetry: telemetryDataRef.current[cpsId],
+                  timestamp,
+                });
+                const healthTimestamp = new Date(timestamp);
+                const health = operationalHealth
+                  ? {
+                      score: operationalHealth.score,
+                      label: operationalHealth.healthState,
+                      healthType: operationalHealth.healthType,
+                      communication: operationalHealth.communication,
+                      evidence: operationalHealth.evidence,
+                      note: operationalHealth.note,
+                      lastUpdate: operationalHealth.timestamp,
+                    }
+                  : {
+                      score: null,
+                      label: 'NOT_COMPUTED',
+                      healthType: 'CPS_LAI_02_TECHNICAL_HEALTH',
+                      communication: { dataFresh },
+                      evidence: {
+                        source: 'CPS_LAI_02_OPCUA_MODE_MARKERS',
+                        evidenceStatus: 'INSUFFICIENT_EVIDENCE',
+                      },
+                      note: 'Simplified operational/technical health was not computed because essential OPC UA evidence is unavailable.',
+                      lastUpdate: Number.isNaN(healthTimestamp.getTime())
+                        ? new Date().toISOString()
+                        : healthTimestamp.toISOString(),
+                    };
+                setAddedCPS((prev) => prev.map((c) =>
+                  normalizeCpsId(c?.id || c?.cpsId) === cpsId ? { ...c, health } : c
+                ));
+                patchRegistryCpsRef.current?.(currentOwner, { health });
+              };
+
+              if (mergedTelemetry !== previousTelemetry) {
+                telemetryDataRef.current = {
+                  ...telemetryDataRef.current,
+                  [cpsId]: { ...mergedTelemetry, cpsId },
+                };
+                setTelemetryData(telemetryDataRef.current);
+              }
+
+              telemetryCommunicationReceivedAtRef.current[cpsId] = receivedAt;
+              if (telemetryCommunicationTimersRef.current[cpsId]) {
+                clearTimeout(telemetryCommunicationTimersRef.current[cpsId]);
+              }
+              setTelemetryCommunication((prev) => prev[cpsId] === true
+                ? prev
+                : { ...prev, [cpsId]: true });
+
+              const applyCpsLai2PhysicalMode = (mode) => {
+                setAddedCPS((prev) => prev.map((c) =>
+                  normalizeCpsId(c?.id || c?.cpsId) === cpsId
+                    ? applyCpsLai2PhysicalOperationMode(
+                        c,
+                        telemetryDataRef.current[cpsId],
+                        mode !== 'UNKNOWN'
+                      )
+                    : c
+                ));
+                const currentOwner = Object.values(registryRef.current || {}).find(
+                  (entry) => normalizeCpsId(entry?.id || entry?.cpsId) === cpsId
+                ) || owner;
+                if (currentOwner?.operationalData?.operationMode !== mode) {
+                  patchRegistryCpsRef.current?.(currentOwner, {
+                    operationalData: {
+                      ...(currentOwner?.operationalData || {}),
+                      operationMode: mode,
+                    },
+                  });
+                }
+              };
+
+              applyCpsLai2PhysicalMode(physicalOperationMode);
+              updateCpsLai2TechnicalHealth(
+                true,
+                data?.publishedAt ?? data?.timestamp ?? data?.collectedAt ?? new Date()
+              );
+
+              const expireCommunication = () => {
+                const lastReceivedAt = telemetryCommunicationReceivedAtRef.current[cpsId];
+                const remainingMs = timeoutMs - (Date.now() - lastReceivedAt);
+                if (lastReceivedAt && remainingMs > 0) {
+                  telemetryCommunicationTimersRef.current[cpsId] = setTimeout(
+                    expireCommunication,
+                    remainingMs
+                  );
+                  return;
+                }
+                if (lastReceivedAt) {
+                  setTelemetryCommunication((prev) => prev[cpsId] === false
+                    ? prev
+                    : { ...prev, [cpsId]: false });
+                  applyCpsLai2PhysicalMode('UNKNOWN');
+                  updateCpsLai2TechnicalHealth(false);
+                }
+              };
+              telemetryCommunicationTimersRef.current[cpsId] = setTimeout(
+                expireCommunication,
+                timeoutMs
+              );
+            }
+
+            if (isCpsLai3Data && data?.data && typeof data.data === 'object') {
+              const cpsId = 'cpslai3';
+              const timeoutMs = Number(data?.staleAfterMs) > 0 ? Number(data.staleAfterMs) : 6000;
+              const receivedAt = Date.now();
+              const previousTelemetry = telemetryDataRef.current[cpsId] || null;
+              const mergedTelemetry = mergeCpsTelemetry(previousTelemetry, data);
+              const dataFresh = data?.communication?.dataFresh === true;
+              const recentStatusCommunication = cpsLai3StatusCommunicationRef.current;
+              const statusReceiptAgeMs = recentStatusCommunication
+                ? receivedAt - recentStatusCommunication.receivedAt
+                : Infinity;
+              const statusSourceTimestamp = Date.parse(recentStatusCommunication?.statusTimestamp || '');
+              const connectedConfirmed = data?.communication?.connected === false &&
+                recentStatusCommunication?.connected === false &&
+                statusReceiptAgeMs >= 0 && statusReceiptAgeMs <= timeoutMs &&
+                Number.isFinite(statusSourceTimestamp);
+              const communication = {
+                connected: data?.communication?.connected === true
+                  ? true
+                  : connectedConfirmed ? false : null,
+                connectedConfirmed,
+                dataFresh: typeof data?.communication?.dataFresh === 'boolean'
+                  ? data.communication.dataFresh
+                  : null,
+                dataMessageReceived: true,
+              };
+
+              if (mergedTelemetry !== previousTelemetry) {
+                telemetryDataRef.current = {
+                  ...telemetryDataRef.current,
+                  [cpsId]: { ...mergedTelemetry, cpsId },
+                };
+                setTelemetryData(telemetryDataRef.current);
+              }
+
+              const applyCpsLai3TechnicalHealth = (timeoutConfirmed = false) => {
+                const result = buildCpsLai3TechnicalHealth({
+                  cpsId,
+                  communication: timeoutConfirmed
+                    ? { ...communication, connected: null, dataFresh: false }
+                    : communication,
+                  telemetry: {
+                    ...(telemetryDataRef.current[cpsId] || mergedTelemetry),
+                    ...data,
+                    // Score only evidence carried by this MQTT snapshot; the
+                    // operational mode may use merged telemetry, Health may not
+                    // fill absent markers with a previous sample.
+                    data: data.data,
+                  },
+                  timestamp: new Date(),
+                  timeoutConfirmed,
+                });
+                const health = result
+                  ? {
+                      score: result.score,
+                      label: result.healthState,
+                      healthType: result.healthType,
+                      communication: result.communication,
+                      evidence: result.evidence,
+                      note: result.note,
+                      lastUpdate: result.timestamp,
+                    }
+                  : {
+                      score: null,
+                      label: 'NOT_COMPUTED',
+                      healthType: 'CPS_LAI_03_TECHNICAL_HEALTH',
+                      communication,
+                      evidence: {
+                        source: 'CPS_LAI_03_OPCUA_MODE_MARKERS',
+                        evidenceStatus: 'INSUFFICIENT_EVIDENCE',
+                        failedChecks: ['INSUFFICIENT_COMMUNICATION_OR_MARKER_EVIDENCE'],
+                      },
+                      note: 'Technical health was not computed because current communication or OPC UA marker evidence is insufficient.',
+                      lastUpdate: new Date().toISOString(),
+                    };
+                setAddedCPS((prev) => prev.map((c) =>
+                  normalizeCpsId(c?.id || c?.cpsId) === cpsId ? { ...c, health } : c
+                ));
+                const currentOwner = Object.values(registryRef.current || {}).find(
+                  (entry) => normalizeCpsId(entry?.id || entry?.cpsId) === cpsId
+                ) || owner;
+                patchRegistryCpsRef.current?.(currentOwner, { health });
+              };
+
+              // Each delivered snapshot refreshes the ACSM receipt watchdog,
+              // including snapshots whose OPC UA dataFresh flag is false.
+              telemetryCommunicationReceivedAtRef.current[cpsId] = receivedAt;
+
+              const applyCpsLai3PhysicalMode = (communicationFresh) => {
+                const evidence = telemetryDataRef.current[cpsId] || null;
+                const derived = deriveCpsLai3PhysicalOperationMode({
+                  cpsId,
+                  evidence,
+                  communication: { dataFresh: communicationFresh },
+                });
+                const operationalDataPatch = {
+                  operationMode: derived.valid ? derived.operationMode : 'UNKNOWN',
+                  physicalModeEvidence: evidence,
+                  physicalModeCommunication: { dataFresh: communicationFresh },
+                  physicalModeDerivation: derived,
+                };
+                setAddedCPS((prev) => prev.map((c) =>
+                  normalizeCpsId(c?.id || c?.cpsId) === cpsId
+                    ? { ...c, operationalData: { ...(c?.operationalData || {}), ...operationalDataPatch } }
+                    : c
+                ));
+                const currentOwner = Object.values(registryRef.current || {}).find(
+                  (entry) => normalizeCpsId(entry?.id || entry?.cpsId) === cpsId
+                ) || owner;
+                patchRegistryCpsRef.current?.(currentOwner, {
+                  operationalData: {
+                    ...(currentOwner?.operationalData || {}),
+                    ...operationalDataPatch,
+                  },
+                });
+              };
+
+              if (telemetryCommunicationTimersRef.current[cpsId]) {
+                clearTimeout(telemetryCommunicationTimersRef.current[cpsId]);
+              }
+              setTelemetryCommunication((prev) => prev[cpsId] === dataFresh
+                ? prev
+                : { ...prev, [cpsId]: dataFresh });
+              applyCpsLai3PhysicalMode(dataFresh);
+              applyCpsLai3TechnicalHealth(false);
+
+              const expireCommunication = () => {
+                const lastReceivedAt = telemetryCommunicationReceivedAtRef.current[cpsId];
+                const remainingMs = timeoutMs - (Date.now() - lastReceivedAt);
+                if (lastReceivedAt && remainingMs > 0) {
+                  telemetryCommunicationTimersRef.current[cpsId] = setTimeout(expireCommunication, remainingMs);
+                  return;
+                }
+                if (!lastReceivedAt) return;
+                setTelemetryCommunication((prev) => prev[cpsId] === false
+                  ? prev
+                  : { ...prev, [cpsId]: false });
+                applyCpsLai3PhysicalMode(false);
+                applyCpsLai3TechnicalHealth(true);
+              };
+              telemetryCommunicationTimersRef.current[cpsId] = setTimeout(expireCommunication, timeoutMs);
+            }
 
             if (!isNewerSnapshot(data?.ts ?? data?.timestamp, owner?.operationalData?.lastUpdate)) return;
 
@@ -7461,10 +7834,13 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 
             const payload = data || rawStr;
 
-            setMqttData((prev) => ({
-              ...prev,
-              [owner.id]: payload,
-            }));
+            setMqttData((prev) => {
+              if (
+                normalizeCpsId(owner?.id || owner?.cpsId) === 'cpslai2' &&
+                isCpsLai2SnapshotEquivalent(prev[owner.id], data)
+              ) return prev;
+              return { ...prev, [owner.id]: payload };
+            });
 
             if (data && typeof data === 'object') {
               const normalizedOwnerOperationMode = normalizeOperationMode(ownerForDataCheck);
@@ -7483,8 +7859,44 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                   data?.CycleTimeMs ?? data?.cycleTimeMs ?? owner?.operationalData?.cycleTimeMs ?? null,
                 lastUpdate: normalizeSnapshotTimestamp(data?.ts ?? data?.timestamp) ?? Date.now(),
               };
+              const cpsLai3PhysicalDerivation = isCpsLai3Data
+                ? deriveCpsLai3PhysicalOperationMode({
+                    cpsId: 'cpslai3',
+                    evidence: telemetryDataRef.current.cpslai3,
+                    communication: {
+                      dataFresh: data?.communication?.dataFresh === true,
+                    },
+                  })
+                : null;
               const nextOperationalData = isCpsLai1Data
                 ? mergeNonStatusOperationalData(owner, operationalDataPatch)
+                : isCpsLai2Data
+                  ? {
+                      ...(owner?.operationalData || {}),
+                      ...operationalDataPatch,
+                      operationMode: getCpsLai2PhysicalOperationMode(
+                        telemetryDataRef.current.cpslai2,
+                        true
+                      ),
+                    }
+                  : isCpsLai3Data
+                    ? {
+                        ...mergeNonStatusOperationalData(owner, operationalDataPatch),
+                        operationMode: cpsLai3PhysicalDerivation?.valid
+                          ? cpsLai3PhysicalDerivation.operationMode
+                          : 'UNKNOWN',
+                        physicalModeEvidence: telemetryDataRef.current.cpslai3,
+                        physicalModeCommunication: {
+                          dataFresh: data?.communication?.dataFresh === true,
+                        },
+                        physicalModeDerivation: cpsLai3PhysicalDerivation,
+                        operationModeRaw:
+                          data?.operationModeRaw ?? owner?.operationalData?.operationModeRaw ?? null,
+                        operationModeSemanticStatus:
+                          data?.operationModeSemanticStatus ??
+                          owner?.operationalData?.operationModeSemanticStatus ??
+                          'PENDING',
+                      }
                 : {
                     ...(owner?.operationalData || {}),
                     ...operationalDataPatch,
@@ -7499,6 +7911,22 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                           ...c,
                           operationalData: mergeNonStatusOperationalData(c, operationalDataPatch),
                         }
+                      : isCpsLai2Data
+                        ? {
+                            ...c,
+                            operationalData: {
+                              ...(c?.operationalData || {}),
+                              ...nextOperationalData,
+                            },
+                          }
+                        : isCpsLai3Data
+                          ? {
+                              ...c,
+                              operationalData: {
+                                ...(c?.operationalData || {}),
+                                ...nextOperationalData,
+                              },
+                            }
                       : {
                         ...c,
                         status: mapOperationalStateToDisplayStatus(nextOperationalData.operationMode),
@@ -7512,7 +7940,11 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                 owner,
                 isCpsLai1Data
                   ? { operationalData: operationalDataPatch }
-                  : {
+                  : isCpsLai2Data
+                    ? { operationalData: nextOperationalData }
+                    : isCpsLai3Data
+                      ? { operationalData: nextOperationalData }
+                    : {
                       status: mapOperationalStateToDisplayStatus(nextOperationalData.operationMode),
                       operationalState: canonicalOperationMode(nextOperationalData.operationMode),
                       operationalData: nextOperationalData,
@@ -7671,7 +8103,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
           playEnabled: true,
           lastUpdate: Date.now(),
         },
-        operationalData: operationalDataWithMode(governedCps, 'running'),
+        operationalData: operationalDataForAcsmState(governedCps, 'running'),
       };
 
       rememberOperationMode(governedCps, 'running');
@@ -7765,7 +8197,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
               },
               governanceProfile: governedCps.governanceProfile,
               governanceStatus: governedCps.governanceStatus,
-              operationalData: operationalDataWithMode(c, 'running'),
+              operationalData: operationalDataForAcsmState(c, 'running'),
             }
           : c
       )
@@ -7785,7 +8217,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         playEnabled: true,
         lastUpdate: Date.now(),
       },
-      operationalData: operationalDataWithMode(governedCps, 'running'),
+      operationalData: operationalDataForAcsmState(governedCps, 'running'),
     });
 
     return true;
@@ -7824,7 +8256,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                 playEnabled: false,
                 lastUpdate: Date.now(),
               },
-              operationalData: operationalDataWithMode(c, 'stopped'),
+              operationalData: operationalDataForAcsmState(c, 'stopped'),
             }
           : c
       )
@@ -7842,7 +8274,7 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         playEnabled: false,
         lastUpdate: Date.now(),
       },
-      operationalData: operationalDataWithMode(cps, 'stopped'),
+      operationalData: operationalDataForAcsmState(cps, 'stopped'),
     });
 
     return true;
@@ -8061,6 +8493,8 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         level3AutoPublishEnabled,
         setLevel3AutoPublishEnabled,
         mqttConnected: Boolean(mqttClient?.connected),
+        telemetryData,
+        telemetryCommunication,
         runSystemAnalytics,
         publishToCoordinator,
         buildLevel3KnowledgePackage,

@@ -13,6 +13,7 @@
     "test:api-catalog": "node --test test/api-catalog.test.mjs",
     "test:governance": "node --experimental-default-type=module --test test/governance-policies.test.mjs",
     "validate:play:local": "node test/play-local-validation.mjs",
+    "validate:cpslai2:flow": "node test/validate-cps-lai-02-flow.mjs",
     "lint": "eslint"
   },
   "dependencies": {
