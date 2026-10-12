@@ -1,0 +1,89 @@
+[
+  {
+    "id": "cpslai2_synthetic_oee_tab",
+    "type": "tab",
+    "label": "CPS-LAI-02 — Synthetic OEE & Health",
+    "disabled": true,
+    "info": "Calculates OEE only from current validated AUTOMATIC evidence, holds its last value outside AUTOMATIC, and calculates Health independently from the four validated physical mode markers."
+  },
+  {
+    "id": "cpslai2_synth_scope",
+    "type": "comment",
+    "z": "cpslai2_synthetic_oee_tab",
+    "name": "Synthetic indicators from existing MQTT telemetry only",
+    "info": "Consumes only cpslai2/data. No OPC UA nodes, commands, HTTP routes, runtime APIs, governance, PPU or HCM integration.",
+    "x": 330,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "cpslai2_synth_data_in",
+    "type": "mqtt in",
+    "z": "cpslai2_synthetic_oee_tab",
+    "name": "Consume cpslai2/data",
+    "topic": "cpslai2/data",
+    "qos": "1",
+    "datatype": "auto",
+    "broker": "cpslai2_mqtt_broker",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 180,
+    "y": 160,
+    "wires": [
+      [
+        "cpslai2_synth_calculate"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_synth_calculate",
+    "type": "function",
+    "z": "cpslai2_synthetic_oee_tab",
+    "name": "Calculate evidence-gated synthetic OEE & Health",
+    "func": "const P = Object.freeze({\n  plannedWindowMs: 60000,\n  expectedSampleIntervalMs: 1000,\n  syntheticPerformanceRatio: 0.90,\n  syntheticQualityRatio: 0.98,\n  maxEvidenceAgeMs: 6000,\n  healthHealthyThreshold: 85,\n  healthDegradedThreshold: 60\n});\n\nconst now = Date.now();\nconst parse = value => {\n  if (Buffer.isBuffer(value)) value = value.toString('utf8');\n  if (typeof value === 'string') {\n    try { value = JSON.parse(value); } catch { return null; }\n  }\n  return value && typeof value === 'object' && !Array.isArray(value) ? value : null;\n};\nconst time = value => {\n  const parsed = Date.parse(value || '');\n  return Number.isFinite(parsed) ? parsed : null;\n};\nconst clamp = value => Math.max(0, Math.min(100, value));\n\nif (msg.topic !== 'cpslai2/data') return null;\nconst data = parse(msg.payload);\nif (data?.cpsId !== 'cpslai2') return null;\n\nconst publishedAtMs = time(data.publishedAt || data.timestamp);\nconst declaredFreshnessMs = Number(data.staleAfterMs);\nconst freshnessLimitMs = Number.isFinite(declaredFreshnessMs) && declaredFreshnessMs > 0\n  ? Math.min(declaredFreshnessMs, P.maxEvidenceAgeMs)\n  : P.maxEvidenceAgeMs;\nconst envelopeAgeMs = publishedAtMs === null || publishedAtMs > now\n  ? freshnessLimitMs + 1\n  : now - publishedAtMs;\nconst markers = [\n  { tag: 'GCT_0', nodeId: 'ns=3;s=\"GCT_0\"' },\n  { tag: 'sys_man', nodeId: 'ns=3;s=\"sys_man\"' },\n  { tag: 'sys_sup', nodeId: 'ns=3;s=\"sys_sup\"' },\n  { tag: 'sys_man2', nodeId: 'ns=3;s=\"sys_man2\"' }\n];\nconst samples = data.data || {};\nconst sampleValid = marker => {\n  const sample = samples[marker.tag];\n  const collectedAtMs = time(sample?.collectedAt);\n  return !!sample && sample.nodeId === marker.nodeId &&\n    String(sample.dataType || sample.datatype || '').toLowerCase() === 'boolean' &&\n    sample.valid === true && sample.stale !== true &&\n    /^Good(?:\\b|\\s|\\()/i.test(String(sample.statusCode || sample.quality || '')) &&\n    typeof sample.value === 'boolean' && collectedAtMs !== null && collectedAtMs <= now &&\n    now - collectedAtMs <= freshnessLimitMs;\n};\nconst validCount = markers.filter(sampleValid).length;\nconst goodCount = markers.filter(marker => {\n  const sample = samples[marker.tag];\n  return sampleValid(marker) && /^Good(?:\\b|\\s|\\()/i.test(String(sample.statusCode || sample.quality || ''));\n}).length;\nconst currentMode = data.derived?.operationMode || 'UNKNOWN';\nconst semanticValid = data.derived?.semanticValidationStatus === 'PHYSICALLY_VALIDATED' &&\n  time(data.derived?.derivedAt) !== null && currentMode !== 'UNKNOWN';\nconst evidenceValid = envelopeAgeMs <= freshnessLimitMs && semanticValid &&\n  validCount === markers.length && goodCount === markers.length;\n\nlet healthHistory = flow.get('cpslai2_synthetic_health_history') || {\n  lastMode: null, transitions: 0, invalidSnapshots: 0, totalSnapshots: 0\n};\nhealthHistory.totalSnapshots++;\nif (!evidenceValid) healthHistory.invalidSnapshots++;\nif (evidenceValid && healthHistory.lastMode && healthHistory.lastMode !== currentMode) {\n  healthHistory.transitions++;\n}\nif (evidenceValid) healthHistory.lastMode = currentMode;\nflow.set('cpslai2_synthetic_health_history', healthHistory);\n\nlet oeeWindow = flow.get('cpslai2_synthetic_oee_window') || null;\nlet lastOee = flow.get('cpslai2_synthetic_last_oee') || null;\nconst automaticEvidence = evidenceValid && currentMode === 'AUTOMATIC';\nconst wasAutomatic = oeeWindow?.active === true;\n\nif (!automaticEvidence) {\n  oeeWindow = null;\n  flow.set('cpslai2_synthetic_oee_window', null);\n} else {\n  if (!wasAutomatic) {\n    oeeWindow = {\n      active: true,\n      startedAt: publishedAtMs,\n      lastSnapshotAt: publishedAtMs,\n      observedMs: 0,\n      snapshotCount: 0\n    };\n  } else if (publishedAtMs > oeeWindow.lastSnapshotAt) {\n    const duration = publishedAtMs - oeeWindow.lastSnapshotAt;\n    if (duration <= freshnessLimitMs) oeeWindow.observedMs += duration;\n    oeeWindow.lastSnapshotAt = publishedAtMs;\n  }\n  oeeWindow.snapshotCount++;\n  flow.set('cpslai2_synthetic_oee_window', oeeWindow);\n}\n\nconst emittedAt = new Date(now).toISOString();\nlet oeePayload;\nif (automaticEvidence) {\n  const elapsedMs = Math.max(\n    P.expectedSampleIntervalMs,\n    publishedAtMs - oeeWindow.startedAt + P.expectedSampleIntervalMs\n  );\n  const observedMs = Math.max(\n    P.expectedSampleIntervalMs,\n    oeeWindow.observedMs + P.expectedSampleIntervalMs\n  );\n  const availability = clamp(100 * observedMs / elapsedMs);\n  const performance = 100 * P.syntheticPerformanceRatio;\n  const quality = 100 * P.syntheticQualityRatio;\n  const oee = availability * performance * quality / 10000;\n  const calculatedAt = new Date(publishedAtMs).toISOString();\n  const window = {\n    basis: 'CURRENT_VALIDATED_AUTOMATIC_PERIOD',\n    windowStart: new Date(oeeWindow.startedAt).toISOString(),\n    windowEnd: calculatedAt,\n    plannedWindowMs: P.plannedWindowMs,\n    plannedElapsedMs: elapsedMs,\n    observedMs,\n    automaticMs: observedMs,\n    baselineOnly: oeeWindow.snapshotCount === 1,\n    snapshotCount: oeeWindow.snapshotCount\n  };\n  const componentStatus = {\n    availability: { value: availability, state: 'COMPUTED', origin: 'PHYSICAL_EVIDENCE', basis: 'validated evidence coverage inside the current AUTOMATIC period' },\n    performance: { value: performance, state: 'COMPUTED', origin: 'SYNTHETIC_ESTIMATE', basis: 'configured 90% hypothesis; no measured production count is implied' },\n    quality: { value: quality, state: 'COMPUTED', origin: 'SYNTHETIC_ESTIMATE', basis: 'configured 98% hypothesis; not measured good/total production' },\n    oee: { value: oee, state: 'COMPUTED', origin: 'SYNTHETIC_ESTIMATE', basis: 'availability x performance x quality' }\n  };\n  lastOee = {\n    calculatedAt,\n    oee: { current: oee, availability, performance, quality, unit: 'percent' },\n    window,\n    componentStatus\n  };\n  flow.set('cpslai2_synthetic_last_oee', lastOee);\n  oeePayload = {\n    schemaVersion: '1.2', cpsId: 'cpslai2', timestamp: emittedAt, calculatedAt,\n    indicatorClass: 'SYNTHETIC', calculationState: 'SYNTHETIC',\n    evidenceStatus: 'CURRENT_PHYSICAL_TELEMETRY', currentMode,\n    sourceTopics: ['cpslai2/data'], parameters: P, window,\n    optionalExperimentalEvidence: { used: false, metricSessionId: null },\n    oee: lastOee.oee, componentStatus\n  };\n} else {\n  const reason = !evidenceValid\n    ? (currentMode === 'UNKNOWN' ? 'MODE_UNKNOWN_OR_INVALID_TELEMETRY' : 'INVALID_OR_STALE_TELEMETRY')\n    : `MODE_${currentMode}_NOT_AUTOMATIC`;\n  const held = !!lastOee;\n  const nullOee = { current: null, availability: null, performance: null, quality: null, unit: 'percent' };\n  oeePayload = {\n    schemaVersion: '1.2', cpsId: 'cpslai2', timestamp: emittedAt,\n    calculatedAt: held ? lastOee.calculatedAt : null,\n    indicatorClass: 'SYNTHETIC', calculationState: held ? 'HELD_LAST_VALUE' : 'NOT_COMPUTED',\n    evidenceStatus: evidenceValid ? 'CURRENT_NON_AUTOMATIC_MODE' : 'DEGRADED_PHYSICAL_TELEMETRY',\n    reason, currentMode, sourceTopics: ['cpslai2/data'], parameters: P,\n    window: held ? lastOee.window : null,\n    optionalExperimentalEvidence: { used: false, metricSessionId: null },\n    oee: held ? lastOee.oee : nullOee,\n    componentStatus: held\n      ? Object.fromEntries(Object.entries(lastOee.componentStatus).map(([key, value]) => [key, { ...value, state: 'HELD_LAST_VALUE' }]))\n      : Object.fromEntries(['availability', 'performance', 'quality', 'oee'].map(key => [key, { value: null, state: 'NOT_COMPUTED' }]))\n  };\n}\n\nlet healthPayload;\nif (evidenceValid) {\n  const freshnessScore = clamp(100 * (1 - envelopeAgeMs / freshnessLimitMs));\n  const validityScore = 25 * validCount / markers.length;\n  const opcQualityScore = 25 * goodCount / markers.length;\n  const stabilityScore = clamp(20 - Math.min(20, healthHistory.transitions * 4) -\n    Math.min(10, 10 * healthHistory.invalidSnapshots / healthHistory.totalSnapshots));\n  const health = clamp(.30 * freshnessScore + validityScore + opcQualityScore + stabilityScore);\n  const healthState = health >= P.healthHealthyThreshold ? 'SYNTHETIC_HEALTHY'\n    : health >= P.healthDegradedThreshold ? 'SYNTHETIC_DEGRADED' : 'SYNTHETIC_CRITICAL';\n  healthPayload = {\n    schemaVersion: '1.2', cpsId: 'cpslai2', timestamp: emittedAt,\n    indicatorClass: 'SYNTHETIC', calculationState: 'SYNTHETIC',\n    evidenceStatus: 'CURRENT_PHYSICAL_TELEMETRY', currentMode,\n    sourceTopics: ['cpslai2/data'], parameters: P,\n    health: {\n      current: health, score: health, healthState, unit: 'percent',\n      origin: 'PHYSICAL_EVIDENCE', source: 'TELEMETRY_INTEGRITY_MODEL',\n      basis: 'freshness, validity, OPC UA quality and marker stability',\n      factors: { freshnessScore, validityScore, opcQualityScore, stabilityScore }\n    }\n  };\n} else {\n  healthPayload = {\n    schemaVersion: '1.2', cpsId: 'cpslai2', timestamp: emittedAt,\n    indicatorClass: 'SYNTHETIC', calculationState: 'NOT_COMPUTED',\n    evidenceStatus: 'DEGRADED_PHYSICAL_TELEMETRY',\n    reason: currentMode === 'UNKNOWN' ? 'MODE_UNKNOWN_OR_INVALID_TELEMETRY' : 'INVALID_OR_STALE_TELEMETRY',\n    currentMode, sourceTopics: ['cpslai2/data'], parameters: P,\n    health: { current: null, score: null, healthState: 'NOT_COMPUTED', unit: 'percent' }\n  };\n}\n\nreturn [\n  { topic: 'cpslai2/synthetic-oee', qos: 1, retain: false, payload: JSON.stringify(oeePayload) },\n  { topic: 'cpslai2/synthetic-health', qos: 1, retain: false, payload: JSON.stringify(healthPayload) }\n];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 510,
+    "y": 160,
+    "wires": [
+      [
+        "cpslai2_synth_oee_out"
+      ],
+      [
+        "cpslai2_synth_health_out"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai2_synth_oee_out",
+    "type": "mqtt out",
+    "z": "cpslai2_synthetic_oee_tab",
+    "name": "Publish cpslai2/synthetic-oee",
+    "topic": "cpslai2/synthetic-oee",
+    "qos": "1",
+    "retain": "false",
+    "broker": "cpslai2_mqtt_broker",
+    "x": 870,
+    "y": 140,
+    "wires": []
+  },
+  {
+    "id": "cpslai2_synth_health_out",
+    "type": "mqtt out",
+    "z": "cpslai2_synthetic_oee_tab",
+    "name": "Publish cpslai2/synthetic-health",
+    "topic": "cpslai2/synthetic-health",
+    "qos": "1",
+    "retain": "false",
+    "broker": "cpslai2_mqtt_broker",
+    "x": 880,
+    "y": 200,
+    "wires": []
+  }
+]

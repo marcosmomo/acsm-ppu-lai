@@ -214,7 +214,7 @@ test('OEE window follows the existing experimental session and retains its bound
   assert.deepEqual(ended.oee, { current: null, availability: null, performance: null, quality: null });
 });
 
-test('manual OEE injection is removed; topic, context handling, and Experimental OEE UI remain', () => {
+test('manual OEE injection is removed; topic and context handling remain without the removed metrics panel', () => {
   assert.ok(flow.some((node) => node.type === 'mqtt out' && node.topic === 'cpslai3/oee'));
   assert.equal(flow.some((node) => ['c3a0000000000027', 'c3a0000000000028', 'c3a0000000000029'].includes(node.id)), false);
   assert.doesNotMatch(byId('c3a0000000000019').func, /cpslai3_exp_oee_window|cpslai3_exp_oee_parameters/);
@@ -222,5 +222,5 @@ test('manual OEE injection is removed; topic, context handling, and Experimental
   const playSource = readFileSync(new URL('../components/PlayFase.js', import.meta.url), 'utf8');
   assert.match(contextSource, /hasExplicitCpsLai3CalculationState/);
   assert.match(playSource, /Experimental OEE/);
-  assert.match(playSource, /experimentalMetrics/);
+  assert.doesNotMatch(playSource, /Experimental Metrics|experimentalMetrics/);
 });

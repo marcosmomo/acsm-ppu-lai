@@ -43,6 +43,10 @@ import {
   mergeCpsTelemetry,
 } from '../lib/acsm/cpsTelemetry.mjs';
 import { deriveCpsLai3PhysicalOperationMode } from '../lib/acsm/cpsLai3OperationMode.mjs';
+import {
+  CPS_SYNTHETIC_MAX_AGE_MS,
+  normalizeCpsSyntheticIndicator,
+} from '../lib/acsm/cpsLai3SyntheticIndicators.mjs';
 import { publishUnplugNotificationIfAvailable } from '../lib/acsm/unplugNotification.mjs';
 import {
   buildCpsLai2TechnicalHealth,
@@ -1018,7 +1022,7 @@ const normalizeLocalAnalyticsPayload = (payload, topic) => {
     ...source,
     cpsId,
     cpsName: source?.cpsName || raw?.cpsName || cpsId,
-    ts: source?.ts || raw?.ts || Date.now(),
+    ts: source?.ts || raw?.ts || source?.timestamp || raw?.timestamp || Date.now(),
     timestamp: source?.timestamp || raw?.timestamp || null,
     sourceStatus: source?.sourceStatus || source?.status || raw?.sourceStatus || raw?.status || null,
     oee: canonicalizeOeeBlock(
@@ -1610,6 +1614,29 @@ const isCpsExplicitlyNonRunning = (cps) =>
 const canIngestCognitivePayload = (cps) =>
   isCpsInPlay(cps) && !isCpsExplicitlyNonRunning(cps);
 
+const isCurrentCpsLai1OperationalOee = ({ topic, payload, normalized, owner }) => {
+  if (normalizeTopic(topic) !== 'cpslai1/oee') return false;
+  if (!owner || normalizeCpsId(owner?.id ?? owner?.cpsId) !== 'cpslai1') return false;
+  if (normalizeCpsId(normalized?.cpsId) !== 'cpslai1') return false;
+  if (String(normalized?.calculationState || '').toUpperCase() !== 'OPERATIONAL_OEE_PROXY') {
+    return false;
+  }
+  if (!isCpsInPlay(owner)) return false;
+
+  const disconnectedState = canonicalOperationMode(
+    owner?.operationalState ?? owner?.globalState?.state ?? owner?.status
+  );
+  if (['unplugged', 'offline', 'disconnected'].includes(disconnectedState)) return false;
+
+  const timestamp = payload?.ts ?? payload?.timestamp;
+  if (normalizeSnapshotTimestamp(timestamp) === null) return false;
+
+  return ['current', 'availability', 'performance', 'quality'].every((field) => {
+    const value = toNumber(normalized?.oee?.[field]);
+    return value !== null && value >= 0 && value <= 1;
+  });
+};
+
 const lifecycleWithPhase = (cps, phase) => ({
   ...(cps?.lifecycle || {}),
   currentPhase: phase,
@@ -2034,6 +2061,11 @@ const buildSubscriptionTopicsForCps = (cps) => {
   const oeeWith = joinTopic(baseWith, OEE_TOPIC_SUFFIX);
   const experimentalMetricsNo = joinTopic(baseNo, 'experimental-metrics');
   const experimentalMetricsWith = joinTopic(baseWith, 'experimental-metrics');
+  const normalizedCpsId = normalizeCpsId(cps?.id ?? cps?.cpsId);
+  const isCpsLai3 = normalizedCpsId === 'cpslai3';
+  const usesSyntheticIndicators = ['cpslai2', 'cpslai3'].includes(normalizedCpsId);
+  const syntheticOeeNo = usesSyntheticIndicators ? joinTopic(baseNo, 'synthetic-oee') : null;
+  const syntheticHealthNo = usesSyntheticIndicators ? joinTopic(baseNo, 'synthetic-health') : null;
 
   const alarmNo = joinTopic(baseNo, ALARM_TOPIC_SUFFIX);
   const alarmWith = joinTopic(baseWith, ALARM_TOPIC_SUFFIX);
@@ -2066,9 +2098,8 @@ const buildSubscriptionTopicsForCps = (cps) => {
     healthWith,
     oeeNo,
     oeeWith,
-    ...(normalizeCpsId(cps?.id ?? cps?.cpsId) === 'cpslai3'
-      ? [experimentalMetricsNo, experimentalMetricsWith]
-      : []),
+    ...(isCpsLai3 ? [experimentalMetricsNo, experimentalMetricsWith] : []),
+    ...(usesSyntheticIndicators ? [syntheticOeeNo, syntheticHealthNo] : []),
     alarmNo,
     alarmWith,
     adaptiveNo,
@@ -3165,6 +3196,11 @@ export const CPSProvider = ({ children, acsmId, config }) => {
   const [telemetryCommunication, setTelemetryCommunication] = useState({});
   const telemetryCommunicationTimersRef = useRef({});
   const telemetryCommunicationReceivedAtRef = useRef({});
+  const syntheticIndicatorTimersRef = useRef({});
+  useEffect(() => () => {
+    Object.values(syntheticIndicatorTimersRef.current).forEach(clearTimeout);
+    syntheticIndicatorTimersRef.current = {};
+  }, []);
   const cpsLai3StatusCommunicationRef = useRef(null);
   const [alerts, setAlerts] = useState([]);
   const [cpsAnalytics, setCpsAnalyticsState] = useState({});
@@ -5753,14 +5789,27 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 
         if (!normalized?.cpsId) return;
 
+        const isCpsLai1OeeTopic = normalizeTopic(topic) === 'cpslai1/oee';
+        if (isCpsLai1OeeTopic && normalizeCpsId(normalized.cpsId) !== 'cpslai1') return;
+
+        const isCpsLai1Owner = normalizeCpsId(owner?.id ?? owner?.cpsId) === 'cpslai1';
+        const isOperationalCpsLai1Oee = isCurrentCpsLai1OperationalOee({
+          topic,
+          payload: parsed,
+          normalized,
+          owner,
+        });
+
         const currentAnalytics = cpsAnalyticsRef.current?.[normalized.cpsId] || {};
         const currentOeeTimestamp = owner?.oee?.lastUpdate || currentAnalytics?.lastUpdate;
         if (!isNewerSnapshot(parsed?.ts ?? parsed?.timestamp, currentOeeTimestamp)) return;
 
-        if (!ownerCanIngestCognitivePayload) {
+        if (!isOperationalCpsLai1Oee && !ownerCanIngestCognitivePayload) {
           patchExplicitOperationModeOnly();
           return;
         }
+
+        if (isCpsLai1OeeTopic && !isOperationalCpsLai1Oee) return;
 
         updateKnowledgeStoreFromAnalytics(normalized.cpsId, {
           ...normalized,
@@ -5779,7 +5828,6 @@ export const CPSProvider = ({ children, acsmId, config }) => {
         }));
 
         if (owner) {
-          const isCpsLai1Owner = normalizeCpsId(owner?.id) === 'cpslai1';
           const isCpsLai3Owner = normalizeCpsId(owner?.id) === 'cpslai3';
           const hasExplicitCpsLai3CalculationState =
             isCpsLai3Owner && Object.prototype.hasOwnProperty.call(normalized, 'calculationState');
@@ -5830,7 +5878,26 @@ export const CPSProvider = ({ children, acsmId, config }) => {
             evidenceStatus: normalized?.evidenceStatus ?? owner?.oee?.evidenceStatus ?? null,
             reason: normalized?.reason ?? owner?.oee?.reason ?? null,
             windowId: normalized?.windowId ?? owner?.oee?.windowId ?? null,
-            lastUpdate: normalized?.ts ?? owner?.oee?.lastUpdate ?? Date.now(),
+            timestamp: normalized?.timestamp ?? owner?.oee?.timestamp ?? null,
+            time: isOperationalCpsLai1Oee ? normalized?.time ?? null : owner?.oee?.time ?? null,
+            cycle: isOperationalCpsLai1Oee ? normalized?.cycle ?? null : owner?.oee?.cycle ?? null,
+            reference: isOperationalCpsLai1Oee
+              ? normalized?.reference ?? null
+              : owner?.oee?.reference ?? null,
+            performanceEvidence: isOperationalCpsLai1Oee
+              ? normalized?.performance ?? null
+              : owner?.oee?.performanceEvidence ?? null,
+            qualityEvidence: isOperationalCpsLai1Oee
+              ? normalized?.quality ?? null
+              : owner?.oee?.qualityEvidence ?? null,
+            evidence: isOperationalCpsLai1Oee
+              ? normalized?.evidence ?? null
+              : owner?.oee?.evidence ?? null,
+            note: isOperationalCpsLai1Oee ? normalized?.note ?? null : owner?.oee?.note ?? null,
+            operationalEnvelope: isOperationalCpsLai1Oee
+              ? normalized
+              : owner?.oee?.operationalEnvelope ?? null,
+            lastUpdate: normalized?.timestamp ?? normalized?.ts ?? owner?.oee?.lastUpdate ?? Date.now(),
           };
 
           const operationalDataPatch = {
@@ -6899,6 +6966,68 @@ export const CPSProvider = ({ children, acsmId, config }) => {
 
           if (DEBUG_LOG_ALL_TOPICS) {
             pushMqttLog(`[DEBUG] msg in '${rawTopic}': ${rawStr}`);
+          }
+
+          const syntheticKindByTopic = {
+            'cpslai2/synthetic-oee': 'oee',
+            'cpslai2/synthetic-health': 'health',
+            'cpslai3/synthetic-oee': 'oee',
+            'cpslai3/synthetic-health': 'health',
+          };
+          const syntheticKind = syntheticKindByTopic[normIncoming];
+          if (syntheticKind) {
+            const data = safeParseJson(message);
+            const syntheticCpsId = normIncoming.split('/')[0];
+            if (data?.cpsId !== syntheticCpsId || data?.indicatorClass !== 'SYNTHETIC') return;
+            const normalized = normalizeCpsSyntheticIndicator(
+              syntheticKind,
+              data,
+              Date.now(),
+              CPS_SYNTHETIC_MAX_AGE_MS,
+              syntheticCpsId
+            );
+            const field = syntheticKind === 'oee' ? 'syntheticOee' : 'syntheticHealth';
+            const timerKey = `${syntheticCpsId}:${syntheticKind}`;
+            const existingRecord = addedCPSRef.current.find(
+              (cps) => normalizeCpsId(cps?.id || cps?.cpsId) === syntheticCpsId
+            )?.[field];
+            const incomingTimestamp = Date.parse(data?.timestamp || '');
+            const existingTimestamp = Date.parse(existingRecord?.payload?.timestamp || '');
+            if (normalized && Number.isFinite(existingTimestamp) && incomingTimestamp <= existingTimestamp) return;
+            if (syntheticIndicatorTimersRef.current[timerKey]) {
+              clearTimeout(syntheticIndicatorTimersRef.current[timerKey]);
+              delete syntheticIndicatorTimersRef.current[timerKey];
+            }
+
+            setAddedCPS((prev) => prev.map((cps) =>
+              normalizeCpsId(cps?.id || cps?.cpsId) === syntheticCpsId
+                ? { ...cps, [field]: normalized }
+                : cps
+            ));
+            const syntheticOwner = addedCPSRef.current.find(
+              (cps) => normalizeCpsId(cps?.id || cps?.cpsId) === syntheticCpsId
+            ) || Object.values(registryRef.current || {}).find(
+              (cps) => normalizeCpsId(cps?.id || cps?.cpsId) === syntheticCpsId
+            );
+            if (syntheticOwner) patchRegistryCpsRef.current?.(syntheticOwner, { [field]: normalized });
+
+            if (normalized) {
+              syntheticIndicatorTimersRef.current[timerKey] = setTimeout(() => {
+                setAddedCPS((prev) => prev.map((cps) =>
+                  normalizeCpsId(cps?.id || cps?.cpsId) === syntheticCpsId && cps?.[field]?.receivedAt === normalized.receivedAt
+                    ? { ...cps, [field]: null }
+                    : cps
+                ));
+                const currentOwner = Object.values(registryRef.current || {}).find(
+                  (cps) => normalizeCpsId(cps?.id || cps?.cpsId) === syntheticCpsId
+                ) || syntheticOwner;
+                if (currentOwner?.[field]?.receivedAt === normalized.receivedAt) {
+                  patchRegistryCpsRef.current?.(currentOwner, { [field]: null });
+                }
+                delete syntheticIndicatorTimersRef.current[timerKey];
+              }, CPS_SYNTHETIC_MAX_AGE_MS);
+            }
+            return;
           }
 
           if (normIncoming === SUPPLY_CHAIN_REASONING_TOPIC) {

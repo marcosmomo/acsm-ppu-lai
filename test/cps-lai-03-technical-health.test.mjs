@@ -160,9 +160,9 @@ test('CPSContext integrates per-data Health, times out receipt, and rejects gene
   assert.match(source, /healthType: 'CPS_LAI_03_TECHNICAL_HEALTH'/);
 });
 
-test('Play Phase presents CPS-LAI-03 health score as a percent and Not Computed as Unavailable', () => {
+test('Play Phase presents CPS-LAI-03 synthetic Health percentage and Not Computed as Unavailable', () => {
   const source = readFileSync(new URL('../components/PlayFase.js', import.meta.url), 'utf8');
-  assert.match(source, /CPS_LAI_03_TECHNICAL_HEALTH/);
+  assert.match(source, /syntheticHealthPayload\?\.health\?\.current \?\? syntheticHealthPayload\?\.health\?\.score/);
   assert.match(source, /cpsLai3HealthNotComputed[\s\S]{0,150}Unavailable/);
-  assert.match(source, /`\$\{healthScore\}%`/);
+  assert.match(source, /formatSyntheticPercent\(healthScore\)/);
 });

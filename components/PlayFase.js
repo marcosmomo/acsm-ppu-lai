@@ -19,6 +19,10 @@ import {
 } from '../lib/acsm/cpsTelemetry.mjs';
 import { deriveCpsLai3PhysicalOperationMode } from '../lib/acsm/cpsLai3OperationMode.mjs';
 import { isValidatedPhysicalOperationMode } from '../lib/acsm/cpsOperationMode.mjs';
+import {
+  CPS_SYNTHETIC_MAX_AGE_MS,
+  formatSyntheticPercent,
+} from '../lib/acsm/cpsLai3SyntheticIndicators.mjs';
 import GovernanceApproval from './GovernanceApproval';
 
 // ===== Status helpers (EN) =====
@@ -136,6 +140,9 @@ const formatPercent = (value) => {
   if (!Number.isFinite(n)) return '—';
   return `${(n * 100).toFixed(1)}%`;
 };
+
+const formatSyntheticRatioForBadge = (value) =>
+  typeof value === 'number' && Number.isFinite(value) ? value / 100 : null;
 
 const formatProductionCount = (value) => {
   if (value === null || value === undefined || value === '') return '\u2014';
@@ -392,7 +399,13 @@ const getDataUrl = (cps) =>
   })();
 
 const getHistoryUrl = (cps) => normalizeUrl(cps?.endpoints?.history) || '';
-const getHealthUrl = (cps) => normalizeUrl(cps?.endpoints?.health) || '';
+const getSyntheticIndicatorUrl = (cps, indicator) => {
+  const cpsId = normalizeCpsId(cps?.id || cps?.cpsId || cps?.baseTopic || cps?.cps);
+  return cpsId === 'cpslai3' && ['oee', 'health'].includes(indicator)
+    ? `http://localhost:1881/cpslai3/synthetic-${indicator}`
+    : '';
+};
+const getHealthUrl = (cps) => getSyntheticIndicatorUrl(cps, 'health') || normalizeUrl(cps?.endpoints?.health) || '';
 
 const getDatasheetUrl = (cps) => {
   const cpsId = normalizeCpsId(cps?.id || cps?.cpsId || cps?.baseTopic || cps?.cps);
@@ -800,7 +813,9 @@ const PlayFase = () => {
               const dataUrl = getDataUrl(cps);
               const usesLocalTelemetryModal = shouldUseLocalTelemetryModal(cps);
               const normalizedCpsId = normalizeCpsId(cps?.id || cps?.cpsId || cps?.topic);
+              const isCpsLai2 = normalizedCpsId === 'cpslai2';
               const isCpsLai3 = normalizedCpsId === 'cpslai3';
+              const usesSyntheticIndicators = isCpsLai2 || isCpsLai3;
               const physicalTelemetryConnected =
                 telemetryCommunication?.[normalizedCpsId] === true;
               const localPhysicalModeEvidence = usesLocalTelemetryModal
@@ -823,6 +838,7 @@ const PlayFase = () => {
                   ? cpsLai3Mode?.operationMode || 'INIT'
                   : humanizeOperationMode(cps?.operationalData?.operationMode);
               const historyUrl = getHistoryUrl(cps);
+              const oeeUrl = getSyntheticIndicatorUrl(cps, 'oee');
               const healthUrl = getHealthUrl(cps);
               const datasheetUrl = getDatasheetUrl(cps);
 
@@ -856,54 +872,84 @@ const PlayFase = () => {
               const globalStateBadgeCls = operationalStateBadgeClass(globalStateValue);
               const globalStateWhen = formatDateTime(cps.globalState?.lastUpdate);
 
-              const healthScore = cps.health?.score ?? null;
-              const healthLabel = cps.health?.label ?? null;
+              const syntheticOeeRecord = usesSyntheticIndicators ? cps.syntheticOee : null;
+              const syntheticHealthRecord = usesSyntheticIndicators ? cps.syntheticHealth : null;
+              const syntheticOeeFresh = !!syntheticOeeRecord &&
+                Date.now() - syntheticOeeRecord.receivedAt <= CPS_SYNTHETIC_MAX_AGE_MS;
+              const syntheticHealthFresh = !!syntheticHealthRecord &&
+                Date.now() - syntheticHealthRecord.receivedAt <= CPS_SYNTHETIC_MAX_AGE_MS;
+              const syntheticOeePayload = syntheticOeeFresh ? syntheticOeeRecord.payload : null;
+              const syntheticHealthPayload = syntheticHealthFresh ? syntheticHealthRecord.payload : null;
+              const syntheticOeeComputed = syntheticOeePayload?.calculationState === 'SYNTHETIC';
+              const syntheticOeeHeld = syntheticOeePayload?.calculationState === 'HELD_LAST_VALUE';
+              const syntheticOeeAvailable = syntheticOeeComputed || syntheticOeeHeld;
+              const syntheticHealthComputed = syntheticHealthPayload?.calculationState === 'SYNTHETIC';
+              const syntheticOeeReason = syntheticOeePayload?.reason ||
+                (!syntheticOeeFresh ? 'NO_CURRENT_SYNTHETIC_OEE_SAMPLE' : null);
+              const syntheticHealthReason = syntheticHealthPayload?.reason ||
+                (!syntheticHealthFresh ? 'NO_CURRENT_SYNTHETIC_HEALTH_SAMPLE' : null);
+
+              const healthUsesSynthetic = usesSyntheticIndicators && syntheticHealthFresh;
+              const healthScore = healthUsesSynthetic
+                ? syntheticHealthComputed ? syntheticHealthPayload?.health?.current ?? syntheticHealthPayload?.health?.score ?? null : null
+                : cps.health?.score ?? null;
+              const healthLabel = healthUsesSynthetic
+                ? syntheticHealthComputed
+                  ? ({ SYNTHETIC_HEALTHY: 'healthy', SYNTHETIC_DEGRADED: 'warning', SYNTHETIC_CRITICAL: 'critical' }[syntheticHealthPayload?.health?.healthState] || null)
+                  : null
+                : cps.health?.label ?? null;
               const cpsLai2TechnicalHealthLabel =
                 normalizedCpsId === 'cpslai2' &&
                 cps.health?.healthType === 'CPS_LAI_02_TECHNICAL_HEALTH'
                   ? ({ DEGRADED: 'warning', COMMUNICATION_LOST: 'failure' }[healthLabel] ?? healthLabel)
                   : healthLabel;
-              const cpsLai3TechnicalHealthLabel =
-                isCpsLai3 && cps.health?.healthType === 'CPS_LAI_03_TECHNICAL_HEALTH'
-                  ? ({ DEGRADED: 'warning', COMMUNICATION_LOST: 'failure' }[healthLabel] ?? healthLabel)
-                  : healthLabel;
+              const cpsLai3TechnicalHealthLabel = healthLabel;
               const cpsLai2HealthNotComputed =
                 normalizedCpsId === 'cpslai2' &&
                 cps.health?.healthType === 'CPS_LAI_02_TECHNICAL_HEALTH' &&
                 healthLabel === 'NOT_COMPUTED';
-              const cpsLai3HealthNotComputed =
-                isCpsLai3 &&
-                cps.health?.healthType === 'CPS_LAI_03_TECHNICAL_HEALTH' &&
-                healthLabel === 'NOT_COMPUTED';
-              const healthNotComputed = cpsLai2HealthNotComputed || cpsLai3HealthNotComputed;
-              const effectiveHealthLabel = isCpsLai3
+              const syntheticHealthNotComputed = healthUsesSynthetic && !syntheticHealthComputed;
+              const cpsLai3HealthNotComputed = isCpsLai3 && !syntheticHealthComputed;
+              const healthNotComputed = syntheticHealthNotComputed ||
+                (!healthUsesSynthetic && (cpsLai2HealthNotComputed || cpsLai3HealthNotComputed));
+              const effectiveHealthLabel = healthUsesSynthetic
                 ? cpsLai3TechnicalHealthLabel
                 : cpsLai2TechnicalHealthLabel;
               const healthText = cpsLai2HealthNotComputed
                 ? 'Unavailable'
-                : cpsLai3HealthNotComputed
+                : syntheticHealthNotComputed || cpsLai3HealthNotComputed
                   ? 'Unavailable'
                   : humanizeHealthLabel(effectiveHealthLabel, healthScore);
               const healthBadgeCls = healthNotComputed
                 ? 'feat-badge'
                 : mapHealthBadgeClass(effectiveHealthLabel, healthScore);
-              const healthIndicatorValue = isCpsLai3 && cps.health?.healthType === 'CPS_LAI_03_TECHNICAL_HEALTH'
-                ? (healthScore === null ? '—' : `${healthScore}%`)
+              const healthIndicatorValue = healthUsesSynthetic
+                ? formatSyntheticPercent(healthScore)
                 : (healthScore ?? '—');
-              const healthWhen = formatDateTime(cps.health?.lastUpdate);
+              const healthWhen = formatDateTime(healthUsesSynthetic ? syntheticHealthRecord?.receivedAt : cps.health?.lastUpdate);
 
-              const oeeValue = cps.oee?.value ?? null;
-              const oeeAvailability = cps.oee?.availability ?? null;
-              const oeePerformance = cps.oee?.performance ?? null;
-              const oeeQuality = cps.oee?.quality ?? null;
-              const oeeText = humanizeOeeLabel(oeeValue);
-              const oeeBadgeCls = mapOeeBadgeClass(oeeValue);
-              const oeeWhen = formatDateTime(cps.oee?.lastUpdate);
-              const oeeTitle = isCpsLai3 ? 'Experimental OEE' : 'Local OEE';
+              const oeeValue = usesSyntheticIndicators
+                ? syntheticOeeAvailable ? syntheticOeePayload?.oee?.current ?? null : null
+                : cps.oee?.value ?? null;
+              const oeeAvailability = usesSyntheticIndicators
+                ? syntheticOeeAvailable ? syntheticOeePayload?.oee?.availability ?? null : null
+                : cps.oee?.availability ?? null;
+              const oeePerformance = usesSyntheticIndicators
+                ? syntheticOeeAvailable ? syntheticOeePayload?.oee?.performance ?? null : null
+                : cps.oee?.performance ?? null;
+              const oeeQuality = usesSyntheticIndicators
+                ? syntheticOeeAvailable ? syntheticOeePayload?.oee?.quality ?? null : null
+                : cps.oee?.quality ?? null;
+              const oeeText = humanizeOeeLabel(usesSyntheticIndicators ? formatSyntheticRatioForBadge(oeeValue) : oeeValue);
+              const oeeBadgeCls = mapOeeBadgeClass(usesSyntheticIndicators ? formatSyntheticRatioForBadge(oeeValue) : oeeValue);
+              const oeeWhen = formatDateTime(usesSyntheticIndicators
+                ? syntheticOeePayload?.calculatedAt || syntheticOeeRecord?.receivedAt
+                : cps.oee?.lastUpdate);
+              const oeeTitle = usesSyntheticIndicators
+                ? syntheticOeeHeld ? 'Último OEE — cálculo pausado' : 'Experimental OEE'
+                : 'Local OEE';
               const isCpsLai1 =
                 normalizeCpsId(cps?.id || cps?.cpsId || cps?.topic) === 'cpslai1';
-              const experimentalMetrics = isCpsLai3 ? cps?.experimentalMetrics : null;
-              const experimentalMetricValues = experimentalMetrics?.metrics || {};
               const production = isCpsLai1 ? cps?.production : null;
               const governanceStatus = String(
                 cps?.governanceStatus || cps?.governanceProfile?.status || 'NOT_DEFINED'
@@ -949,6 +995,16 @@ const PlayFase = () => {
                             Stop
                           </button>
 
+                          {isCpsLai3 && (
+                            <button
+                              onClick={() => openExternalUrl(oeeUrl, 'Synthetic OEE endpoint is not available.')}
+                              className="desc-btn"
+                              title={`Open CPS-LAI-03 synthetic OEE endpoint: ${oeeUrl}`}
+                            >
+                              OEE API
+                            </button>
+                          )}
+
                           <button
                             onClick={() =>
                               openExternalUrl(
@@ -1013,7 +1069,7 @@ const PlayFase = () => {
                             }
                             disabled={!healthUrl}
                           >
-                            Health API
+                            {isCpsLai3 ? 'Synthetic Health API' : 'Health API'}
                           </button>
 
                           <button
@@ -1051,6 +1107,16 @@ const PlayFase = () => {
                             Restart
                           </button>
 
+                          {isCpsLai3 && (
+                            <button
+                              onClick={() => openExternalUrl(oeeUrl, 'Synthetic OEE endpoint is not available.')}
+                              className="desc-btn"
+                              title={`Open CPS-LAI-03 synthetic OEE endpoint: ${oeeUrl}`}
+                            >
+                              OEE API
+                            </button>
+                          )}
+
                           <button
                             onClick={() =>
                               openExternalUrl(
@@ -1115,7 +1181,7 @@ const PlayFase = () => {
                             }
                             disabled={!healthUrl}
                           >
-                            Health API
+                            {isCpsLai3 ? 'Synthetic Health API' : 'Health API'}
                           </button>
 
                           <button
@@ -1180,6 +1246,16 @@ const PlayFase = () => {
                             Data
                           </button>
 
+                          {isCpsLai3 && (
+                            <button
+                              onClick={() => openExternalUrl(oeeUrl, 'Synthetic OEE endpoint is not available.')}
+                              className="desc-btn"
+                              title={`Open CPS-LAI-03 synthetic OEE endpoint: ${oeeUrl}`}
+                            >
+                              OEE API
+                            </button>
+                          )}
+
                           <button
                             onClick={() =>
                               openExternalUrl(
@@ -1213,7 +1289,7 @@ const PlayFase = () => {
                             }
                             disabled={!healthUrl}
                           >
-                            Health API
+                            {isCpsLai3 ? 'Synthetic Health API' : 'Health API'}
                           </button>
 
                           <button
@@ -1281,7 +1357,7 @@ const PlayFase = () => {
                   <div className="single-feature-card" style={{ marginBottom: 12 }}>
                     <div className="single-feature-row" style={{ marginBottom: 0 }}>
                       <div className="single-feature-title">
-                        Health Indicator: <strong>{healthIndicatorValue}</strong>
+                        Health Indicator: <strong title={healthUsesSynthetic ? syntheticHealthReason || syntheticHealthPayload?.evidenceStatus : undefined}>{healthIndicatorValue}</strong>
                       </div>
 
                       <div className="single-feature-status">
@@ -1289,9 +1365,15 @@ const PlayFase = () => {
                       </div>
 
                       <div className="single-feature-meta">
+                        {healthUsesSynthetic && <div className="single-feature-time"><span> Synthetic</span></div>}
                         <div className="single-feature-time">
                           Last health update: <span>{healthWhen}</span>
                         </div>
+                        {healthUsesSynthetic && !syntheticHealthComputed && (
+                          <div className="single-feature-time" title={syntheticHealthPayload?.evidenceStatus || 'No current synthetic Health sample'}>
+                            Reason: <span>{syntheticHealthReason}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1299,7 +1381,7 @@ const PlayFase = () => {
                   <div className="single-feature-card" style={{ marginBottom: 12 }}>
                     <div className="single-feature-row" style={{ marginBottom: 8 }}>
                       <div className="single-feature-title">
-                        {oeeTitle}: <strong>{formatPercent(oeeValue)}</strong>
+                        {oeeTitle}: <strong title={usesSyntheticIndicators ? syntheticOeeReason || syntheticOeePayload?.evidenceStatus : undefined}>{usesSyntheticIndicators ? formatSyntheticPercent(oeeValue) : formatPercent(oeeValue)}</strong>
                       </div>
 
                       <div className="single-feature-status">
@@ -1307,13 +1389,19 @@ const PlayFase = () => {
                       </div>
 
                       <div className="single-feature-meta">
+                        {usesSyntheticIndicators && <div className="single-feature-time"><span> Synthetic</span></div>}
                         <div className="single-feature-time">
                           Last OEE update: <span>{oeeWhen}</span>
                         </div>
-                        {isCpsLai3 && (
+                        {usesSyntheticIndicators && (
                           <div className="single-feature-time">
-                            Calculation: <span>{cps.oee?.calculationState || 'NOT_COMPUTED'}</span>
-                            {cps.oee?.windowId ? <> · Window: <span>{cps.oee.windowId}</span></> : null}
+                            Calculation: <span>{syntheticOeePayload?.calculationState || 'NOT_COMPUTED'}</span>
+                            {syntheticOeePayload?.metricSessionId ? <> · Session: <span>{syntheticOeePayload.metricSessionId}</span></> : null}
+                          </div>
+                        )}
+                        {usesSyntheticIndicators && !syntheticOeeComputed && (
+                          <div className="single-feature-time" title={syntheticOeePayload?.evidenceStatus || 'No current synthetic OEE sample'}>
+                            Reason: <span>{syntheticOeeReason}</span>
                           </div>
                         )}
                       </div>
@@ -1321,15 +1409,15 @@ const PlayFase = () => {
 
                     <div className="single-feature-row" style={{ marginBottom: 0 }}>
                       <div className="single-feature-title">
-                        Availability: <strong>{formatPercent(oeeAvailability)}</strong>
+                        Availability: <strong>{usesSyntheticIndicators ? formatSyntheticPercent(oeeAvailability) : formatPercent(oeeAvailability)}</strong>
                       </div>
 
                       <div className="single-feature-title">
-                        Performance: <strong>{formatPercent(oeePerformance)}</strong>
+                        Performance: <strong>{usesSyntheticIndicators ? formatSyntheticPercent(oeePerformance) : formatPercent(oeePerformance)}</strong>
                       </div>
 
                       <div className="single-feature-title">
-                        Quality: <strong>{formatPercent(oeeQuality)}</strong>
+                        Quality: <strong>{usesSyntheticIndicators ? formatSyntheticPercent(oeeQuality) : formatPercent(oeeQuality)}</strong>
                       </div>
                     </div>
 
@@ -1369,42 +1457,6 @@ const PlayFase = () => {
                       </div>
                     )}
 
-                    {isCpsLai3 && (
-                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e2e8f0' }}>
-                        <div className="single-feature-title" style={{ marginBottom: 4 }}>
-                          <strong>Experimental Metrics</strong>
-                        </div>
-                        <div className="single-feature-time" style={{ marginBottom: 8 }}>
-                          Signal evidence only — not validated production counts or OEE.
-                          {' '}Session: {experimentalMetrics?.metricSessionId || 'Not started'}
-                          {' '}({experimentalMetrics?.sessionStatus || 'NOT_STARTED'}).
-                          {' '}Quality: {experimentalMetrics?.evidenceQuality || 'Unavailable'}.
-                        </div>
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                            gap: 8,
-                          }}
-                        >
-                          <div className="single-feature-title">
-                            B1BG1 activations: <strong>{formatProductionCount(experimentalMetricValues.pieceSensorActivationCount)}</strong>
-                          </div>
-                          <div className="single-feature-title">
-                            G1BG3 signal active: <strong>{formatCycleTimeMs(experimentalMetricValues.conveyorSignalActiveTimeMs)}</strong>
-                          </div>
-                          <div className="single-feature-title">
-                            G1MB1 activations: <strong>{formatProductionCount(experimentalMetricValues.separator1ActivationCount)}</strong>
-                          </div>
-                          <div className="single-feature-title">
-                            G1MB2 activations: <strong>{formatProductionCount(experimentalMetricValues.separator2ActivationCount)}</strong>
-                          </div>
-                        </div>
-                        <div className="single-feature-time" style={{ marginTop: 8 }}>
-                          Last experimental update: <span>{formatDateTime(experimentalMetrics?.updatedAt)}</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div className="single-feature-card">
