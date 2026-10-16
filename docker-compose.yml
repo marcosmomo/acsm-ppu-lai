@@ -86,6 +86,28 @@ services:
     networks:
       - acsm-network
 
+  cps-lai-01-cognitive:
+    build:
+      context: ./services/cps-lai-01-cognitive
+    image: acsm-cps-lai-01-cognitive:latest
+    container_name: acsm-cps-lai-01-cognitive
+    restart: unless-stopped
+    environment:
+      CPSLAI1_COGNITIVE_ENABLED: "true"
+      MQTT_URL: mqtt://acsm-mosquitto:1883
+      MQTT_CLIENT_ID: cpslai1-cognitive
+      COGNITIVE_MINIMUM_SAMPLES: "5"
+      COGNITIVE_MAX_SAMPLES: "30"
+      COGNITIVE_OBSERVATION_WINDOW_MS: "3000"
+      COGNITIVE_PREDICTION_HORIZON_MS: "300000"
+      COGNITIVE_PUBLICATION_INTERVAL_MS: "30000"
+      COGNITIVE_HYSTERESIS_CONFIRMATIONS: "2"
+      NODE_ENV: production
+    depends_on:
+      - acsm-mosquitto
+    networks:
+      - acsm-network
+
 networks:
   acsm-network:
     external: true

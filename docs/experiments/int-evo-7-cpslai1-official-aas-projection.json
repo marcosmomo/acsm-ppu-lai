@@ -1,0 +1,377 @@
+{
+  "schemaVersion": "aas-functional-card-document/1.0",
+  "generatedBy": "scripts/experiments/build-int-evo-7-official-aas-projection.mjs",
+  "scope": "VERIFIED_DOCUMENT_PREVIEW_ONLY",
+  "cycleBinding": "NONE",
+  "verification": {
+    "catalogContentHash": "b5ca586f90662dbebf5d829d92c2e53d342301b1378fb4ed0223641091ade692"
+  },
+  "physicalValidationClaimed": false,
+  "operationalCycleClaimed": false,
+  "document": {
+    "schemaVersion": "verifiable-aas-projection/1.0",
+    "sourceVersion": "verifiable-aas-document-source/1.0.0",
+    "referenceId": "cpslai1-official-revised-aas",
+    "cpsId": "cpslai1",
+    "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+    "assetId": "urn:ufsc:lai:asset:cps-lai-01:distribution-conveyor",
+    "contentHash": "b5ca586f90662dbebf5d829d92c2e53d342301b1378fb4ed0223641091ade692",
+    "version": "1",
+    "administration": {
+      "version": "1",
+      "revision": "1"
+    },
+    "sourceId": "acsm-cps-defs-official-cpslai1",
+    "sourceType": "OFFICIAL_STATIC_DOCUMENT",
+    "operational": false,
+    "evidenceLevel": "DECLARED_ONLY",
+    "completeness": "COMPLETE_WITH_WARNINGS",
+    "functionalHash": "c14aa9caa5cc283b3260a3f14c6d490834ab116eb315cf0ba65cfff8af330df7",
+    "capabilities": [
+      {
+        "kind": "CAPABILITY",
+        "name": "ConveyorForward",
+        "enabled": true,
+        "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/conveyorforward",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/conveyorforward",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "true",
+            "valueType": "xs:boolean"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "CAPABILITY",
+        "name": "ConveyorReverse",
+        "enabled": true,
+        "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/conveyorreverse",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/conveyorreverse",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "true",
+            "valueType": "xs:boolean"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "CAPABILITY",
+        "name": "PieceSeparation",
+        "enabled": true,
+        "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/pieceseparation",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/pieceseparation",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "true",
+            "valueType": "xs:boolean"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "CAPABILITY",
+        "name": "MaterialTransport",
+        "enabled": null,
+        "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/primarycapability",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/primarycapability",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "MaterialTransport",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "CAPABILITY",
+        "name": "SlideActuation",
+        "enabled": true,
+        "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/slideactuation",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/slideactuation",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "true",
+            "valueType": "xs:boolean"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      }
+    ],
+    "services": [
+      {
+        "kind": "SERVICE",
+        "name": "plug",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_1",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_1",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "plug",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "LifecycleServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "getOEE",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_10",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_10",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "getOEE",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "LifecycleServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "play",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_2",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_2",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "play",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "LifecycleServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "stop",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_3",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_3",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "stop",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "LifecycleServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "maintenance",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_4",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_4",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "maintenance",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "LifecycleServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "return",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_5",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_5",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "return",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "LifecycleServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "unplug",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_6",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_6",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "unplug",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "LifecycleServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "getAAS",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_7",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_7",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "getAAS",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "LifecycleServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "getStatus",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_8",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_8",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "getStatus",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "LifecycleServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "getHealth",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_9",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/lifecycleservices/service_9",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "getHealth",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "LifecycleServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "transportMaterial",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/processservices/service_1",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/processservices/service_1",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "transportMaterial",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "ProcessServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "separatePiece",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/processservices/service_2",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/processservices/service_2",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "separatePiece",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "ProcessServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      },
+      {
+        "kind": "SERVICE",
+        "name": "actuateSlide",
+        "enabled": null,
+        "identity": "technical:service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/processservices/service_3",
+        "identityBasis": "TECHNICAL_PATH",
+        "technicalIdentity": "service:urn:ufsc:lai:ppu:cps-lai-01:submodel:services:services/processservices/service_3",
+        "semanticReferences": [],
+        "attributes": {
+          "declarationValue": {
+            "value": "actuateSlide",
+            "valueType": "xs:string"
+          },
+          "serviceGroup": {
+            "value": "ProcessServices",
+            "valueType": "xs:string"
+          }
+        },
+        "evidenceLevel": "DECLARED_ONLY"
+      }
+    ],
+    "archiveReference": null,
+    "physicalStateInferred": false
+  }
+}

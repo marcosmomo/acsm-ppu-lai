@@ -23,6 +23,7 @@ const cx = (...classes) => classes.filter(Boolean).join(' ');
 const LIFECYCLE_PHASES = new Set(['plug', 'play', 'unplug']);
 
 const toNumber = (value) => {
+  if (value === null || value === undefined || value === '') return null;
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : null;
 };
@@ -206,6 +207,19 @@ const getOperationalStateFromContext = (cps, getCanonicalOperationalState) => {
 };
 
 const operationFieldConfig = {
+  cpslai1: [
+    { label: 'Piece At Entry', keys: ['PieceAtEntry'] },
+    { label: 'Piece At Middle', keys: ['PieceAtMiddle'] },
+    { label: 'Piece At Exit', keys: ['PieceAtExit'] },
+    { label: 'Slide Retracted', keys: ['SlideRetracted'] },
+    { label: 'Slide Extended', keys: ['SlideExtended'] },
+    { label: 'Alarm Signal', keys: ['AlarmSignal'] },
+    { label: 'Total Count', keys: ['totalCount'], formatter: (value) => formatNumber(value, 0) },
+    { label: 'Completed Cycles', keys: ['completedCycles'], formatter: (value) => formatNumber(value, 0) },
+    { label: 'Incomplete Cycles', keys: ['incompleteCycles'], formatter: (value) => formatNumber(value, 0) },
+    { label: 'Last Cycle Time', keys: ['lastCycleTimeMs'], formatter: formatMs },
+    { label: 'Average Cycle Time', keys: ['averageCycleTimeMs'], formatter: formatMs },
+  ],
   cps1: [
     { label: 'Tip Temperature', keys: ['tipTemperature', 'tempPontaSolda', 'currentTemperature'] },
     { label: 'Arc Current', keys: ['arcCurrent', 'correnteArco', 'currentRPM'] },
@@ -233,6 +247,7 @@ const getOperationalRows = (cpsId, cps = {}, analytics = {}) => {
   const data = {
     ...(analytics?.telemetry || {}),
     ...(analytics?.features || {}),
+    ...(cps?.production || {}),
     ...(cps?.operationalData || {}),
   };
   const configured = operationFieldConfig[cpsId] || [];
@@ -375,7 +390,10 @@ const formatDisplayCpsId = (value) => {
 };
 
 function CPSHeader({ cps, cpsId, analytics, canonicalOperationalState }) {
-  const assetName = cps?.nome || analytics?.cpsName || cpsId;
+  const normalizedCpsId = String(cps?.id || cps?.cpsId || cpsId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const assetName = normalizedCpsId === 'cpslai1'
+    ? 'CPS-LAI-01 - Distribution/Conveyor Station'
+    : cps?.nome || analytics?.cpsName || cpsId;
   const displayCpsId = formatDisplayCpsId(cps?.cpsId || cps?.lifecycle?.cpsId || cpsId);
   const topic = cps?.topic || cps?.baseTopic || analytics?.baseTopic || cpsId;
   const lastUpdate =
@@ -468,23 +486,21 @@ function CPSHealthPanel({ cps, analytics }) {
   );
 }
 
-function CPSLearningPanel({ analytics, adaptiveIntelligence }) {
+function CPSLearningPanel({ cpsId, analytics, adaptiveIntelligence }) {
   const learning = analytics?.learning || {};
   const rows = metricRows({ analytics, learning }, [
     { label: 'Learning State', paths: ['learning.learningState', 'learning.state', 'learning.type', 'analytics.learningState'] },
-    { label: 'Pattern', paths: ['learning.pattern', 'learning.learningPattern', 'learning.learned', 'analytics.learningPattern'] },
+    { label: 'Pattern', paths: ['learning.dominantPattern', 'learning.pattern', 'learning.patterns', 'learning.learningPattern', 'learning.learned', 'analytics.learningPattern'] },
     { label: 'Drift', paths: ['learning.drift', 'learning.driftScore', 'analytics.driftScore'] },
     { label: 'Anomaly', paths: ['learning.anomaly', 'learning.anomalyScore', 'analytics.anomalyScore'] },
-    { label: 'Trend', paths: ['learning.trend', 'analytics.trend'] },
+    { label: 'Trend', paths: ['learning.metrics.oee.trend', 'learning.trend', 'analytics.trend'] },
   ]);
   const evidence = analytics?.evidence || learning?.evidence || learning?.basis || analytics?.timeSeriesFeatures?.quickSignals;
   const evidenceRows = getEvidenceRows(analytics, learning);
 
   return (
     <Section icon={<Brain size={18} />} title="Learning">
-      <div className={styles.toolbar}>
-        <HistoryRecordsButton level="level1" />
-      </div>
+      <div className={styles.toolbar}><HistoryRecordsButton cpsId={cpsId} level="level1" /></div>
       {rows.length ? (
         <div className={styles.fields}>
           {rows.map((row) => (
@@ -528,7 +544,11 @@ function CPSReasoningPanel({ analytics }) {
         <div className={styles.empty}>No reasoning metrics available yet.</div>
       )}
       <TextBlock label="Explanation" value={reasoning?.explanation} />
-      <TextBlock label="Root Cause / Evidence" value={reasoning?.probableCause || reasoning?.evidence || reasoning?.supportingEvidence || analytics?.evidence} />
+      <TextBlock label="Observations" value={reasoning?.observations} />
+      <TextBlock label="Inferences" value={reasoning?.inferences} />
+      <TextBlock label="Hypotheses" value={reasoning?.hypotheses} />
+      <TextBlock label="Probable Cause" value={reasoning?.probableCause} />
+      <TextBlock label="Evidence References" value={reasoning?.evidence || reasoning?.supportingEvidence || analytics?.evidence} />
     </Section>
   );
 }
@@ -542,18 +562,22 @@ function CPSPredictionPanel({ analytics }) {
     analytics?.predictedOee,
     prediction?.forecastOEE,
     analytics?.forecastOEE,
+    prediction?.expected?.oee,
     prediction?.forecast,
     analytics?.forecast
   );
   const rows = [
+    { label: 'Prediction State', value: text(prediction?.state) },
     { label: 'Predicted OEE', value: formatPct(predictedOEE) },
-    { label: 'Trend', value: text(prediction?.trend || analytics?.trend) },
+    { label: 'Horizon', value: text(prediction?.horizon) },
+    { label: 'Trend', value: text(prediction?.trend || analytics?.learning?.metrics?.oee?.trend || analytics?.trend) },
     {
       label: 'Confidence',
       value: hasValue(prediction?.confidence)
         ? formatNumber(prediction.confidence)
         : formatNumber(analytics?.learning?.confidence),
     },
+    { label: 'Historical Evidence', value: compactTextValue(prediction?.historicalWindow || analytics?.evidenceWindow), wide: true },
   ];
 
   return (
@@ -573,6 +597,7 @@ function CPSRecommendationPanel({ analytics }) {
     : {};
   const recommendation =
     (typeof analytics?.recommendation === 'string' ? analytics.recommendation : null) ||
+    source?.text ||
     source?.recommendation ||
     analytics?.reasoning?.recommendation ||
     analytics?.learning?.recommendation;
@@ -584,6 +609,7 @@ function CPSRecommendationPanel({ analytics }) {
     analytics?.learning?.recommendedAction ||
     analytics?.learning?.action;
   const rationale = source?.rationale || analytics?.reasoning?.rationale || analytics?.learning?.rationale;
+  const evidence = source?.evidence || analytics?.reasoning?.evidence;
   const recommendationText = text(recommendation);
   const actionText =
     hasValue(recommendedAction) && compactTextValue(recommendedAction) !== recommendationText
@@ -593,6 +619,9 @@ function CPSRecommendationPanel({ analytics }) {
     { label: 'Recommendation', value: recommendationText, wide: true },
     { label: 'Recommended Action', value: actionText },
     { label: 'Rationale', value: compactTextValue(rationale), wide: true },
+    { label: 'Requires Governance', value: hasValue(source?.requiresGovernance) ? String(source.requiresGovernance) : DASH },
+    { label: 'Execution', value: text(source?.execution) },
+    { label: 'Evidence References', value: compactTextValue(evidence), wide: true },
   ];
 
   return (
@@ -658,29 +687,36 @@ function CPSCognitiveTrace({ cpsId, className = '' }) {
     );
   }
 
-  if (state.error || !state.episode) {
-    return null;
-  }
-
   const episode = state.episode;
   const context = episode?.contextSnapshot || {};
+  const latestKnowledge = Array.isArray(episode?.knowledgeItems)
+    ? episode.knowledgeItems.at(-1)?.originalKnowledge || {}
+    : {};
+  const latestDecision = Array.isArray(episode?.decisions) ? episode.decisions.at(-1) : null;
+  const latestFeedback = Array.isArray(episode?.events)
+    ? episode.events.filter((event) => event?.eventType === 'feedback').at(-1)?.content
+    : null;
+  const latestEffectiveness = Array.isArray(episode?.effectiveness)
+    ? episode.effectiveness.at(-1)
+    : null;
   const steps = [
-    ['Learning', context?.learning || context?.systemAnalytics?.learningPattern || episode?.trigger],
-    ['Reasoning', context?.reasoning || context?.systemReasoning || episode?.dominantLoss],
-    ['Recommendation', episode?.recommendation || context?.recommendation],
-    ['Decision', episode?.decision || episode?.action || episode?.strategy],
-    ['Feedback', episode?.feedback || episode?.status],
-    ['Effectiveness', episode?.effectiveness || episode?.result || episode?.closedAt],
+    ['Learning', latestKnowledge?.learning || context?.learning || context?.systemAnalytics?.learningPattern],
+    ['Reasoning', latestKnowledge?.reasoning || context?.reasoning || context?.systemReasoning],
+    ['Recommendation', latestKnowledge?.recommendation || context?.recommendation],
+    ['Decision', latestDecision],
+    ['Feedback', latestFeedback],
+    ['Effectiveness', latestEffectiveness],
   ];
 
   return (
     <Section icon={<Brain size={18} />} title="HCM / Cognitive Trace" className={className}>
+      {state.error ? <div className={styles.empty}>HCM trace unavailable: {state.error}</div> : null}
       <div className={styles.trace}>
         {steps.map(([label, value], index) => (
           <React.Fragment key={label}>
             <div className={cx(styles.traceStep, index < steps.length - 1 && styles.traceStepLinked)}>
               <span className={styles.fieldLabel}>{label}</span>
-              <strong className={styles.fieldValue}>{compactTextValue(value)}</strong>
+              <strong className={styles.fieldValue}>{hasValue(value) ? compactTextValue(value) : 'Not available'}</strong>
             </div>
           </React.Fragment>
         ))}
@@ -696,10 +732,8 @@ export default function CPSDashboard({
   adaptiveIntelligence,
   getCanonicalOperationalState,
 }) {
-  const canonicalOperationalState =
-    getOperationalStateFromContext(cps, getCanonicalOperationalState);
-
-  const hasAnalytics = hasObject(analytics);
+  const canonicalOperationalState = getOperationalStateFromContext(cps, getCanonicalOperationalState);
+  const hasCognitiveAnalytics = hasObject(analytics);
 
   return (
     <div className={styles.dashboard}>
@@ -713,9 +747,9 @@ export default function CPSDashboard({
       <div className={styles.grid}>
         <CPSOperationalPanel cpsId={cpsId} cps={cps} analytics={analytics} />
         <CPSHealthPanel cps={cps} analytics={analytics} />
-        {hasAnalytics ? (
+        {hasCognitiveAnalytics ? (
           <>
-            <CPSLearningPanel analytics={analytics} adaptiveIntelligence={adaptiveIntelligence} />
+            <CPSLearningPanel cpsId={cpsId} analytics={analytics} adaptiveIntelligence={adaptiveIntelligence} />
             <CPSReasoningPanel analytics={analytics} />
             <CPSPredictionPanel analytics={analytics} />
             <CPSRecommendationPanel analytics={analytics} />

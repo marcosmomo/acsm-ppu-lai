@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "AVM-4-manifest/1.0",
+  "experiment": "AVM-4",
+  "simulation": true,
+  "rootDir": "C:\\Users\\marco\\AppData\\Local\\Temp\\acsm-avm4-cpslai1-eaqsdD",
+  "generatedFiles": [
+    "aas-archive/7c/7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb.aas",
+    "aas-archive/b4/b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd.aas",
+    "aas-archive/f7/f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d.aas",
+    "evolution/evolution-store.json",
+    "fault-probes/activation-governance.json",
+    "fault-probes/close-governance.json",
+    "governance/governance.json",
+    "manifest.json",
+    "report.json",
+    "selection/selection-store.json",
+    "summary.md"
+  ]
+}

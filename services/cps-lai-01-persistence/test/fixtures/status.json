@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0",
+  "cpsId": "cpslai1",
+  "timestamp": "2026-01-15T12:00:02.000Z",
+  "lifecyclePhase": "play",
+  "operationMode": "AUTOMATIC",
+  "operationModeEvidence": { "sourceTag": "AUTO_TAG", "evidenceStatus": "PHYSICALLY_VALIDATED", "AutomaticModeSignal": true },
+  "operationalState": "RUNNING",
+  "operationalStateEvidence": { "reason": "PHYSICAL_ACTIVITY", "evidenceStatus": "RULE_DERIVED_FROM_PHYSICAL_ACTIVITY", "evidenceSource": "PHYSICALLY_VALIDATED_SENSORS", "communicationFresh": true },
+  "evidenceStatus": "PHYSICALLY_VALIDATED_MODE"
+}

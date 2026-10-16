@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "AVM-5-evidence-provenance/1.0",
+  "experiment": "AVM-5",
+  "sourceExperiment": "AVM-4",
+  "sourceDirectory": "C:\\Users\\marco\\AppData\\Local\\Temp\\acsm-avm4-cpslai1-eaqsdD",
+  "verifiedAt": "2026-10-14",
+  "files": {
+    "report.json": "623569a2a84d3ea939f54faf3a80500e9eee6a9cae346f8583ca3f5a98eb429a",
+    "summary.md": "58d3b0da6b2fa8d955f073f1c3976a676d9e2af555c7a0272459dc9d3b37fc5c",
+    "manifest.json": "ee9e8509b00a4c94e9a2dd8853b8b026cb3532d6cef1cc4792641cf910b7dbc4"
+  },
+  "verification": {
+    "reportSchema": "AVM-4-report/1.0",
+    "manifestSchema": "AVM-4-manifest/1.0",
+    "matchingExperiment": true,
+    "matchingSourceRoot": true,
+    "cycleCount": 3,
+    "simulation": true,
+    "physicalValidationClaimed": false,
+    "operationalValidationClaimed": false
+  },
+  "copyScope": ["report.json", "summary.md", "manifest.json"],
+  "excluded": "AAS archive, GovernanceRepository, EvolutionStore, selection store and fault-probe files were not copied."
+}

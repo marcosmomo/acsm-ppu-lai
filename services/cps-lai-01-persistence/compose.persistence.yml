@@ -1,0 +1,56 @@
+services:
+  cpslai1-persistence:
+    image: node:22-alpine
+    container_name: acsm-ppu-lai-cpslai1-persistence
+    profiles: ["ingestion"]
+    init: true
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "src/index.js"]
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    sysctls:
+      net.ipv4.ip_forward: "0"
+    tmpfs:
+      - /tmp
+    environment:
+      CPS_ID: cpslai1
+      MQTT_URL: mqtt://acsm-mosquitto:1883
+      MQTT_CLIENT_ID: cpslai1-persistence
+      MYSQL_URL: "mysql://${CPSLAI1_DB_USER:-cpslai1_writer}:${CPSLAI1_DB_PASSWORD:?Set CPSLAI1_DB_PASSWORD in the ignored local env file}@cpslai1-mysql:3306/acsm_cpslai1"
+      PERSISTENCE_ENABLE_MQTT: "${PERSISTENCE_ENABLE_MQTT:-false}"
+      PERSISTENCE_ENABLE_PPU_EVENTS: "${PERSISTENCE_ENABLE_PPU_EVENTS:-false}"
+      PERSISTENCE_SPOOL_PATH: /app/var/pending.jsonl
+      PERSISTENCE_DEAD_LETTER_PATH: /app/var/rejected.jsonl
+      PORT: "3011"
+    volumes:
+      - type: bind
+        source: ./package.json
+        target: /app/package.json
+        read_only: true
+      - type: bind
+        source: ./src
+        target: /app/src
+        read_only: true
+      - type: bind
+        source: ./node_modules
+        target: /app/node_modules
+        read_only: true
+      - cpslai1-persistence-spool:/app/var
+    networks:
+      - acsm-network
+      - cpslai1-private
+
+networks:
+  acsm-network:
+    external: true
+    name: acsm-network
+  cpslai1-private:
+    external: true
+    name: acsm-ppu-lai-cpslai1-private
+
+volumes:
+  cpslai1-persistence-spool:
+    external: true
+    name: acsm-ppu-lai-cpslai1-persistence-spool

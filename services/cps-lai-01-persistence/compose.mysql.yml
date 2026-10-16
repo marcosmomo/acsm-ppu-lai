@@ -1,0 +1,28 @@
+services:
+  cpslai1-mysql:
+    image: mysql:8.4.11
+    container_name: acsm-ppu-lai-cpslai1-mysql
+    restart: unless-stopped
+    env_file:
+      - .env.cpslai1.mysql.local
+    environment:
+      MYSQL_DATABASE: acsm_cpslai1
+      TZ: UTC
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+00:00
+    volumes:
+      - cpslai1-mysql-data:/var/lib/mysql
+    networks:
+      - cpslai1-private
+
+networks:
+  cpslai1-private:
+    name: acsm-ppu-lai-cpslai1-private
+    driver: bridge
+    internal: true
+
+volumes:
+  cpslai1-mysql-data:
+    name: acsm-ppu-lai-cpslai1-mysql-data

@@ -1,0 +1,10 @@
+{
+  "repositorySchemaVersion": 1,
+  "revision": 7,
+  "profiles": { "cpslai1": { "profileId": "gov-cpslai1-v4", "profileVersion": 4, "status": "APPROVED", "plugCycleStatus": "ACTIVE", "plugCycleId": "cycle-4", "plugEventId": "plug-4" } },
+  "profileVersions": { "cpslai1": [{ "profileId": "gov-cpslai1-v4", "profileVersion": 4, "status": "APPROVED", "plugCycleStatus": "ACTIVE", "plugCycleId": "cycle-4", "plugEventId": "plug-4" }] },
+  "pendingActions": {},
+  "history": [],
+  "ppuOutbox": {},
+  "plugCycles": { "cycle-4": { "plugCycleId": "cycle-4", "plugEventId": "plug-4", "cpsId": "cpslai1", "state": "ACTIVE", "governanceProfileId": "gov-cpslai1-v4" } }
+}

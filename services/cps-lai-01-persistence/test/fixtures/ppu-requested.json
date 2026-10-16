@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0",
+  "eventId": "ppu-play-requested-001",
+  "correlationId": "ppu-cycle-001",
+  "commandId": "command-001",
+  "cpsId": "cpslai1",
+  "operation": "PLAY",
+  "result": "REQUESTED",
+  "previousState": "STOPPED",
+  "newState": null,
+  "occurredAt": "2026-01-15T12:00:00.000Z",
+  "actor": { "id": "acsm1", "type": "SYSTEM" },
+  "humanDecision": null,
+  "source": "ACSM",
+  "evidence": { "requestRef": "controlled-test-request" },
+  "episodeId": "episode-001"
+}

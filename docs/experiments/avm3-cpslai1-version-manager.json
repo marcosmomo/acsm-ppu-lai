@@ -1,0 +1,367 @@
+{
+  "schemaVersion": "AVM-3-view/1.0",
+  "generatedBy": "scripts/experiments/build-avm3-version-manager-artifact.mjs",
+  "evidenceScope": "OFFLINE_DOCUMENTAL_AAS",
+  "physicalValidationClaimed": false,
+  "sourceCatalogVersion": "experimental-aas-catalog/1.0.0",
+  "previewBinding": {
+    "status": "PREVIEW_NOT_BOUND_TO_PLUG_CYCLE",
+    "plugEventId": null,
+    "plugCycleId": null,
+    "profileId": null,
+    "selectionId": null
+  },
+  "versions": {
+    "v1": {
+      "version": "v1",
+      "label": "V1 — baseline experimental",
+      "description": "AVM-1B experimental enriched baseline with declared PieceDetection support.",
+      "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+      "assetId": "urn:ufsc:lai:asset:cps-lai-01:distribution-conveyor",
+      "aasSha256": "7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+      "functionalHash": "5ca2e6d97211397535372ebbd32bf05f9798021d2b25cbabfc9d00709c1f135e",
+      "sourceClassification": "EXPERIMENTAL_STATIC_DOCUMENT",
+      "sourceLocator": "evolution-experiments/cpslai1/aas-v1.json",
+      "completeness": "COMPLETE_WITH_WARNINGS",
+      "capabilities": [
+        {
+          "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+          "name": "PieceDetection",
+          "enabled": null,
+          "attributes": {
+            "PieceAtEntry": "true",
+            "PieceAtExit": "true",
+            "PieceAtMiddle": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/conveyorforward",
+          "name": "ConveyorForward",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/conveyorreverse",
+          "name": "ConveyorReverse",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/pieceseparation",
+          "name": "PieceSeparation",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/primarycapability",
+          "name": "MaterialTransport",
+          "enabled": null,
+          "attributes": {
+            "declarationValue": "MaterialTransport"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/slideactuation",
+          "name": "SlideActuation",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        }
+      ]
+    },
+    "v2": {
+      "version": "v2",
+      "label": "V2 — PieceAtMiddle desabilitada",
+      "description": "AVM-1B experimental version with PieceDetection/PieceAtMiddle disabled.",
+      "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+      "assetId": "urn:ufsc:lai:asset:cps-lai-01:distribution-conveyor",
+      "aasSha256": "b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+      "functionalHash": "b54732ebc3139fcdc57ba4b02d88d8d1fb99689573c230794026ab71967c5cdb",
+      "sourceClassification": "EXPERIMENTAL_STATIC_DOCUMENT",
+      "sourceLocator": "evolution-experiments/cpslai1/aas-v2.json",
+      "completeness": "COMPLETE_WITH_WARNINGS",
+      "capabilities": [
+        {
+          "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+          "name": "PieceDetection",
+          "enabled": null,
+          "attributes": {
+            "PieceAtEntry": "true",
+            "PieceAtExit": "true",
+            "PieceAtMiddle": "false"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/conveyorforward",
+          "name": "ConveyorForward",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/conveyorreverse",
+          "name": "ConveyorReverse",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/pieceseparation",
+          "name": "PieceSeparation",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/primarycapability",
+          "name": "MaterialTransport",
+          "enabled": null,
+          "attributes": {
+            "declarationValue": "MaterialTransport"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/slideactuation",
+          "name": "SlideActuation",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        }
+      ]
+    },
+    "v3": {
+      "version": "v3",
+      "label": "V3 — ExperimentalAdaptivePieceDetection adicionada",
+      "description": "AVM-1B experimental version adding a synthetic, non-physically-validated capability.",
+      "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+      "assetId": "urn:ufsc:lai:asset:cps-lai-01:distribution-conveyor",
+      "aasSha256": "f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+      "functionalHash": "d90f9b2a46ba47f543972e1c7b68662d9dac7490a788d5d2e15788627a8ac66d",
+      "sourceClassification": "EXPERIMENTAL_STATIC_DOCUMENT",
+      "sourceLocator": "evolution-experiments/cpslai1/aas-v3.json",
+      "completeness": "COMPLETE_WITH_WARNINGS",
+      "capabilities": [
+        {
+          "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1",
+          "name": "ExperimentalAdaptivePieceDetection",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+          "name": "PieceDetection",
+          "enabled": null,
+          "attributes": {
+            "PieceAtEntry": "true",
+            "PieceAtExit": "true",
+            "PieceAtMiddle": "false"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/conveyorforward",
+          "name": "ConveyorForward",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/conveyorreverse",
+          "name": "ConveyorReverse",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/pieceseparation",
+          "name": "PieceSeparation",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/primarycapability",
+          "name": "MaterialTransport",
+          "enabled": null,
+          "attributes": {
+            "declarationValue": "MaterialTransport"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        },
+        {
+          "identity": "technical:capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/slideactuation",
+          "name": "SlideActuation",
+          "enabled": true,
+          "attributes": {
+            "declarationValue": "true"
+          },
+          "evidenceLevel": "DECLARED_ONLY",
+          "physicallyValidated": false
+        }
+      ]
+    }
+  },
+  "comparisons": [
+    {
+      "id": "baseline-v1",
+      "previousVersion": null,
+      "currentVersion": "v1",
+      "status": "BASELINE",
+      "previousAasSha256": null,
+      "currentAasSha256": "7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+      "previousFunctionalHash": null,
+      "currentFunctionalHash": "5ca2e6d97211397535372ebbd32bf05f9798021d2b25cbabfc9d00709c1f135e",
+      "differences": [],
+      "ambiguities": []
+    },
+    {
+      "id": "v1-v2",
+      "previousVersion": "v1",
+      "currentVersion": "v2",
+      "status": "CHANGED",
+      "previousAasSha256": "7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+      "currentAasSha256": "b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+      "previousFunctionalHash": "5ca2e6d97211397535372ebbd32bf05f9798021d2b25cbabfc9d00709c1f135e",
+      "currentFunctionalHash": "b54732ebc3139fcdc57ba4b02d88d8d1fb99689573c230794026ab71967c5cdb",
+      "differences": [
+        {
+          "type": "CHANGED",
+          "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+          "capabilityBefore": "PieceDetection",
+          "capabilityCurrent": "PieceDetection",
+          "enabledBefore": null,
+          "enabledCurrent": null,
+          "changedAttributes": [
+            {
+              "name": "PieceAtMiddle",
+              "before": "true",
+              "current": "false"
+            }
+          ]
+        }
+      ],
+      "ambiguities": []
+    },
+    {
+      "id": "v2-v3",
+      "previousVersion": "v2",
+      "currentVersion": "v3",
+      "status": "CHANGED",
+      "previousAasSha256": "b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+      "currentAasSha256": "f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+      "previousFunctionalHash": "b54732ebc3139fcdc57ba4b02d88d8d1fb99689573c230794026ab71967c5cdb",
+      "currentFunctionalHash": "d90f9b2a46ba47f543972e1c7b68662d9dac7490a788d5d2e15788627a8ac66d",
+      "differences": [
+        {
+          "type": "ADDED",
+          "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1",
+          "capabilityBefore": null,
+          "capabilityCurrent": "ExperimentalAdaptivePieceDetection",
+          "enabledBefore": null,
+          "enabledCurrent": true,
+          "changedAttributes": [
+            {
+              "name": "declarationValue",
+              "before": null,
+              "current": "true"
+            }
+          ]
+        }
+      ],
+      "ambiguities": []
+    },
+    {
+      "id": "v1-v3",
+      "previousVersion": "v1",
+      "currentVersion": "v3",
+      "status": "CHANGED",
+      "previousAasSha256": "7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+      "currentAasSha256": "f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+      "previousFunctionalHash": "5ca2e6d97211397535372ebbd32bf05f9798021d2b25cbabfc9d00709c1f135e",
+      "currentFunctionalHash": "d90f9b2a46ba47f543972e1c7b68662d9dac7490a788d5d2e15788627a8ac66d",
+      "differences": [
+        {
+          "type": "ADDED",
+          "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1",
+          "capabilityBefore": null,
+          "capabilityCurrent": "ExperimentalAdaptivePieceDetection",
+          "enabledBefore": null,
+          "enabledCurrent": true,
+          "changedAttributes": [
+            {
+              "name": "declarationValue",
+              "before": null,
+              "current": "true"
+            }
+          ]
+        },
+        {
+          "type": "CHANGED",
+          "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+          "capabilityBefore": "PieceDetection",
+          "capabilityCurrent": "PieceDetection",
+          "enabledBefore": null,
+          "enabledCurrent": null,
+          "changedAttributes": [
+            {
+              "name": "PieceAtMiddle",
+              "before": "true",
+              "current": "false"
+            }
+          ]
+        }
+      ],
+      "ambiguities": []
+    }
+  ]
+}

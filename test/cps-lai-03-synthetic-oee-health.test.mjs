@@ -82,6 +82,17 @@ test('leaving AUTOMATIC for STEP_BY_STEP holds the last OEE and its calculation 
   assert.equal(JSON.parse(step.result[1].payload).calculationState, 'SYNTHETIC', 'Health remains independent');
 });
 
+test('changing from AUTOMATIC to MANUAL holds OEE while valid Health remains computed', () => {
+  const context = new Map();
+  run([{ topic: 'cpslai3/data', payload: data('AUTOMATIC') }], context);
+  const { result } = run([{ topic: 'cpslai3/data', payload: data('MANUAL') }], context);
+  const oee = JSON.parse(result[0].payload);
+  const health = JSON.parse(result[1].payload);
+  assert.equal(oee.calculationState, 'HELD_LAST_VALUE');
+  assert.equal(oee.reason, 'MODE_MANUAL_NOT_AUTOMATIC');
+  assert.equal(health.calculationState, 'SYNTHETIC');
+});
+
 test('maintenance also holds OEE while Health continues from valid evidence', () => {
   const context = new Map();
   run([{ topic: 'cpslai3/data', payload: data('AUTOMATIC') }], context);

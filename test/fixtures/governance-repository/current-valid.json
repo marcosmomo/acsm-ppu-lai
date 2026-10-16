@@ -1,0 +1,8 @@
+{
+  "profiles": { "cpslai1": { "profileId": "gov-cpslai1-v2", "profileVersion": 2, "status": "APPROVED", "plugCycleStatus": "CLOSED" } },
+  "profileVersions": { "cpslai1": [{ "profileId": "gov-cpslai1-v2", "profileVersion": 2, "status": "APPROVED", "plugCycleStatus": "CLOSED" }] },
+  "pendingActions": {},
+  "history": [{ "id": "history-1", "eventType": "GOVERNANCE_PROFILE_APPROVED" }],
+  "ppuOutbox": {},
+  "customLegacyField": { "preserve": true }
+}

@@ -1,0 +1,464 @@
+[
+  {
+    "id": "cpslai1_synthetic_tab",
+    "type": "tab",
+    "label": "CPS-LAI-01 — OPERATIONAL EMULATOR",
+    "disabled": true,
+    "info": "Operational substitute for CPS-LAI-01; disabled by default and started only by a scenario Inject. Publishes to the principal loopback broker at 127.0.0.1:1883 after the operator verifies that cpslai1/# has no other active producer. No OPC UA, PLC, email, or PPU command path."
+  },
+  {
+    "id": "cpslai1_synthetic_comment",
+    "type": "comment",
+    "z": "cpslai1_synthetic_tab",
+    "name": "OPERATIONAL EMULATOR — manual scenario controls",
+    "info": "Before enabling this tab, verify that no other producer is active on cpslai1/#. Use a scenario button to start/restart and STOP to stop. Enabling/deploying does not start publication because the clock has once=false and the active flag is set only by a scenario button.",
+    "x": 250,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "cpslai1_synthetic_start_normal",
+    "type": "inject",
+    "z": "cpslai1_synthetic_tab",
+    "name": "START / RESTART — operação normal",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "payload": "{\"command\":\"restart\",\"scenario\":\"normal\"}",
+    "payloadType": "json",
+    "x": 230,
+    "y": 100,
+    "wires": [
+      [
+        "cpslai1_synthetic_controller"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_start_degradation",
+    "type": "inject",
+    "z": "cpslai1_synthetic_tab",
+    "name": "START / RESTART — degradação",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "payload": "{\"command\":\"restart\",\"scenario\":\"degradation\"}",
+    "payloadType": "json",
+    "x": 230,
+    "y": 140,
+    "wires": [
+      [
+        "cpslai1_synthetic_controller"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_start_stop",
+    "type": "inject",
+    "z": "cpslai1_synthetic_tab",
+    "name": "START / RESTART — parada",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "payload": "{\"command\":\"restart\",\"scenario\":\"stop\"}",
+    "payloadType": "json",
+    "x": 230,
+    "y": 180,
+    "wires": [
+      [
+        "cpslai1_synthetic_controller"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_start_alarm",
+    "type": "inject",
+    "z": "cpslai1_synthetic_tab",
+    "name": "START / RESTART — alarme",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "payload": "{\"command\":\"restart\",\"scenario\":\"alarm\"}",
+    "payloadType": "json",
+    "x": 230,
+    "y": 220,
+    "wires": [
+      [
+        "cpslai1_synthetic_controller"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_start_incomplete",
+    "type": "inject",
+    "z": "cpslai1_synthetic_tab",
+    "name": "START / RESTART — ciclo incompleto",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "payload": "{\"command\":\"restart\",\"scenario\":\"incomplete\"}",
+    "payloadType": "json",
+    "x": 230,
+    "y": 260,
+    "wires": [
+      [
+        "cpslai1_synthetic_controller"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_start_maintenance",
+    "type": "inject",
+    "z": "cpslai1_synthetic_tab",
+    "name": "START / RESTART — manutenção",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "payload": "{\"command\":\"restart\",\"scenario\":\"maintenance\"}",
+    "payloadType": "json",
+    "x": 230,
+    "y": 300,
+    "wires": [
+      [
+        "cpslai1_synthetic_controller"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_start_return",
+    "type": "inject",
+    "z": "cpslai1_synthetic_tab",
+    "name": "START / RESTART — retorno operacional",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "payload": "{\"command\":\"restart\",\"scenario\":\"return\"}",
+    "payloadType": "json",
+    "x": 230,
+    "y": 340,
+    "wires": [
+      [
+        "cpslai1_synthetic_controller"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_start_commloss",
+    "type": "inject",
+    "z": "cpslai1_synthetic_tab",
+    "name": "START / RESTART — perda de comunicação",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "payload": "{\"command\":\"restart\",\"scenario\":\"communicationLoss\"}",
+    "payloadType": "json",
+    "x": 230,
+    "y": 380,
+    "wires": [
+      [
+        "cpslai1_synthetic_controller"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_stop",
+    "type": "inject",
+    "z": "cpslai1_synthetic_tab",
+    "name": "STOP — parar cenário",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "payload": "{\"command\":\"stop\"}",
+    "payloadType": "json",
+    "x": 210,
+    "y": 440,
+    "wires": [
+      [
+        "cpslai1_synthetic_controller"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_controller",
+    "type": "function",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Start / stop / restart synthetic scenario",
+    "outputs": 1,
+    "func": "const p=typeof msg.payload==='string'?JSON.parse(msg.payload):msg.payload||{}; const now=Number(msg._syntheticNowMs)||Date.now(); const prefix='cpslai1_synthetic_'; const allowed=['normal','degradation','stop','alarm','incomplete','maintenance','return','communicationLoss']; if(p.command==='stop'){flow.set(prefix+'active',false); msg.topic='emulator/cpslai1/events'; msg.payload={schemaVersion:'1.0',cpsId:'cpslai1',producerComponent:'CPS_LAI_01_OPERATIONAL_EMULATOR',eventType:'SCENARIO_STOPPED',scenario:flow.get(prefix+'scenario')||null,timestamp:new Date(now).toISOString()}; return msg;} if(!['start','restart'].includes(p.command)||!allowed.includes(p.scenario))return null; for(const k of ['latest','last_update_ms','physical_activity_values','last_physical_activity_ms','last_physical_activity_field','last_physical_activity_tag','production_prev','current_cycle','production_metrics','oee_time','last_alarm'])flow.set(prefix+k,null); flow.set(prefix+'scenario',p.scenario); flow.set(prefix+'started_at_ms',now); flow.set(prefix+'active',true); flow.set(prefix+'last_snapshot_ms',null); msg.topic='emulator/cpslai1/events'; msg.payload={schemaVersion:'1.0',cpsId:'cpslai1',producerComponent:'CPS_LAI_01_OPERATIONAL_EMULATOR',eventType:p.command==='restart'?'SCENARIO_RESTARTED':'SCENARIO_STARTED',scenario:p.scenario,timestamp:new Date(now).toISOString()}; return msg;",
+    "x": 600,
+    "y": 240,
+    "wires": [
+      [
+        "cpslai1_synthetic_debug_events"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_tick",
+    "type": "inject",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Synthetic clock — 250 ms",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "payload": "tick",
+    "payloadType": "str",
+    "repeat": "0.25",
+    "once": false,
+    "onceDelay": 1,
+    "x": 220,
+    "y": 540,
+    "wires": [
+      [
+        "cpslai1_synthetic_generator"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_generator",
+    "type": "function",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Generate OPC-shaped synthetic signals",
+    "outputs": 2,
+    "func": "const pre='cpslai1_synthetic_'; if(flow.get(pre+'active')!==true)return [null,null]; const scenario=flow.get(pre+'scenario'); const started=Number(flow.get(pre+'started_at_ms')||0); const now=Number(msg._syntheticNowMs)||Date.now(); const elapsed=now-started; const cfg={normal:{cycle:3000,entry:250,middle:900,exit:1650},degradation:{cycle:6500,entry:250,middle:2200,exit:5000},stop:{cycle:3000,entry:250,middle:900,exit:1650,stopAfter:1},alarm:{cycle:3000,entry:250,middle:900,exit:1650,alarm:true},incomplete:{cycle:3000,entry:250,middle:null,exit:1650},maintenance:{cycle:3000,entry:null,middle:null,exit:null,mode:'STEP_BY_STEP'},return:{cycle:3000,entry:250,middle:900,exit:1650,returnDuration:3000},communicationLoss:{lossAfter:1000}}[scenario]; if(!cfg)return [null,null]; let phase=elapsed%cfg.cycle; let entry=false,middle=false,exit=false,slideExtended=false; if(scenario==='communicationLoss'&&elapsed>=cfg.lossAfter)return [null,{_syntheticSnapshot:true,_syntheticNowMs:now,_syntheticScenario:scenario,_syntheticLifecyclePhase:'play'}]; if(scenario==='maintenance'){} else if(scenario==='stop'&&Math.floor(elapsed/cfg.cycle)>=cfg.stopAfter){} else if(cfg.entry!==null){entry=phase>=cfg.entry&&(cfg.middle===null?phase<cfg.exit:phase<cfg.middle); middle=cfg.middle!==null&&phase>=cfg.middle&&phase<cfg.exit; exit=phase>=cfg.exit&&phase<cfg.cycle; slideExtended=middle;} const mode=cfg.mode||'AUTOMATIC'; const returning=scenario==='return'&&elapsed<cfg.returnDuration; const values={G1BG1:exit,G1BG2:middle,G1BG3:entry,C2BG1:!slideExtended,C2BG2:slideExtended,ALARMS:cfg.alarm===true,sys_man:mode==='MANUAL',man_step_1:mode==='STEP_BY_STEP',sup_step_1:mode==='AUTOMATIC'&&!returning,GCT_0:returning}; const tags={G1BG1:'PieceAtExit',G1BG2:'PieceAtMiddle',G1BG3:'PieceAtEntry',C2BG1:'SlideRetracted',C2BG2:'SlideExtended',ALARMS:'AlarmSignal',sys_man:'ManualModeSignal',man_step_1:'StepByStepModeSignal',sup_step_1:'AutomaticModeSignal',GCT_0:'InitModeSignal'}; const out=Object.entries(values).map(([tag,value])=>({topic:'ns=3;s=\"'+tag+'\"',payload:value,statusCode:{value:0,name:'Good'},sourceTimestamp:new Date(now).toISOString(),serverTimestamp:new Date(now).toISOString(),_synthetic:true,_syntheticNowMs:now,_syntheticScenario:scenario,_syntheticLifecyclePhase:scenario==='return'&&returning?'return':'play',_syntheticTag:tag,_syntheticField:tags[tag]})); const snapshot={_syntheticSnapshot:true,_syntheticNowMs:now,_syntheticScenario:scenario,_syntheticLifecyclePhase:scenario==='return'&&returning?'return':'play'}; return [out,snapshot];",
+    "x": 600,
+    "y": 540,
+    "wires": [
+      [
+        "cpslai1_synthetic_normalize"
+      ],
+      [
+        "cpslai1_synthetic_snapshot"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_normalize",
+    "type": "function",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Normalize + cache emulated operational sample",
+    "outputs": 1,
+    "func": "if(msg._synthetic!==true)return null; const map={G1BG1:['PieceAtExit','%I0.0','FIELD_VALIDATED'],G1BG2:['PieceAtMiddle','%I0.1','FIELD_VALIDATED'],G1BG3:['PieceAtEntry','%I0.2','FIELD_VALIDATED'],C2BG1:['SlideRetracted','%I0.4','FIELD_VALIDATED'],C2BG2:['SlideExtended','%I0.5','FIELD_VALIDATED'],ALARMS:['AlarmSignal','%M75.4','TECHNICALLY_VALIDATED'],sys_man:['ManualModeSignal',null,'PHYSICALLY_VALIDATED_MODE_MARKER'],man_step_1:['StepByStepModeSignal',null,'PHYSICALLY_VALIDATED_MODE_MARKER'],sup_step_1:['AutomaticModeSignal',null,'PHYSICALLY_VALIDATED_MODE_MARKER'],GCT_0:['InitModeSignal',null,'PHYSICALLY_VALIDATED_MODE_MARKER']}; const nodeId=String(msg.topic||'').split(';datatype=')[0].trim(); const m=nodeId.match(/s=(?:\"([^\"]+)\"|([^;]+))$/); if(!m)return null; const tag=m[1]||m[2], meta=map[tag]; if(!meta||typeof msg.payload!=='boolean'||msg.statusCode?.value!==0)return null; const [field,logicalAddress,evidenceStatus]=meta, now=Number(msg._syntheticNowMs)||Date.now(), iso=new Date(now).toISOString(); let latest=flow.get('cpslai1_synthetic_latest')||{}; latest[field]={value:msg.payload,tag,nodeId,logicalAddress,dataType:'Boolean',statusCode:'Good',quality:'Good',valid:true,stale:false,evidenceStatus,timestamp:iso,sourceTimestamp:msg.sourceTimestamp||iso,serverTimestamp:msg.serverTimestamp||iso,evidenceOrigin:'OPERATIONAL_EMULATOR'}; flow.set('cpslai1_synthetic_latest',latest); flow.set('cpslai1_synthetic_last_update_ms',now); if(['PieceAtEntry','PieceAtMiddle','PieceAtExit','SlideRetracted','SlideExtended'].includes(field)){let prev=flow.get('cpslai1_synthetic_physical_activity_values')||{}; if(Object.prototype.hasOwnProperty.call(prev,field)&&prev[field]!==msg.payload){flow.set('cpslai1_synthetic_last_physical_activity_ms',now);flow.set('cpslai1_synthetic_last_physical_activity_field',field);flow.set('cpslai1_synthetic_last_physical_activity_tag',tag);}prev[field]=msg.payload;flow.set('cpslai1_synthetic_physical_activity_values',prev);} msg.payload={cpsId:'cpslai1',producerComponent:'CPS_LAI_01_OPERATIONAL_EMULATOR',source:'OPC_UA',field,tag,nodeId,logicalAddress,dataType:'Boolean',value:msg.payload,timestamp:iso,evidenceOrigin:'OPERATIONAL_EMULATOR',evidenceStatus}; msg.topic='emulator/cpslai1/signals'; return msg;",
+    "x": 930,
+    "y": 500,
+    "wires": [
+      [
+        "cpslai1_synthetic_metrics"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_metrics",
+    "type": "function",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Derive production metrics (isolated copy)",
+    "outputs": 1,
+    "func": "const sample=msg.payload||{}; const field=sample.field, value=Boolean(sample.value), now=Number(msg._syntheticNowMs)||Date.now(); if(!['PieceAtEntry','PieceAtMiddle','PieceAtExit'].includes(field))return null; let metrics=flow.get('cpslai1_synthetic_production_metrics')||{totalCount:0,completedCycles:0,incompleteCycles:0,lastCycleTimeMs:null,averageCycleTimeMs:null,cycleTimeSumMs:0,firstProductionTimestamp:null,lastProductionTimestamp:null,sampleCounts:{PieceAtEntry:0,PieceAtMiddle:0,PieceAtExit:0},risingEdges:{PieceAtEntry:0,PieceAtMiddle:0,PieceAtExit:0}}; metrics.sampleCounts[field]=(metrics.sampleCounts[field]||0)+1; let previous=flow.get('cpslai1_synthetic_production_prev')||{}; if(!Object.prototype.hasOwnProperty.call(previous,field)){previous[field]=value;flow.set('cpslai1_synthetic_production_prev',previous);flow.set('cpslai1_synthetic_production_metrics',metrics);return null;} const risingEdge=!Boolean(previous[field])&&value; previous[field]=value; flow.set('cpslai1_synthetic_production_prev',previous); if(!risingEdge){flow.set('cpslai1_synthetic_production_metrics',metrics);return null;} metrics.risingEdges[field]=(metrics.risingEdges[field]||0)+1; let cycle=flow.get('cpslai1_synthetic_current_cycle')||null; if(field==='PieceAtEntry'){if(!cycle){cycle={startedAt:now,middleSeen:false,middleAt:null};flow.set('cpslai1_synthetic_current_cycle',cycle);}flow.set('cpslai1_synthetic_production_metrics',metrics);return null;} if(field==='PieceAtMiddle'){if(cycle){cycle.middleSeen=true;cycle.middleAt=now;flow.set('cpslai1_synthetic_current_cycle',cycle);}flow.set('cpslai1_synthetic_production_metrics',metrics);return null;} metrics.totalCount+=1; if(!metrics.firstProductionTimestamp)metrics.firstProductionTimestamp=now; metrics.lastProductionTimestamp=now; if(cycle&&cycle.middleSeen){const cycleTimeMs=now-cycle.startedAt;metrics.completedCycles+=1;metrics.lastCycleTimeMs=cycleTimeMs;metrics.cycleTimeSumMs+=cycleTimeMs;metrics.averageCycleTimeMs=Math.round(metrics.cycleTimeSumMs/metrics.completedCycles);}else metrics.incompleteCycles+=1; flow.set('cpslai1_synthetic_current_cycle',null);flow.set('cpslai1_synthetic_production_metrics',metrics);return null;",
+    "x": 1240,
+    "y": 500,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_snapshot",
+    "type": "function",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Build SYNTHETIC data / status / OEE",
+    "outputs": 4,
+    "func": "if(msg._syntheticSnapshot!==true)return [null,null,null,null]; const now=Number(msg._syntheticNowMs)||Date.now(), nowIso=new Date(now).toISOString(), latest=flow.get('cpslai1_synthetic_latest')||{}, lastMs=Number(flow.get('cpslai1_synthetic_last_update_ms')||0), scenario=msg._syntheticScenario||flow.get('cpslai1_synthetic_scenario'), ageMs=lastMs?now-lastMs:null, dataFresh=ageMs!==null&&ageMs<=5000; const val=f=>latest[f]?latest[f].value:null, evidence=f=>latest[f]||null; const production=flow.get('cpslai1_synthetic_production_metrics')||{totalCount:0,completedCycles:0,incompleteCycles:0,lastCycleTimeMs:null,averageCycleTimeMs:null,cycleTimeSumMs:0,firstProductionTimestamp:null,lastProductionTimestamp:null,sampleCounts:{PieceAtEntry:0,PieceAtMiddle:0,PieceAtExit:0},risingEdges:{PieceAtEntry:0,PieceAtMiddle:0,PieceAtExit:0}}; const cycle=flow.get('cpslai1_synthetic_current_cycle')||null; const lifecyclePhase=msg._syntheticLifecyclePhase||'play'; let operationMode='UNKNOWN',operationModeSource=null; if(val('InitModeSignal')===true){operationMode='INIT';operationModeSource='GCT_0';}else if(val('ManualModeSignal')===true){operationMode='MANUAL';operationModeSource='sys_man';}else if(val('StepByStepModeSignal')===true){operationMode='STEP_BY_STEP';operationModeSource='man_step_1';}else if(val('AutomaticModeSignal')===true){operationMode='AUTOMATIC';operationModeSource='sup_step_1';} const inactivityThresholdMs=5000, lastActivity=flow.get('cpslai1_synthetic_last_physical_activity_ms')??null, activityAge=lastActivity!==null?Math.max(0,now-Number(lastActivity)):null; let state='UNKNOWN',reason='INSUFFICIENT_EVIDENCE'; if(!dataFresh){state='UNKNOWN';reason='COMMUNICATION_NOT_FRESH';}else if(operationMode==='STEP_BY_STEP'){state='MAINTENANCE';reason='INFERRED_MAINTENANCE_FROM_STEP_BY_STEP_MODE';}else if(lifecyclePhase==='play'&&operationMode==='AUTOMATIC'){if(lastActivity===null){state='UNKNOWN';reason='NO_PHYSICAL_ACTIVITY_EVIDENCE';}else if(activityAge<=inactivityThresholdMs){state='RUNNING';reason='RECENT_PHYSICAL_ACTIVITY_ON_VALIDATED_SENSOR';}else{state='STOPPED';reason='PHYSICAL_INACTIVITY_THRESHOLD_EXCEEDED';}}else if(operationMode==='MANUAL'){reason='MANUAL_MODE_WITHOUT_MAINTENANCE_INFERENCE';}else if(operationMode==='INIT'){reason='INITIALIZATION_MODE';} const previous=flow.get('cpslai1_synthetic_oee_time')||{lastTimestampMs:null,lastOperationalState:null,runTimeMs:0,stoppedTimeMs:0,maintenanceTimeMs:0,unknownTimeMs:0}; if(previous.lastTimestampMs!==null&&Number.isFinite(Number(previous.lastTimestampMs))){const delta=Math.max(0,Math.min(5000,now-Number(previous.lastTimestampMs)));switch(previous.lastOperationalState){case 'RUNNING':previous.runTimeMs+=delta;break;case 'STOPPED':previous.stoppedTimeMs+=delta;break;case 'MAINTENANCE':previous.maintenanceTimeMs+=delta;break;default:previous.unknownTimeMs+=delta;}} previous.lastTimestampMs=now;previous.lastOperationalState=state;flow.set('cpslai1_synthetic_oee_time',previous); const plannedProductionTimeMs=Number(previous.runTimeMs||0)+Number(previous.stoppedTimeMs||0),runTimeMs=Number(previous.runTimeMs||0),stoppedTimeMs=Number(previous.stoppedTimeMs||0),totalCount=Number(production.totalCount||0),completedCycles=Number(production.completedCycles||0),referenceCycleTimeMs=2020; const availability=plannedProductionTimeMs>0?Math.max(0,Math.min(1,runTimeMs/plannedProductionTimeMs)):null; const performance=runTimeMs>0&&totalCount>0?Math.max(0,Math.min(1,(referenceCycleTimeMs*totalCount)/runTimeMs)):null; const qualityProxy=totalCount>0?1.0:null; const currentOee=availability!==null&&performance!==null&&qualityProxy!==null?availability*performance*qualityProxy:null; const common={cpsId:'cpslai1-synthetic',classification:'SYNTHETIC',synthetic:true,source:'SYNTHETIC_EMULATOR',scenario,timestamp:nowIso}; const data={...common,schemaVersion:'1.0',assetName:'DistributionConveyorStationLAI',displayName:'CPS-LAI-01 — Distribution/Conveyor Station',data:{PieceAtEntry:val('PieceAtEntry'),PieceAtMiddle:val('PieceAtMiddle'),PieceAtExit:val('PieceAtExit'),SlideRetracted:val('SlideRetracted'),SlideExtended:val('SlideExtended'),AlarmSignal:val('AlarmSignal')},operationMode,lifecyclePhase,evidence:Object.fromEntries(['PieceAtEntry','PieceAtMiddle','PieceAtExit','SlideRetracted','SlideExtended','AlarmSignal','ManualModeSignal','StepByStepModeSignal','AutomaticModeSignal','InitModeSignal'].map(f=>[f,{...evidence(f),evidenceOrigin:'SYNTHETIC',classification:'SYNTHETIC'}]))}; const status={...common,schemaVersion:'1.0',lifecyclePhase,operationMode,operationModeEvidence:{sourceTag:operationModeSource,evidenceStatus:'SYNTHETIC'},operationalState:state,operationalStateEvidence:{reason,evidenceStatus:'SYNTHETIC',evidenceSource:'SYNTHETIC_EMULATOR',communicationFresh:dataFresh,lastPhysicalActivityAt:lastActivity!==null?new Date(Number(lastActivity)).toISOString():null,physicalActivityAgeMs:activityAge,inactivityThresholdMs},communication:{dataFresh,dataAgeMs:ageMs,source:'SYNTHETIC'}}; const oee={...common,schemaVersion:'1.0',calculationState:currentOee===null?'PARTIAL':'OPERATIONAL_OEE_PROXY',oee:{current:currentOee,availability,performance,quality:qualityProxy},time:{plannedProductionTimeMs,runTimeMs,stoppedTimeMs,maintenanceTimeMs:Number(previous.maintenanceTimeMs||0),unknownTimeMs:Number(previous.unknownTimeMs||0)},production:{totalCount,completedCycles,incompleteCycles:Number(production.incompleteCycles||0),lastCycleTimeMs:production.lastCycleTimeMs??null,averageCycleTimeMs:production.averageCycleTimeMs??null,firstProductionTimestamp:production.firstProductionTimestamp?new Date(production.firstProductionTimestamp).toISOString():null,lastProductionTimestamp:production.lastProductionTimestamp?new Date(production.lastProductionTimestamp).toISOString():null,sampleCounts:production.sampleCounts,risingEdges:production.risingEdges},cycle:{active:cycle!==null,startedAt:cycle?new Date(cycle.startedAt).toISOString():null,middleSeen:cycle?Boolean(cycle.middleSeen):false},reference:{cycleTimeMs:referenceCycleTimeMs,evidenceStatus:'SYNTHETIC_REFERENCE'},performance:{countSource:'PieceAtExit',countSourceTag:'G1BG1',formula:'referenceCycleTimeMs * totalCount / runTimeMs'},quality:{type:'ASSUMED_CONFORMING_OUTPUT',productQualityValidated:false,assumedGoodCount:totalCount,assumedRejectCount:0,formula:'assumed goodCount = totalCount; rejectCount = 0',evidenceStatus:'NO_VALIDATED_REJECT_SIGNAL'},evidenceStatus:'SYNTHETIC'}; const build=(topic,payload)=>({topic,payload:JSON.stringify(payload)}); const alarm=val('AlarmSignal')===true, wasAlarm=flow.get('cpslai1_synthetic_last_alarm')===true;flow.set('cpslai1_synthetic_last_alarm',alarm);let event=null;if(alarm&&!wasAlarm)event={...common,eventType:'SYNTHETIC_ALARM_RAISED',tag:'ALARMS',field:'AlarmSignal'};return [build('synthetic/cpslai1/data',data),build('synthetic/cpslai1/status',status),build('synthetic/cpslai1/oee',oee),event?build('synthetic/cpslai1/events',event):null];",
+    "x": 940,
+    "y": 620,
+    "wires": [
+      [
+        "cpslai1_synthetic_debug_data",
+        "cpslai1_operational_contract_adapter"
+      ],
+      [
+        "cpslai1_synthetic_debug_status",
+        "cpslai1_operational_contract_adapter"
+      ],
+      [
+        "cpslai1_synthetic_debug_oee",
+        "cpslai1_operational_contract_adapter"
+      ],
+      [
+        "cpslai1_synthetic_debug_events"
+      ]
+    ]
+  },
+  {
+    "id": "cpslai1_operational_contract_adapter",
+    "type": "function",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Apply ACSM operational MQTT contracts",
+    "outputs": 4,
+    "func": "let p=typeof msg.payload==='string'?JSON.parse(msg.payload):msg.payload; if(!p||typeof p!=='object')return [null,null,null,null]; const suffix=String(msg.topic||'').split('/').pop(); p={...p,cpsId:'cpslai1',producerComponent:'CPS_LAI_01_OPERATIONAL_EMULATOR'}; delete p.classification; delete p.synthetic; if(suffix==='data'){p.source='OPC_UA';p.cpsName=p.assetName||'DistributionConveyorStationLAI';p.evidence=Object.fromEntries(Object.entries(p.evidence||{}).map(([key,value])=>{const e={...(value||{}),evidenceOrigin:'OPERATIONAL_EMULATOR',valid:value?.value!==null&&value?.value!==undefined,stale:false,statusCode:'Good',quality:'Good'};delete e.classification;return [key,e];}));msg.topic='cpslai1/data';msg.payload=JSON.stringify(p);msg.qos=1;msg.retain=false;return [msg,null,null,null];} if(suffix==='status'){p.source='NODE_RED_OPERATIONAL_EMULATOR';p.integrationState=p.communication?.dataFresh?'connected':'stale_data';p.availability=p.communication?.dataFresh?'available':'unavailable';if(p.operationModeEvidence)p.operationModeEvidence.evidenceStatus='EMULATED_OPERATIONAL_MODE_MARKER';if(p.operationalStateEvidence){p.operationalStateEvidence.evidenceStatus='EMULATED_OPERATIONAL_EVIDENCE';p.operationalStateEvidence.evidenceSource='CPS_LAI_01_OPERATIONAL_EMULATOR';}msg.topic='cpslai1/status';msg.payload=JSON.stringify(p);msg.qos=1;msg.retain=false;const map={RUNNING:[100,'HEALTHY'],STOPPED:[70,'DEGRADED'],MAINTENANCE:[60,'MAINTENANCE'],UNKNOWN:[40,'UNKNOWN_OPERATIONAL_STATE']};const derived=p.communication?.dataFresh?(map[p.operationalState]||map.UNKNOWN):[0,'COMMUNICATION_LOST'];const health={schemaVersion:'1.0',cpsId:'cpslai1',producerComponent:'CPS_LAI_01_OPERATIONAL_EMULATOR',timestamp:p.timestamp,health:derived[0],current:derived[0],score:derived[0],healthState:derived[1],state:derived[1],healthType:'OPERATIONAL_HEALTH',communication:{dataFresh:p.communication?.dataFresh===true,dataAgeMs:p.communication?.dataAgeMs??null},evidence:{communicationFresh:p.communication?.dataFresh===true,operationalState:p.operationalState,evidenceStatus:'RULE_DERIVED_FROM_EMULATED_OPERATIONAL_EVIDENCE'},note:'Operational Health derived from emulator communication freshness and operational state.'};const hm={topic:'cpslai1/health',payload:JSON.stringify(health),qos:1,retain:false};return [null,msg,null,hm];} if(suffix==='oee'){p.source='NODE_RED_OPERATIONAL_EMULATOR';p.evidenceStatus='SENSOR_DERIVED_OPERATIONAL_OEE';if(p.reference)p.reference.evidenceStatus='EXPERIMENTAL_REFERENCE_PROVISIONAL';msg.topic='cpslai1/oee';msg.payload=JSON.stringify(p);msg.qos=1;msg.retain=false;return [null,null,msg,null];} return [null,null,null,null];",
+    "x": 1510,
+    "y": 740,
+    "wires": [
+      ["cpslai1_synthetic_mqtt_data"],
+      ["cpslai1_synthetic_mqtt_status"],
+      ["cpslai1_synthetic_mqtt_oee"],
+      ["cpslai1_synthetic_mqtt_events"]
+    ]
+  },
+  {
+    "id": "cpslai1_synthetic_debug_data",
+    "type": "debug",
+    "z": "cpslai1_synthetic_tab",
+    "name": "SYNTHETIC data — debug only",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 1280,
+    "y": 580,
+    "wires": []
+  },
+  {
+    "id": "cpslai1_synthetic_debug_status",
+    "type": "debug",
+    "z": "cpslai1_synthetic_tab",
+    "name": "SYNTHETIC status — debug only",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 1280,
+    "y": 620,
+    "wires": []
+  },
+  {
+    "id": "cpslai1_synthetic_debug_oee",
+    "type": "debug",
+    "z": "cpslai1_synthetic_tab",
+    "name": "SYNTHETIC OEE — debug only",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 1280,
+    "y": 660,
+    "wires": []
+  },
+  {
+    "id": "cpslai1_synthetic_debug_events",
+    "type": "debug",
+    "z": "cpslai1_synthetic_tab",
+    "name": "SYNTHETIC events — debug only",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "x": 940,
+    "y": 300,
+    "wires": []
+  },
+  {
+    "id": "cpslai1_synthetic_mqtt_broker",
+    "type": "mqtt-broker",
+    "name": "ACSM-PPU-LAI principal MQTT broker",
+    "broker": "127.0.0.1",
+    "port": "1883",
+    "clientid": "cpslai1-operational-emulator",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": "",
+    "willMsg": {},
+    "birthMsg": {},
+    "closeMsg": {}
+  },
+  {
+    "id": "cpslai1_synthetic_mqtt_data",
+    "type": "mqtt out",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Publish cpslai1/data",
+    "topic": "cpslai1/data",
+    "qos": "1",
+    "retain": "false",
+    "broker": "cpslai1_synthetic_mqtt_broker",
+    "x": 1500,
+    "y": 580,
+    "wires": []
+  },
+  {
+    "id": "cpslai1_synthetic_mqtt_status",
+    "type": "mqtt out",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Publish cpslai1/status",
+    "topic": "cpslai1/status",
+    "qos": "1",
+    "retain": "false",
+    "broker": "cpslai1_synthetic_mqtt_broker",
+    "x": 1500,
+    "y": 620,
+    "wires": []
+  },
+  {
+    "id": "cpslai1_synthetic_mqtt_oee",
+    "type": "mqtt out",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Publish cpslai1/oee",
+    "topic": "cpslai1/oee",
+    "qos": "1",
+    "retain": "false",
+    "broker": "cpslai1_synthetic_mqtt_broker",
+    "x": 1500,
+    "y": 660,
+    "wires": []
+  },
+  {
+    "id": "cpslai1_synthetic_mqtt_events",
+    "type": "mqtt out",
+    "z": "cpslai1_synthetic_tab",
+    "name": "Publish cpslai1/health",
+    "topic": "cpslai1/health",
+    "qos": "1",
+    "retain": "false",
+    "broker": "cpslai1_synthetic_mqtt_broker",
+    "x": 1160,
+    "y": 300,
+    "wires": []
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0",
+  "eventId": "ppu-play-completed-001",
+  "correlationId": "ppu-cycle-001",
+  "commandId": "command-001",
+  "cpsId": "cpslai1",
+  "operation": "PLAY",
+  "result": "COMPLETED",
+  "previousState": "STOPPED",
+  "newState": "RUNNING",
+  "occurredAt": "2026-01-15T12:00:02.000Z",
+  "actor": { "id": "cpslai1-local-adapter", "type": "CPS" },
+  "humanDecision": null,
+  "source": "CPS_LOCAL_ADAPTER",
+  "evidence": {
+    "ack": { "success": true, "reason": "CONTROLLED_TEST_ACK" },
+    "status": { "operationalState": "RUNNING", "evidenceStatus": "CONTROLLED_TEST" }
+  },
+  "episodeId": "episode-001"
+}

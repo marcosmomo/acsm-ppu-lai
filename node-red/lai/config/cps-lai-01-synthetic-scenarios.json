@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0",
+  "identity": "cpslai1",
+  "producerComponent": "CPS_LAI_01_OPERATIONAL_EMULATOR",
+  "broker": "mqtt://127.0.0.1:1883",
+  "topics": ["cpslai1/data", "cpslai1/status", "cpslai1/oee", "cpslai1/health"],
+  "manualStartRequired": true,
+  "tickMs": 250,
+  "freshnessThresholdMs": 5000,
+  "referenceCycleTimeMs": 2020,
+  "scenarios": {
+    "normal": { "label": "Operação normal", "cycleIntervalMs": 3000, "entryOffsetMs": 250, "middleOffsetMs": 900, "exitOffsetMs": 1650, "lifecyclePhase": "play", "operationMode": "AUTOMATIC" },
+    "degradation": { "label": "Degradação de Performance", "cycleIntervalMs": 6500, "entryOffsetMs": 250, "middleOffsetMs": 2200, "exitOffsetMs": 5000, "lifecyclePhase": "play", "operationMode": "AUTOMATIC" },
+    "stop": { "label": "Parada operacional", "cycleIntervalMs": 3000, "entryOffsetMs": 250, "middleOffsetMs": 900, "exitOffsetMs": 1650, "stopAfterCycles": 1, "lifecyclePhase": "play", "operationMode": "AUTOMATIC" },
+    "alarm": { "label": "Alarme", "cycleIntervalMs": 3000, "entryOffsetMs": 250, "middleOffsetMs": 900, "exitOffsetMs": 1650, "alarm": true, "lifecyclePhase": "play", "operationMode": "AUTOMATIC" },
+    "incomplete": { "label": "Ciclo incompleto", "cycleIntervalMs": 3000, "entryOffsetMs": 250, "middleOffsetMs": null, "exitOffsetMs": 1650, "lifecyclePhase": "play", "operationMode": "AUTOMATIC" },
+    "maintenance": { "label": "Manutenção", "cycleIntervalMs": 3000, "entryOffsetMs": null, "middleOffsetMs": null, "exitOffsetMs": null, "lifecyclePhase": "play", "operationMode": "STEP_BY_STEP" },
+    "return": { "label": "Retorno operacional", "returnDurationMs": 3000, "cycleIntervalMs": 3000, "entryOffsetMs": 250, "middleOffsetMs": 900, "exitOffsetMs": 1650, "lifecyclePhase": "return", "operationMode": "AUTOMATIC" },
+    "communicationLoss": { "label": "Perda de comunicação", "communicationLossAfterMs": 1000, "lifecyclePhase": "play", "operationMode": "AUTOMATIC" }
+  }
+}

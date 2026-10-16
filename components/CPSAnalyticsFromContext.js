@@ -25,7 +25,11 @@ const hasMinimumLevel1Evidence = (analytics = {}, knowledgePackage = {}) =>
   knowledgePackage.availability !== undefined ||
   hasObjectContent(analytics.oee) ||
   hasObjectContent(analytics.telemetry) ||
-  hasObjectContent(analytics.rawTelemetry);
+  hasObjectContent(analytics.rawTelemetry) ||
+  hasObjectContent(analytics.learning) ||
+  hasObjectContent(analytics.reasoning) ||
+  hasObjectContent(analytics.prediction) ||
+  analytics.recommendation !== undefined;
 
 const buildStableSignature = (value) => JSON.stringify(value);
 
@@ -43,7 +47,9 @@ export default function CPSAnalyticsFromContext({
     getCanonicalOperationalState,
   } = useCPSContext();
   const lastLevel1SnapshotSignatureRef = useRef('');
+  const pendingLevel1SnapshotSignatureRef = useRef('');
   const [level1MemorySamples, setLevel1MemorySamples] = useState(0);
+  const [hcmPersistence, setHcmPersistence] = useState({ status: 'idle', repositoryId: '' });
   const fallbackConfig = getActiveAcsmConfig();
   const activeConfig = acsmConfig?.id ? acsmConfig : fallbackConfig;
   const allowedCpsIds = getManagedCpsIdsForAcsm(activeConfig);
@@ -113,8 +119,8 @@ export default function CPSAnalyticsFromContext({
   useEffect(() => {
     if (!level1CognitiveSignature) return;
     if (lastLevel1SnapshotSignatureRef.current === level1CognitiveSignature) return;
-    lastLevel1SnapshotSignatureRef.current = level1CognitiveSignature;
-
+    if (pendingLevel1SnapshotSignatureRef.current === level1CognitiveSignature) return;
+    pendingLevel1SnapshotSignatureRef.current = level1CognitiveSignature;
     const oee = analytics?.oee || {};
     const learning = analytics?.learning || {};
     const reasoning = analytics?.reasoning || {};
@@ -181,6 +187,60 @@ export default function CPSAnalyticsFromContext({
 
     const memory = appendCognitiveSnapshot('level1', source, snapshot);
     setLevel1MemorySamples(memory.length);
+    setHcmPersistence((current) => ({ ...current, status: 'saving', error: '' }));
+
+    let cancelled = false;
+    let retryTimer;
+    const persistSnapshot = async (attempt = 1) => {
+      try {
+        const response = await fetch('/api/hcm/knowledge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cpsId: source,
+            source: 'level1',
+            timestamp: snapshot.timestamp,
+            originalKnowledge: snapshot,
+          }),
+        });
+        const data = await response.json().catch(() => null);
+        if (response.ok && data?.persisted && data?.knowledgeItem?.knowledgeId) {
+          lastLevel1SnapshotSignatureRef.current = level1CognitiveSignature;
+          pendingLevel1SnapshotSignatureRef.current = '';
+          if (cancelled) return;
+          setHcmPersistence({
+            status: 'persisted',
+            repositoryId: data?.repository?.repositoryId || '',
+            error: '',
+          });
+          return;
+        }
+        throw new Error(
+          response.ok
+            ? 'HCM persistence response did not confirm the stored knowledge item.'
+            : `HTTP ${response.status}: ${data?.error || 'Level 1 persistence failed.'}`
+        );
+      } catch (error) {
+        if (cancelled) return;
+        if (attempt < 3) {
+          setHcmPersistence((current) => ({ ...current, status: 'retrying', error: '' }));
+          retryTimer = window.setTimeout(() => persistSnapshot(attempt + 1), attempt * 1000);
+          return;
+        }
+        pendingLevel1SnapshotSignatureRef.current = '';
+        setHcmPersistence({ status: 'error', repositoryId: '', error: error?.message || 'Persistence failed.' });
+        console.error('[ACSM Analytics] Failed to persist the Level 1 snapshot in HCM.', error);
+      }
+    };
+
+    void persistSnapshot();
+    return () => {
+      cancelled = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+      if (pendingLevel1SnapshotSignatureRef.current === level1CognitiveSignature) {
+        pendingLevel1SnapshotSignatureRef.current = '';
+      }
+    };
   }, [
     activeConfig?.id,
     analytics,
@@ -198,7 +258,7 @@ export default function CPSAnalyticsFromContext({
     }
   }, [effectiveCpsId]);
 
-  if (!hasData) {
+  if (!hasData && effectiveCpsId !== 'cpslai1') {
     return (
       <div
         style={{
@@ -285,17 +345,19 @@ export default function CPSAnalyticsFromContext({
         adaptiveIntelligence={adaptiveIntelligence}
         getCanonicalOperationalState={getCanonicalOperationalState}
       />
-      <GenerativeAIInterpretationPanel
+      {hasData && <GenerativeAIInterpretationPanel
         level="level1"
         contextType="operational"
         knowledgePackage={level1KnowledgePackage}
         language="en"
         outputType="summary"
         title="Generative AI Interpretation - Level 1 Operational Intelligence"
-      />
-      <div style={{ color: '#64748b', fontSize: 12, fontWeight: 800 }}>
-        Cognitive Memory: {level1MemorySamples} snapshots
-      </div>
+      />}
+      {hasData && <div style={{ color: '#64748b', fontSize: 12, fontWeight: 800 }}>
+        Cognitive Memory: {level1MemorySamples} snapshots | HCM: {hcmPersistence.status}
+        {hcmPersistence.repositoryId ? ` (${hcmPersistence.repositoryId})` : ''}
+        {hcmPersistence.status === 'error' ? ` — ${hcmPersistence.error}` : ''}
+      </div>}
     </div>
   );
 }

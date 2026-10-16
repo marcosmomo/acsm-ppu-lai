@@ -25,6 +25,7 @@ import { sanitizeTextEncoding } from '../lib/text/sanitizeTextEncoding';
 const DASH = '-';
 
 const toNumber = (value) => {
+  if (value === null || value === undefined || value === '') return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 };
@@ -400,7 +401,7 @@ export default function CPSAnalyticsPanel({ cpsId, analytics, title, adaptiveInt
 
       <PremiumSection icon={<Activity size={15} />} eyebrow="ADAPTIVE INTELLIGENCE" title="Local Adaptive Intelligence" subtitle="Short-window adaptive memory for this CPS asset.">
         <div style={{ marginBottom: 12 }}>
-          <HistoryRecordsButton level="level1" />
+          <HistoryRecordsButton cpsId={cpsId} level="level1" />
         </div>
         <div style={responsiveTwoCol}>
           <div style={{ border: '1px solid #e2e8f0', borderRadius: 20, padding: 18, background: '#ffffff', display: 'grid', gap: 10 }}>
@@ -441,7 +442,7 @@ export default function CPSAnalyticsPanel({ cpsId, analytics, title, adaptiveInt
           <div style={{ border: '1px solid #ede9fe', background: 'linear-gradient(180deg, #f5f3ff 0%, #ffffff 100%)', borderRadius: 20, padding: 18 }}>
             <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Recommended Action</div>
             <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.7, color: '#0f172a' }}>
-              {txt(learning?.recommendation || reasoning?.recommendation, 'No operational recommendation available.')}
+              {txt(learning?.recommendation || reasoning?.recommendation || analytics?.recommendation?.text, 'No operational recommendation available.')}
             </div>
           </div>
         </div>

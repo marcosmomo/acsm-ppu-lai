@@ -92,6 +92,8 @@ test('Boolean datatype is proven from supported OPC UA attribute response format
     assert.equal(sample.dataType, 'Boolean');
     assert.equal(sample.dataTypeEvidence, 'OPC_UA_ATTRIBUTE_DATATYPE');
     assert.equal(sample.value, true);
+    assert.equal(sample.acquisitionSource, 'OPC_UA_READ_RESPONSE');
+    assert.equal(sample.acquisitionReceivedAt, sample.collectedAt);
     assert.ok(Number.isFinite(Date.parse(sample.timestamp)));
     assert.ok(Number.isFinite(Date.parse(sample.collectedAt)));
   }
@@ -119,7 +121,10 @@ test('MQTT contract carries evidence, freshness and conservative derivation on c
   assert.match(snapshot, /snapshotComplete/);
   assert.match(snapshot, /availableTagCount/);
   assert.match(snapshot, /expectedTagCount/);
-  assert.match(snapshot, /communication:\{ dataFresh/);
+  assert.match(snapshot, /connected:acquisitionFunctional/);
+  assert.match(snapshot, /acquisitionSource:acquisitionFunctional \? 'OPC_UA_READ_RESPONSES'/);
+  assert.match(snapshot, /sessionConnected:communicationStatus\.connected === true/);
+  assert.match(snapshot, /lastSessionErrorAt/);
   assert.match(snapshot, /CPS_LAI_03_PHYSICAL_MODE_MARKERS/);
   assert.match(snapshot, /INVALID_INIT_MARKER/);
   assert.match(snapshot, /VALIDATED_GCT_0_ACTIVE/);
@@ -140,10 +145,18 @@ const physicalSample = (tag, value, extra = {}) => ({
   quality: 'Good',
   valid: true,
   collectedAt: new Date().toISOString(),
+  acquisitionReceivedAt: new Date().toISOString(),
+  acquisitionSource: 'OPC_UA_READ_RESPONSE',
   ...extra,
 });
 
-const runSnapshot = (values, overrides = {}) => {
+const runSnapshot = (values, overrides = {}, communicationStatus = {
+  connected: false,
+  status: { text: 'error' },
+  timestamp: '2026-10-12T17:27:21.638Z',
+  lastSessionError: { text: 'error' },
+  lastSessionErrorAt: '2026-10-12T17:27:21.638Z',
+}) => {
   const samples = {
     GCT_0: physicalSample('GCT_0', values[0], overrides.GCT_0),
     sys_man: physicalSample('sys_man', values[1], overrides.sys_man),
@@ -153,7 +166,11 @@ const runSnapshot = (values, overrides = {}) => {
   for (const [tag, override] of Object.entries(overrides)) {
     if (override === null) delete samples[tag];
   }
-  const flow = { get: (key) => key === 'cpslai3_mode_samples' ? samples : undefined };
+  const flow = {
+    get: (key) => key === 'cpslai3_mode_samples'
+      ? samples
+      : key === 'cpslai3_opcua_status' ? communicationStatus : undefined,
+  };
   const result = new Function('msg', 'flow', 'node', byId.get('c3a000000000000e').func)({}, flow, {});
   return JSON.parse(result[0].payload);
 };
@@ -173,6 +190,60 @@ test('snapshot function is valid JavaScript and derives all four physical modes 
     assert.equal(payload.snapshotComplete, true);
     assert.equal(payload.derived.initEvidence.sourceTag, 'GCT_0');
   }
+});
+
+test('recent complete Good acquisition proves functional communication without hiding stale session status', () => {
+  const payload = runSnapshot([false, false, true, false]);
+  assert.equal(payload.communication.connected, true);
+  assert.equal(payload.communication.acquisitionFunctional, true);
+  assert.equal(payload.communication.acquisitionSource, 'OPC_UA_READ_RESPONSES');
+  assert.ok(Number.isFinite(Date.parse(payload.communication.lastAcquisitionAt)));
+  assert.equal(payload.communication.sessionConnected, false);
+  assert.equal(payload.communication.sessionStatus.text, 'error');
+  assert.equal(payload.communication.lastSessionError.text, 'error');
+  assert.equal(payload.communication.lastSessionErrorAt, '2026-10-12T17:27:21.638Z');
+});
+
+test('missing, stale, incomplete or Bad OPC UA evidence cannot prove functional communication', () => {
+  const old = '2020-01-01T00:00:00.000Z';
+  const staleOverrides = Object.fromEntries(
+    ['GCT_0', 'sys_man', 'sys_sup', 'sys_man2'].map((tag) => [tag, { collectedAt: old }])
+  );
+  assert.equal(runSnapshot([false, false, true, false], staleOverrides).communication.connected, false);
+  assert.equal(runSnapshot([false, false, true, false], { sys_man2: null }).communication.connected, false);
+  assert.equal(runSnapshot([false, false, true, false], {
+    sys_sup: { acquisitionSource: null, acquisitionReceivedAt: null },
+  }).communication.connected, false, 'republished cache without OPC UA response provenance is insufficient');
+  assert.equal(runSnapshot([false, false, true, false], {
+    sys_sup: { statusCode: 'BadCommunicationError', quality: 'BadCommunicationError' },
+  }).communication.connected, false);
+});
+
+test('fresh OPC UA responses recover functional acquisition after stale cached data expires', () => {
+  const old = '2020-01-01T00:00:00.000Z';
+  const staleOverrides = Object.fromEntries(
+    ['GCT_0', 'sys_man', 'sys_sup', 'sys_man2'].map((tag) => [tag, { collectedAt: old }])
+  );
+  const lost = runSnapshot([false, false, true, false], staleOverrides);
+  const recovered = runSnapshot([false, false, true, false]);
+  assert.equal(lost.communication.connected, false);
+  assert.equal(lost.communication.dataFresh, false);
+  assert.equal(recovered.communication.connected, true);
+  assert.equal(recovered.communication.dataFresh, true);
+});
+
+test('session status node preserves the last error independently from later connected status', () => {
+  const state = new Map();
+  const flow = { get: (key) => state.get(key), set: (key, value) => state.set(key, value) };
+  const execute = new Function('msg', 'flow', byId.get('c3a0000000000008').func);
+  execute({ status: { text: 'error' } }, flow);
+  const failure = state.get('cpslai3_opcua_status');
+  execute({ status: { text: 'connected' } }, flow);
+  const recovered = state.get('cpslai3_opcua_status');
+  assert.equal(failure.connected, false);
+  assert.equal(recovered.connected, true);
+  assert.equal(recovered.lastSessionError.text, 'error');
+  assert.equal(recovered.lastSessionErrorAt, failure.lastSessionErrorAt);
 });
 
 test('missing, stale and conflicting GCT_0 evidence produces UNKNOWN', () => {

@@ -1,0 +1,10 @@
+{
+  "profiles": { "cps1": { "profileId": "gov-cps1-v2", "profileVersion": 2, "status": "APPROVED", "plugCycleStatus": "CLOSED" } },
+  "profileVersions": { "cps1": [
+    { "profileId": "gov-cps1-v1", "profileVersion": 1, "status": "PENDING_APPROVAL" },
+    { "profileId": "gov-cps1-v2", "profileVersion": 2, "status": "APPROVED", "plugCycleStatus": "CLOSED" }
+  ] },
+  "pendingActions": {},
+  "history": [],
+  "ppuOutbox": {}
+}

@@ -1,0 +1,174 @@
+{
+  "schemaVersion": "AVM-5-ppu-history/1.0",
+  "experiment": "AVM-5",
+  "cpsId": "cpslai1",
+  "title": "PPU Evolution History — CPS-LAI-01",
+  "scope": "OFFLINE_SIMULATION",
+  "simulation": true,
+  "physicalValidationClaimed": false,
+  "operationalValidationClaimed": false,
+  "source": {
+    "kind": "PRESERVED_AVM4_REPORT",
+    "relativePath": "docs/experiments/avm4-cpslai1/report.json",
+    "schemaVersion": "AVM-4-report/1.0",
+    "generatedAt": "2026-10-14T20:00:00.000Z",
+    "sha256": "623569a2a84d3ea939f54faf3a80500e9eee6a9cae346f8583ca3f5a98eb429a"
+  },
+  "generatedBy": "scripts/experiments/build-avm5-ppu-history-artifact.mjs",
+  "cycles": [
+    {
+      "sequence": 1,
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v1",
+      "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+      "profileId": "GOV-CPSLAI1-003",
+      "aasVersion": "v1",
+      "aasSha256": "7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+      "functionalHash": "5ca2e6d97211397535372ebbd32bf05f9798021d2b25cbabfc9d00709c1f135e",
+      "evolution": {
+        "status": "BASELINE",
+        "differences": []
+      },
+      "lifecycleState": "CLOSED",
+      "profileStatus": "PENDING_APPROVAL",
+      "playGate": {
+        "allowed": false,
+        "reason": "GOVERNANCE_APPROVAL_REQUIRED"
+      },
+      "references": {
+        "snapshotId": "evo_snap_65e399521eb1daeedc49fcdaf047ae96",
+        "previousSnapshotId": null,
+        "comparisonId": "evo_cmp_8630a27615f5fd7364fd424671ebd06d",
+        "archive": "sha256:7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+        "baseline": {
+          "recordId": "avm4-baseline:cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+          "sha256": "67fa6118ae8f7f08699d4dc95e4ea9c7e96b1362091631563a3163f63016e584"
+        },
+        "plug": {
+          "evidenceId": "lifecycle-evidence:27a0093599a2690be8eb8833a822f484eda3ea60d1e5ce251ef851a48df9374f",
+          "transitionId": "lifecycle-transition:a20dd5e378e649c9fb1f71b7b58532a7cc84efbbee9bcc7c82a7a59f0423ae4b",
+          "confirmationLevel": "BACKEND_ACCEPTED",
+          "recordId": "lifecycle-transition:a20dd5e378e649c9fb1f71b7b58532a7cc84efbbee9bcc7c82a7a59f0423ae4b",
+          "contentHash": "1102fce78ecbaa8e5924472ed2c3c5aff989ea2183e7f27934cd7aabd70460f1"
+        },
+        "unplug": {
+          "evidenceId": "lifecycle-evidence:88f91b325969d113c5d9f59db7d2d6b8ce53d30ad4f008de99d792da53562d30",
+          "transitionId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+          "confirmationLevel": "BACKEND_ACCEPTED",
+          "recordId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+          "contentHash": "b204a18a0f6a3eb59089f79bd6daa61b3fdf8651fc79a3c6f8311c8f546cd9c5"
+        }
+      }
+    },
+    {
+      "sequence": 2,
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v2",
+      "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+      "profileId": "GOV-CPSLAI1-004",
+      "aasVersion": "v2",
+      "aasSha256": "b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+      "functionalHash": "b54732ebc3139fcdc57ba4b02d88d8d1fb99689573c230794026ab71967c5cdb",
+      "evolution": {
+        "status": "CHANGED",
+        "differences": [
+          {
+            "type": "CHANGED",
+            "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+            "capabilityBefore": "PieceDetection",
+            "capabilityCurrent": "PieceDetection",
+            "changedAttributes": [
+              {
+                "name": "PieceAtMiddle",
+                "before": "true",
+                "current": "false"
+              }
+            ]
+          }
+        ]
+      },
+      "lifecycleState": "CLOSED",
+      "profileStatus": "PENDING_APPROVAL",
+      "playGate": {
+        "allowed": false,
+        "reason": "GOVERNANCE_APPROVAL_REQUIRED"
+      },
+      "references": {
+        "snapshotId": "evo_snap_8ae0ceb2f772f7f1d4f18e3c3a6a3049",
+        "previousSnapshotId": "evo_snap_65e399521eb1daeedc49fcdaf047ae96",
+        "comparisonId": "evo_cmp_3d72eeb9524e4a273c4b03b4b16aec02",
+        "archive": "sha256:b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+        "baseline": {
+          "recordId": "avm4-baseline:cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+          "sha256": "960f92391d5b405066ecd7f298033291b27211f2544e9f31f4b00840e17a8124"
+        },
+        "plug": {
+          "evidenceId": "lifecycle-evidence:918e7a826891f865fb46d2856e24bf1873b6c6c72e9800f33408606d6f71ce68",
+          "transitionId": "lifecycle-transition:14754c961123bed50b4f2312d5ae28d30d079c9cb579d83234ba53b370460b40",
+          "confirmationLevel": "BACKEND_ACCEPTED",
+          "recordId": "lifecycle-transition:14754c961123bed50b4f2312d5ae28d30d079c9cb579d83234ba53b370460b40",
+          "contentHash": "1b34b6ede5de8c3b51c56177152bdfa432ee93603c47928b534e35d19701a2b9"
+        },
+        "unplug": {
+          "evidenceId": "lifecycle-evidence:2487b817e6321facc1c32606421c039da31aeab13afe0c2927f63655e4df5627",
+          "transitionId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+          "confirmationLevel": "BACKEND_ACCEPTED",
+          "recordId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+          "contentHash": "fc17e37540adec1be5a479b1b1e9fe39ed02fe8c33a63f7f94e402b07a475962"
+        }
+      }
+    },
+    {
+      "sequence": 3,
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v3",
+      "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+      "profileId": "GOV-CPSLAI1-005",
+      "aasVersion": "v3",
+      "aasSha256": "f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+      "functionalHash": "d90f9b2a46ba47f543972e1c7b68662d9dac7490a788d5d2e15788627a8ac66d",
+      "evolution": {
+        "status": "CHANGED",
+        "differences": [
+          {
+            "type": "ADDED",
+            "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1",
+            "capabilityBefore": null,
+            "capabilityCurrent": "ExperimentalAdaptivePieceDetection",
+            "changedAttributes": [
+              {
+                "name": "declarationValue",
+                "before": null,
+                "current": "true"
+              }
+            ]
+          }
+        ]
+      },
+      "lifecycleState": "ACTIVE",
+      "profileStatus": "PENDING_APPROVAL",
+      "playGate": {
+        "allowed": false,
+        "reason": "GOVERNANCE_APPROVAL_REQUIRED"
+      },
+      "references": {
+        "snapshotId": "evo_snap_806be2863445e2f08dcaf3ad95ac99cd",
+        "previousSnapshotId": "evo_snap_8ae0ceb2f772f7f1d4f18e3c3a6a3049",
+        "comparisonId": "evo_cmp_1e3ff155a24cc6b2ce30a6a2b027b64e",
+        "archive": "sha256:f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+        "baseline": {
+          "recordId": "avm4-baseline:cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+          "sha256": "f9e6306fe2620c55c59afd62814edf31120356d6bec65c6d96521d26752171c9"
+        },
+        "plug": {
+          "evidenceId": "lifecycle-evidence:fad7fac3113b95ad1217f52c340a55d2519893851b8085f3fd8e18a7943b0248",
+          "transitionId": "lifecycle-transition:29e48deaacceaf8b5ccf5d91b012ee1a9c8e88fce74b53037ee057433bc5d374",
+          "confirmationLevel": "BACKEND_ACCEPTED",
+          "recordId": "lifecycle-transition:29e48deaacceaf8b5ccf5d91b012ee1a9c8e88fce74b53037ee057433bc5d374",
+          "contentHash": "ce776c739841cefe15cbbf2c83874bdc732eaede320218a14ef528ea9e12d5d6"
+        },
+        "unplug": null
+      }
+    }
+  ]
+}

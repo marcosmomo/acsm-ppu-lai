@@ -1,0 +1,12 @@
+flows_cred.json
+.config.runtime.json
+runner-state.json
+runner-state.json.*.tmp
+runner-state.json.corrupt-*
+*.log
+logs/
+context/
+pki/
+node_modules/
+results/*
+!results/.gitkeep

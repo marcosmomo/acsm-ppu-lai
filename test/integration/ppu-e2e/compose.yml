@@ -1,0 +1,58 @@
+name: ppu-e2e-isolated
+
+services:
+  broker:
+    image: eclipse-mosquitto:2.0
+    container_name: ppu-e2e-isolated-broker
+    restart: "no"
+    environment:
+      MQTT_USERNAME: ppu_e2e_user
+      MQTT_PASSWORD: ppu_e2e_only_password
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        mosquitto_passwd -b -c /tmp/ppu-e2e-passwords "$${MQTT_USERNAME}" "$${MQTT_PASSWORD}"
+        && chmod 0644 /tmp/ppu-e2e-passwords
+        && exec mosquitto -c /mosquitto/config/mosquitto.conf
+    ports:
+      - "127.0.0.1:28883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - broker-data:/mosquitto/data
+    networks: [ppu-e2e]
+
+  mysql:
+    image: mysql:8.4.11
+    container_name: ppu-e2e-isolated-mysql
+    restart: "no"
+    environment:
+      MYSQL_ROOT_PASSWORD: ppu_e2e_root_only
+      MYSQL_DATABASE: acsm_cpslai1
+      MYSQL_USER: ppu_e2e_writer
+      MYSQL_PASSWORD: ppu_e2e_writer_only
+      TZ: UTC
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+00:00
+    ports:
+      - "127.0.0.1:33307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks: [ppu-e2e]
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uppu_e2e_writer -pppu_e2e_writer_only --silent"]
+      interval: 2s
+      timeout: 2s
+      retries: 40
+
+networks:
+  ppu-e2e:
+    name: ppu-e2e-isolated-network
+    driver: bridge
+
+volumes:
+  broker-data:
+    name: ppu-e2e-isolated-broker-data
+  mysql-data:
+    name: ppu-e2e-isolated-mysql-data

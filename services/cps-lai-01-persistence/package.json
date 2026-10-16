@@ -1,0 +1,17 @@
+{
+  "name": "cpslai1-persistence",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Locally owned CPS-LAI-01 persistence service (not enabled by default)",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "migrate": "node src/migrate.js",
+    "test": "node --test ../../test/cps-lai-01-persistence*.test.mjs ../../test/cps-lai-01-history-pagination.test.mjs test/*.test.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "mqtt": "^5.14.1",
+    "mysql2": "^3.14.0"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1.0",
+  "cpsId": "cpslai1",
+  "timestamp": "2026-01-15T12:00:02.000Z",
+  "health": 85,
+  "current": 85,
+  "score": 85,
+  "healthState": "OPERATIONAL_STATE_RUNNING",
+  "healthType": "OPERATIONAL_HEALTH",
+  "communication": { "dataFresh": true, "dataAgeMs": 200 },
+  "evidence": { "communicationFresh": true, "operationalState": "RUNNING", "evidenceStatus": "RULE_DERIVED_FROM_VALIDATED_OPERATIONAL_EVIDENCE" }
+}

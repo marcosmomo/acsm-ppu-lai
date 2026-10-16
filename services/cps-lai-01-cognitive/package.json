@@ -1,0 +1,17 @@
+{
+  "name": "cpslai1-cognitive",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Experimental read-only cognitive knowledge service for CPS-LAI-01",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "mqtt": "^5.14.1"
+  }
+}

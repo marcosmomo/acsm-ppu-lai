@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0",
+  "cpsId": "cpslai1",
+  "timestamp": "2026-01-15T12:00:02.000Z",
+  "calculationState": "OPERATIONAL_OEE_PROXY",
+  "oee": { "current": 0.5, "availability": 0.8, "performance": 0.625, "quality": 1 },
+  "time": { "plannedProductionTimeMs": 10000, "runTimeMs": 8000, "stoppedTimeMs": 2000, "maintenanceTimeMs": 0, "unknownTimeMs": 0 },
+  "production": { "totalCount": 10, "completedCycles": 10, "incompleteCycles": 0, "risingEdges": { "PieceAtExit": 10 } },
+  "reference": { "cycleTimeMs": 2020, "evidenceStatus": "EXPERIMENTAL_REFERENCE_PROVISIONAL" },
+  "performance": { "countSource": "PieceAtExit", "countSourceTag": "EXIT_TAG", "formula": "referenceCycleTimeMs * totalCount / runTimeMs" },
+  "quality": { "productQualityValidated": false, "assumedGoodCount": 10, "assumedRejectCount": 0, "evidenceStatus": "NO_VALIDATED_REJECT_SIGNAL" },
+  "evidenceStatus": "SENSOR_DERIVED_OPERATIONAL_OEE"
+}

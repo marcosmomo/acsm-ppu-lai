@@ -1599,7 +1599,7 @@ const getCpsLifecyclePhase = (cps) =>
 const isCpsInPlay = (cps) => getCpsLifecyclePhase(cps) === 'play';
 
 const isCpsOperationallyRunning = (cps) =>
-  isCpsInPlay(cps) && normalizeOperationMode(cps) === 'running';
+  isCpsInPlay(cps) && getCanonicalOperationalState(cps) === 'running';
 
 const NON_RUNNING_OPERATIONAL_STATES = new Set([
   'stopped',
@@ -7602,6 +7602,11 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                       operationalData: isCpsLai3Status
                         ? c?.operationalData
                         : nextOperationalData,
+                      // CPS-LAI-01 status must update the physical mode over the
+                      // latest React state, not over the pre-handler owner snapshot.
+                      ...(isCpsLai1Status
+                        ? { operationalData: applyPhysicalStatus(c, data) }
+                        : {}),
                       ...(operationalHealth
                         ? {
                             health: {
@@ -7989,6 +7994,21 @@ export const CPSProvider = ({ children, acsmId, config }) => {
                   data?.PieceCounter ?? data?.pieceCounter ?? owner?.operationalData?.pieceCounter ?? null,
                 cycleTimeMs:
                   data?.CycleTimeMs ?? data?.cycleTimeMs ?? owner?.operationalData?.cycleTimeMs ?? null,
+                ...(isCpsLai1Data
+                  ? {
+                      PieceAtEntry: data?.PieceAtEntry ?? owner?.operationalData?.PieceAtEntry ?? null,
+                      PieceAtMiddle: data?.PieceAtMiddle ?? owner?.operationalData?.PieceAtMiddle ?? null,
+                      PieceAtExit: data?.PieceAtExit ?? owner?.operationalData?.PieceAtExit ?? null,
+                      SlideRetracted: data?.SlideRetracted ?? owner?.operationalData?.SlideRetracted ?? null,
+                      SlideExtended: data?.SlideExtended ?? owner?.operationalData?.SlideExtended ?? null,
+                      AlarmSignal: data?.AlarmSignal ?? owner?.operationalData?.AlarmSignal ?? null,
+                      totalCount: data?.production?.totalCount ?? data?.totalCount ?? owner?.operationalData?.totalCount ?? null,
+                      completedCycles: data?.production?.completedCycles ?? data?.completedCycles ?? owner?.operationalData?.completedCycles ?? null,
+                      incompleteCycles: data?.production?.incompleteCycles ?? data?.incompleteCycles ?? owner?.operationalData?.incompleteCycles ?? null,
+                      lastCycleTimeMs: data?.production?.lastCycleTimeMs ?? data?.lastCycleTimeMs ?? owner?.operationalData?.lastCycleTimeMs ?? null,
+                      averageCycleTimeMs: data?.production?.averageCycleTimeMs ?? data?.averageCycleTimeMs ?? owner?.operationalData?.averageCycleTimeMs ?? null,
+                    }
+                  : {}),
                 lastUpdate: normalizeSnapshotTimestamp(data?.ts ?? data?.timestamp) ?? Date.now(),
               };
               const cpsLai3PhysicalDerivation = isCpsLai3Data

@@ -1,0 +1,61 @@
+CREATE TABLE production_events (
+  production_event_id BINARY(16) NOT NULL,
+  cps_id VARCHAR(16) NOT NULL,
+  event_key BINARY(32) NOT NULL,
+  event_type VARCHAR(32) NOT NULL,
+  signal_key VARCHAR(128) NOT NULL,
+  source_tag VARCHAR(128) NULL,
+  count_delta INT UNSIGNED NOT NULL DEFAULT 1,
+  cycle_id BINARY(16) NULL,
+  cycle_time_ms BIGINT UNSIGNED NULL,
+  source_timestamp DATETIME(3) NULL,
+  received_at DATETIME(3) NOT NULL,
+  evidence_status VARCHAR(64) NULL,
+  origin_method VARCHAR(32) NOT NULL,
+  evidence_refs_json JSON NOT NULL,
+  PRIMARY KEY (production_event_id),
+  UNIQUE KEY uq_production_identity (cps_id, event_key),
+  KEY ix_production_type_source (event_type, source_timestamp),
+  KEY ix_production_cycle (cycle_id),
+  KEY ix_production_received (received_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE production_rollups (
+  rollup_id BINARY(16) NOT NULL,
+  cps_id VARCHAR(16) NOT NULL,
+  bucket_start DATETIME(3) NOT NULL,
+  bucket_size VARCHAR(16) NOT NULL,
+  metric_key VARCHAR(128) NOT NULL,
+  aggregation_method VARCHAR(24) NOT NULL,
+  value_num DOUBLE NULL,
+  count_value BIGINT UNSIGNED NULL,
+  sample_count INT UNSIGNED NOT NULL DEFAULT 0,
+  valid_sample_count INT UNSIGNED NOT NULL DEFAULT 0,
+  invalid_sample_count INT UNSIGNED NOT NULL DEFAULT 0,
+  evidence_status VARCHAR(64) NULL,
+  calculation_version VARCHAR(64) NOT NULL,
+  computed_at DATETIME(3) NOT NULL,
+  PRIMARY KEY (rollup_id),
+  UNIQUE KEY uq_rollup_identity (cps_id, bucket_start, bucket_size, metric_key, calculation_version),
+  KEY ix_rollup_metric_time (metric_key, bucket_start)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE ppu_events (
+  ppu_event_id BINARY(16) NOT NULL,
+  cps_id VARCHAR(16) NOT NULL,
+  event_key BINARY(32) NOT NULL,
+  event_type VARCHAR(64) NOT NULL,
+  actor_id VARCHAR(128) NULL,
+  source VARCHAR(64) NOT NULL,
+  occurred_at DATETIME(3) NOT NULL,
+  recorded_at DATETIME(3) NOT NULL,
+  episode_id VARCHAR(128) NULL,
+  correlation_id VARCHAR(128) NULL,
+  evidence_refs_json JSON NOT NULL,
+  payload_json JSON NOT NULL,
+  PRIMARY KEY (ppu_event_id),
+  UNIQUE KEY uq_ppu_identity (cps_id, event_key),
+  KEY ix_ppu_type_time (event_type, occurred_at),
+  KEY ix_ppu_episode (episode_id),
+  KEY ix_ppu_correlation (correlation_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

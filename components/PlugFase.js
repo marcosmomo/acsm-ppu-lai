@@ -8,6 +8,7 @@ import {
 } from '../lib/governance/uiState.mjs';
 import { sanitizeTextEncoding } from '../lib/text/sanitizeTextEncoding';
 import GovernanceConfiguration from './GovernanceConfiguration';
+import ExperimentalAasCycleDemo from './ExperimentalAasCycleDemo';
 
 const PLUG_SERVICE_MAPPING = [
   ['REGISTERED CPS', 'summary.registeredCPS'],
@@ -123,6 +124,7 @@ export default function PlugFase() {
   });
   const [plugApiCopyFeedback, setPlugApiCopyFeedback] = useState('');
   const [plugProjectedAssets, setPlugProjectedAssets] = useState([]);
+  const [aasFunctionalCapabilitiesOpen, setAasFunctionalCapabilitiesOpen] = useState(false);
 
   const eligiblePlayCPS = Array.isArray(playPhaseCPS) ? playPhaseCPS : addedCPS;
   const cpsNamesInPlay = useMemo(
@@ -693,7 +695,22 @@ export default function PlugFase() {
                     </div>
 
                     <section className="plug-asset-capabilities">
-                      <div className="plug-asset-box-title">Discovered Capabilities</div>
+                      <div className="plug-asset-capabilities-heading">
+                        <div className="plug-asset-box-title">Discovered Capabilities</div>
+                        {normalizeCpsKey(cps?.id) === 'cpslai1' ? (
+                          <button
+                            type="button"
+                            className="aas-functional-preview-toggle"
+                            aria-expanded={aasFunctionalCapabilitiesOpen}
+                            aria-controls="aas-functional-capabilities-panel"
+                            onClick={() => setAasFunctionalCapabilitiesOpen((open) => !open)}
+                          >
+                            {aasFunctionalCapabilitiesOpen
+                              ? 'Hide AAS Functional Capabilities'
+                              : 'View AAS Functional Capabilities'}
+                          </button>
+                        ) : null}
+                      </div>
                       <div className="plug-asset-capability-groups">
                         {capabilities.map((section) => (
                           <div key={section.group} className="plug-asset-capability-group">
@@ -709,6 +726,12 @@ export default function PlugFase() {
                         ))}
                       </div>
                     </section>
+
+                    {normalizeCpsKey(cps?.id) === 'cpslai1' && aasFunctionalCapabilitiesOpen ? (
+                      <div id="aas-functional-capabilities-panel">
+                        <ExperimentalAasCycleDemo cpsId={cps.id} />
+                      </div>
+                    ) : null}
 
                     <section className="plug-asset-lifecycle-evidence">
                       <div className="plug-asset-box-title">Lifecycle Evidence</div>

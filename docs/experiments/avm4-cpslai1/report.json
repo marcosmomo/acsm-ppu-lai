@@ -1,0 +1,1640 @@
+{
+  "schemaVersion": "AVM-4-report/1.0",
+  "experiment": "AVM-4",
+  "generatedAt": "2026-10-14T20:00:00.000Z",
+  "simulation": true,
+  "physicalValidationClaimed": false,
+  "operationalValidationClaimed": false,
+  "rootDir": "C:\\Users\\marco\\AppData\\Local\\Temp\\acsm-avm4-cpslai1-eaqsdD",
+  "fixtures": {
+    "governanceSeed": "test/fixtures/governance-repository/current-valid.json",
+    "lifecycleAuthority": {
+      "system": "avm4-offline-fixture",
+      "component": "transactional-lifecycle-authority",
+      "instanceId": "avm4-isolated-1"
+    },
+    "baselineProvenanceKind": "SIMULATED_AUTHENTICATED_FIXTURE"
+  },
+  "cycles": [
+    {
+      "sequence": 1,
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v1",
+      "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+      "profileId": "GOV-CPSLAI1-003",
+      "aasVersion": "v1",
+      "aasSha256": "7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+      "functionalHash": "5ca2e6d97211397535372ebbd32bf05f9798021d2b25cbabfc9d00709c1f135e",
+      "selectionId": "avm_sel_26bc30dfa49a2a3c4b7ef41a0afec32b",
+      "selectionOutcome": "SELECTED",
+      "selectionRetryOutcome": "NO_OP",
+      "evolution": {
+        "status": "BASELINE",
+        "duplicateRetry": true,
+        "snapshotId": "evo_snap_65e399521eb1daeedc49fcdaf047ae96",
+        "comparisonId": "evo_cmp_8630a27615f5fd7364fd424671ebd06d",
+        "previousSnapshotId": null,
+        "differences": []
+      },
+      "archive": {
+        "contentHash": "7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+        "reference": "sha256:7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb"
+      },
+      "lifecycle": {
+        "plug": {
+          "transition": {
+            "transitionId": "lifecycle-transition:a20dd5e378e649c9fb1f71b7b58532a7cc84efbbee9bcc7c82a7a59f0423ae4b",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v1",
+            "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+            "profileId": "GOV-CPSLAI1-003",
+            "operation": "PLUG",
+            "previousState": "idle",
+            "resultingState": "plug",
+            "outcome": "ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "storedAt": "2026-10-14T20:00:00.000Z",
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:a20dd5e378e649c9fb1f71b7b58532a7cc84efbbee9bcc7c82a7a59f0423ae4b",
+              "contentHash": "1102fce78ecbaa8e5924472ed2c3c5aff989ea2183e7f27934cd7aabd70460f1"
+            }
+          },
+          "evidence": {
+            "schemaVersion": "1.0",
+            "evidenceId": "lifecycle-evidence:27a0093599a2690be8eb8833a822f484eda3ea60d1e5ce251ef851a48df9374f",
+            "transitionId": "lifecycle-transition:a20dd5e378e649c9fb1f71b7b58532a7cc84efbbee9bcc7c82a7a59f0423ae4b",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v1",
+            "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+            "profileId": "GOV-CPSLAI1-003",
+            "operation": "PLUG",
+            "phase": "plug",
+            "previousState": "idle",
+            "resultingState": "plug",
+            "outcome": "ACCEPTED",
+            "confirmationLevel": "BACKEND_ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "authorityReceipt": {
+              "verified": true,
+              "principal": {
+                "type": "LIFECYCLE_AUTHORITY",
+                "system": "avm4-offline-fixture",
+                "component": "transactional-lifecycle-authority",
+                "instanceId": "avm4-isolated-1"
+              },
+              "authorizationId": "avm4-simulated-server-authorization",
+              "scheme": "AVM4_OFFLINE_FIXTURE_VERIFIER",
+              "claimsHash": "avm4-fixture-claims",
+              "permission": "lifecycle.plug.record"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "receivedAt": "2026-10-14T20:00:00.000Z",
+            "correlationId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+            "commandId": null,
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:a20dd5e378e649c9fb1f71b7b58532a7cc84efbbee9bcc7c82a7a59f0423ae4b",
+              "contentHash": "1102fce78ecbaa8e5924472ed2c3c5aff989ea2183e7f27934cd7aabd70460f1"
+            },
+            "contentHash": "d5650dc805b40d721794494d8b8b94aed8c6353e70c1991afcc308005d773344"
+          }
+        },
+        "baseline": {
+          "baseline": {
+            "schemaVersion": "1.0",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v1",
+            "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+            "profileId": "GOV-CPSLAI1-003",
+            "lifecycleState": "plug",
+            "governanceStatus": "PENDING_APPROVAL",
+            "confirmationLevel": "BACKEND_ACCEPTED",
+            "observedAt": "2026-10-14T20:00:00.000Z",
+            "verifiedAt": "2026-10-14T20:00:00.000Z",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "baseline-recorder",
+              "recordId": "lifecycle-evidence:27a0093599a2690be8eb8833a822f484eda3ea60d1e5ce251ef851a48df9374f",
+              "domain": "BACKEND_LOGICAL"
+            },
+            "provenance": {
+              "kind": "SIMULATED_AUTHENTICATED_FIXTURE",
+              "issuer": "AVM4_OFFLINE_RUNNER",
+              "verificationId": "avm4-baseline-verification:cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46"
+            },
+            "evidenceReference": {
+              "recordId": "avm4-baseline:cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+              "sha256": "67fa6118ae8f7f08699d4dc95e4ea9c7e96b1362091631563a3163f63016e584"
+            },
+            "simulation": true
+          },
+          "validation": {
+            "status": "PASS",
+            "code": "LIFECYCLE_BASELINE_VALID",
+            "message": "Baseline is structurally consistent and source-authorized under the injected policy.",
+            "details": {
+              "cpsId": "cpslai1",
+              "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+              "profileId": "GOV-CPSLAI1-003",
+              "confirmationLevel": "BACKEND_ACCEPTED",
+              "lifecycleState": "plug"
+            }
+          },
+          "evidencePayloadSha256": "67fa6118ae8f7f08699d4dc95e4ea9c7e96b1362091631563a3163f63016e584"
+        },
+        "unplug": {
+          "transition": {
+            "transitionId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v1",
+            "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+            "profileId": "GOV-CPSLAI1-003",
+            "operation": "UNPLUG",
+            "previousState": "plug",
+            "resultingState": "unplugged",
+            "outcome": "ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "storedAt": "2026-10-14T20:00:00.000Z",
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+              "contentHash": "b204a18a0f6a3eb59089f79bd6daa61b3fdf8651fc79a3c6f8311c8f546cd9c5"
+            }
+          },
+          "evidence": {
+            "schemaVersion": "1.0",
+            "evidenceId": "lifecycle-evidence:88f91b325969d113c5d9f59db7d2d6b8ce53d30ad4f008de99d792da53562d30",
+            "transitionId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v1",
+            "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+            "profileId": "GOV-CPSLAI1-003",
+            "operation": "UNPLUG",
+            "phase": "unplug",
+            "previousState": "plug",
+            "resultingState": "unplugged",
+            "outcome": "ACCEPTED",
+            "confirmationLevel": "BACKEND_ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "authorityReceipt": {
+              "verified": true,
+              "principal": {
+                "type": "LIFECYCLE_AUTHORITY",
+                "system": "avm4-offline-fixture",
+                "component": "transactional-lifecycle-authority",
+                "instanceId": "avm4-isolated-1"
+              },
+              "authorizationId": "avm4-simulated-server-authorization",
+              "scheme": "AVM4_OFFLINE_FIXTURE_VERIFIER",
+              "claimsHash": "avm4-fixture-claims",
+              "permission": "lifecycle.unplug.record"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "receivedAt": "2026-10-14T20:00:00.000Z",
+            "correlationId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+            "commandId": null,
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+              "contentHash": "b204a18a0f6a3eb59089f79bd6daa61b3fdf8651fc79a3c6f8311c8f546cd9c5"
+            },
+            "contentHash": "75f7717a0de9b5c4448167d04931250440760eb22b5fb76a81c65c49314f3331"
+          }
+        },
+        "simulation": true,
+        "confirmationLevel": "BACKEND_ACCEPTED"
+      },
+      "plugRetry": {
+        "sameCycle": true,
+        "sameProfile": true
+      },
+      "profileStatus": "PENDING_APPROVAL",
+      "playGate": {
+        "ok": false,
+        "status": 409,
+        "cpsId": "cpslai1",
+        "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+        "profileId": "GOV-CPSLAI1-003",
+        "cycleState": "ACTIVE",
+        "governanceStatus": "PENDING_APPROVAL",
+        "lifecyclePhase": "play",
+        "expectedPhase": "play",
+        "correlated": true,
+        "cycleActive": true,
+        "approved": false,
+        "phaseCompatible": true,
+        "reason": "GOVERNANCE_APPROVAL_REQUIRED"
+      },
+      "unplug": {
+        "cycleState": "CLOSED",
+        "governanceStatus": "PENDING_APPROVAL",
+        "confirmationLevel": "BACKEND_ACCEPTED",
+        "lifecycle": {
+          "transition": {
+            "transitionId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v1",
+            "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+            "profileId": "GOV-CPSLAI1-003",
+            "operation": "UNPLUG",
+            "previousState": "plug",
+            "resultingState": "unplugged",
+            "outcome": "ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "storedAt": "2026-10-14T20:00:00.000Z",
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+              "contentHash": "b204a18a0f6a3eb59089f79bd6daa61b3fdf8651fc79a3c6f8311c8f546cd9c5"
+            }
+          },
+          "evidence": {
+            "schemaVersion": "1.0",
+            "evidenceId": "lifecycle-evidence:88f91b325969d113c5d9f59db7d2d6b8ce53d30ad4f008de99d792da53562d30",
+            "transitionId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v1",
+            "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+            "profileId": "GOV-CPSLAI1-003",
+            "operation": "UNPLUG",
+            "phase": "unplug",
+            "previousState": "plug",
+            "resultingState": "unplugged",
+            "outcome": "ACCEPTED",
+            "confirmationLevel": "BACKEND_ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "authorityReceipt": {
+              "verified": true,
+              "principal": {
+                "type": "LIFECYCLE_AUTHORITY",
+                "system": "avm4-offline-fixture",
+                "component": "transactional-lifecycle-authority",
+                "instanceId": "avm4-isolated-1"
+              },
+              "authorizationId": "avm4-simulated-server-authorization",
+              "scheme": "AVM4_OFFLINE_FIXTURE_VERIFIER",
+              "claimsHash": "avm4-fixture-claims",
+              "permission": "lifecycle.unplug.record"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "receivedAt": "2026-10-14T20:00:00.000Z",
+            "correlationId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+            "commandId": null,
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+              "contentHash": "b204a18a0f6a3eb59089f79bd6daa61b3fdf8651fc79a3c6f8311c8f546cd9c5"
+            },
+            "contentHash": "75f7717a0de9b5c4448167d04931250440760eb22b5fb76a81c65c49314f3331"
+          }
+        }
+      },
+      "finalCycleState": "CLOSED",
+      "delayedUnplugRetry": {
+        "cycleState": "CLOSED",
+        "didNotCloseCurrentCycle": true
+      }
+    },
+    {
+      "sequence": 2,
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v2",
+      "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+      "profileId": "GOV-CPSLAI1-004",
+      "aasVersion": "v2",
+      "aasSha256": "b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+      "functionalHash": "b54732ebc3139fcdc57ba4b02d88d8d1fb99689573c230794026ab71967c5cdb",
+      "selectionId": "avm_sel_b0adbdcdff92b166229a112aa23f0eda",
+      "selectionOutcome": "SELECTED",
+      "selectionRetryOutcome": "NO_OP",
+      "evolution": {
+        "status": "CHANGED",
+        "duplicateRetry": true,
+        "snapshotId": "evo_snap_8ae0ceb2f772f7f1d4f18e3c3a6a3049",
+        "comparisonId": "evo_cmp_3d72eeb9524e4a273c4b03b4b16aec02",
+        "previousSnapshotId": "evo_snap_65e399521eb1daeedc49fcdaf047ae96",
+        "differences": [
+          {
+            "type": "CHANGED",
+            "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+            "capabilityBefore": "PieceDetection",
+            "capabilityCurrent": "PieceDetection",
+            "changedAttributes": [
+              {
+                "name": "PieceAtMiddle",
+                "before": "true",
+                "current": "false"
+              }
+            ]
+          }
+        ]
+      },
+      "archive": {
+        "contentHash": "b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+        "reference": "sha256:b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd"
+      },
+      "lifecycle": {
+        "plug": {
+          "transition": {
+            "transitionId": "lifecycle-transition:14754c961123bed50b4f2312d5ae28d30d079c9cb579d83234ba53b370460b40",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v2",
+            "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+            "profileId": "GOV-CPSLAI1-004",
+            "operation": "PLUG",
+            "previousState": "unplugged",
+            "resultingState": "plug",
+            "outcome": "ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "storedAt": "2026-10-14T20:00:00.000Z",
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:14754c961123bed50b4f2312d5ae28d30d079c9cb579d83234ba53b370460b40",
+              "contentHash": "1b34b6ede5de8c3b51c56177152bdfa432ee93603c47928b534e35d19701a2b9"
+            }
+          },
+          "evidence": {
+            "schemaVersion": "1.0",
+            "evidenceId": "lifecycle-evidence:918e7a826891f865fb46d2856e24bf1873b6c6c72e9800f33408606d6f71ce68",
+            "transitionId": "lifecycle-transition:14754c961123bed50b4f2312d5ae28d30d079c9cb579d83234ba53b370460b40",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v2",
+            "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+            "profileId": "GOV-CPSLAI1-004",
+            "operation": "PLUG",
+            "phase": "plug",
+            "previousState": "unplugged",
+            "resultingState": "plug",
+            "outcome": "ACCEPTED",
+            "confirmationLevel": "BACKEND_ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "authorityReceipt": {
+              "verified": true,
+              "principal": {
+                "type": "LIFECYCLE_AUTHORITY",
+                "system": "avm4-offline-fixture",
+                "component": "transactional-lifecycle-authority",
+                "instanceId": "avm4-isolated-1"
+              },
+              "authorizationId": "avm4-simulated-server-authorization",
+              "scheme": "AVM4_OFFLINE_FIXTURE_VERIFIER",
+              "claimsHash": "avm4-fixture-claims",
+              "permission": "lifecycle.plug.record"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "receivedAt": "2026-10-14T20:00:00.000Z",
+            "correlationId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+            "commandId": null,
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:14754c961123bed50b4f2312d5ae28d30d079c9cb579d83234ba53b370460b40",
+              "contentHash": "1b34b6ede5de8c3b51c56177152bdfa432ee93603c47928b534e35d19701a2b9"
+            },
+            "contentHash": "6029c6fda4e7bfb2a7b569c63489829b0ca8f5491b3e593b4591677f1146c983"
+          }
+        },
+        "baseline": {
+          "baseline": {
+            "schemaVersion": "1.0",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v2",
+            "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+            "profileId": "GOV-CPSLAI1-004",
+            "lifecycleState": "plug",
+            "governanceStatus": "PENDING_APPROVAL",
+            "confirmationLevel": "BACKEND_ACCEPTED",
+            "observedAt": "2026-10-14T20:00:00.000Z",
+            "verifiedAt": "2026-10-14T20:00:00.000Z",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "baseline-recorder",
+              "recordId": "lifecycle-evidence:918e7a826891f865fb46d2856e24bf1873b6c6c72e9800f33408606d6f71ce68",
+              "domain": "BACKEND_LOGICAL"
+            },
+            "provenance": {
+              "kind": "SIMULATED_AUTHENTICATED_FIXTURE",
+              "issuer": "AVM4_OFFLINE_RUNNER",
+              "verificationId": "avm4-baseline-verification:cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0"
+            },
+            "evidenceReference": {
+              "recordId": "avm4-baseline:cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+              "sha256": "960f92391d5b405066ecd7f298033291b27211f2544e9f31f4b00840e17a8124"
+            },
+            "simulation": true
+          },
+          "validation": {
+            "status": "PASS",
+            "code": "LIFECYCLE_BASELINE_VALID",
+            "message": "Baseline is structurally consistent and source-authorized under the injected policy.",
+            "details": {
+              "cpsId": "cpslai1",
+              "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+              "profileId": "GOV-CPSLAI1-004",
+              "confirmationLevel": "BACKEND_ACCEPTED",
+              "lifecycleState": "plug"
+            }
+          },
+          "evidencePayloadSha256": "960f92391d5b405066ecd7f298033291b27211f2544e9f31f4b00840e17a8124"
+        },
+        "unplug": {
+          "transition": {
+            "transitionId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v2",
+            "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+            "profileId": "GOV-CPSLAI1-004",
+            "operation": "UNPLUG",
+            "previousState": "plug",
+            "resultingState": "unplugged",
+            "outcome": "ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "storedAt": "2026-10-14T20:00:00.000Z",
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+              "contentHash": "fc17e37540adec1be5a479b1b1e9fe39ed02fe8c33a63f7f94e402b07a475962"
+            }
+          },
+          "evidence": {
+            "schemaVersion": "1.0",
+            "evidenceId": "lifecycle-evidence:2487b817e6321facc1c32606421c039da31aeab13afe0c2927f63655e4df5627",
+            "transitionId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v2",
+            "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+            "profileId": "GOV-CPSLAI1-004",
+            "operation": "UNPLUG",
+            "phase": "unplug",
+            "previousState": "plug",
+            "resultingState": "unplugged",
+            "outcome": "ACCEPTED",
+            "confirmationLevel": "BACKEND_ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "authorityReceipt": {
+              "verified": true,
+              "principal": {
+                "type": "LIFECYCLE_AUTHORITY",
+                "system": "avm4-offline-fixture",
+                "component": "transactional-lifecycle-authority",
+                "instanceId": "avm4-isolated-1"
+              },
+              "authorizationId": "avm4-simulated-server-authorization",
+              "scheme": "AVM4_OFFLINE_FIXTURE_VERIFIER",
+              "claimsHash": "avm4-fixture-claims",
+              "permission": "lifecycle.unplug.record"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "receivedAt": "2026-10-14T20:00:00.000Z",
+            "correlationId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+            "commandId": null,
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+              "contentHash": "fc17e37540adec1be5a479b1b1e9fe39ed02fe8c33a63f7f94e402b07a475962"
+            },
+            "contentHash": "876ce9edd2e29264fb34af478bcae9646c91de1bd335dcd3f7ceb46626adc230"
+          }
+        },
+        "simulation": true,
+        "confirmationLevel": "BACKEND_ACCEPTED"
+      },
+      "plugRetry": {
+        "sameCycle": true,
+        "sameProfile": true
+      },
+      "profileStatus": "PENDING_APPROVAL",
+      "playGate": {
+        "ok": false,
+        "status": 409,
+        "cpsId": "cpslai1",
+        "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+        "profileId": "GOV-CPSLAI1-004",
+        "cycleState": "ACTIVE",
+        "governanceStatus": "PENDING_APPROVAL",
+        "lifecyclePhase": "play",
+        "expectedPhase": "play",
+        "correlated": true,
+        "cycleActive": true,
+        "approved": false,
+        "phaseCompatible": true,
+        "reason": "GOVERNANCE_APPROVAL_REQUIRED"
+      },
+      "unplug": {
+        "cycleState": "CLOSED",
+        "governanceStatus": "PENDING_APPROVAL",
+        "confirmationLevel": "BACKEND_ACCEPTED",
+        "lifecycle": {
+          "transition": {
+            "transitionId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v2",
+            "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+            "profileId": "GOV-CPSLAI1-004",
+            "operation": "UNPLUG",
+            "previousState": "plug",
+            "resultingState": "unplugged",
+            "outcome": "ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "storedAt": "2026-10-14T20:00:00.000Z",
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+              "contentHash": "fc17e37540adec1be5a479b1b1e9fe39ed02fe8c33a63f7f94e402b07a475962"
+            }
+          },
+          "evidence": {
+            "schemaVersion": "1.0",
+            "evidenceId": "lifecycle-evidence:2487b817e6321facc1c32606421c039da31aeab13afe0c2927f63655e4df5627",
+            "transitionId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v2",
+            "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+            "profileId": "GOV-CPSLAI1-004",
+            "operation": "UNPLUG",
+            "phase": "unplug",
+            "previousState": "plug",
+            "resultingState": "unplugged",
+            "outcome": "ACCEPTED",
+            "confirmationLevel": "BACKEND_ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "authorityReceipt": {
+              "verified": true,
+              "principal": {
+                "type": "LIFECYCLE_AUTHORITY",
+                "system": "avm4-offline-fixture",
+                "component": "transactional-lifecycle-authority",
+                "instanceId": "avm4-isolated-1"
+              },
+              "authorizationId": "avm4-simulated-server-authorization",
+              "scheme": "AVM4_OFFLINE_FIXTURE_VERIFIER",
+              "claimsHash": "avm4-fixture-claims",
+              "permission": "lifecycle.unplug.record"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "receivedAt": "2026-10-14T20:00:00.000Z",
+            "correlationId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+            "commandId": null,
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+              "contentHash": "fc17e37540adec1be5a479b1b1e9fe39ed02fe8c33a63f7f94e402b07a475962"
+            },
+            "contentHash": "876ce9edd2e29264fb34af478bcae9646c91de1bd335dcd3f7ceb46626adc230"
+          }
+        }
+      },
+      "finalCycleState": "CLOSED"
+    },
+    {
+      "sequence": 3,
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v3",
+      "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+      "profileId": "GOV-CPSLAI1-005",
+      "aasVersion": "v3",
+      "aasSha256": "f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+      "functionalHash": "d90f9b2a46ba47f543972e1c7b68662d9dac7490a788d5d2e15788627a8ac66d",
+      "selectionId": "avm_sel_9a294b6a852a4e186788180880ff03b3",
+      "selectionOutcome": "SELECTED",
+      "selectionRetryOutcome": "NO_OP",
+      "evolution": {
+        "status": "CHANGED",
+        "duplicateRetry": true,
+        "snapshotId": "evo_snap_806be2863445e2f08dcaf3ad95ac99cd",
+        "comparisonId": "evo_cmp_1e3ff155a24cc6b2ce30a6a2b027b64e",
+        "previousSnapshotId": "evo_snap_8ae0ceb2f772f7f1d4f18e3c3a6a3049",
+        "differences": [
+          {
+            "type": "ADDED",
+            "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1",
+            "capabilityBefore": null,
+            "capabilityCurrent": "ExperimentalAdaptivePieceDetection",
+            "changedAttributes": [
+              {
+                "name": "declarationValue",
+                "before": null,
+                "current": "true"
+              }
+            ]
+          }
+        ]
+      },
+      "archive": {
+        "contentHash": "f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+        "reference": "sha256:f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d"
+      },
+      "lifecycle": {
+        "plug": {
+          "transition": {
+            "transitionId": "lifecycle-transition:29e48deaacceaf8b5ccf5d91b012ee1a9c8e88fce74b53037ee057433bc5d374",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v3",
+            "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+            "profileId": "GOV-CPSLAI1-005",
+            "operation": "PLUG",
+            "previousState": "unplugged",
+            "resultingState": "plug",
+            "outcome": "ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "storedAt": "2026-10-14T20:00:00.000Z",
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:29e48deaacceaf8b5ccf5d91b012ee1a9c8e88fce74b53037ee057433bc5d374",
+              "contentHash": "ce776c739841cefe15cbbf2c83874bdc732eaede320218a14ef528ea9e12d5d6"
+            }
+          },
+          "evidence": {
+            "schemaVersion": "1.0",
+            "evidenceId": "lifecycle-evidence:fad7fac3113b95ad1217f52c340a55d2519893851b8085f3fd8e18a7943b0248",
+            "transitionId": "lifecycle-transition:29e48deaacceaf8b5ccf5d91b012ee1a9c8e88fce74b53037ee057433bc5d374",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v3",
+            "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+            "profileId": "GOV-CPSLAI1-005",
+            "operation": "PLUG",
+            "phase": "plug",
+            "previousState": "unplugged",
+            "resultingState": "plug",
+            "outcome": "ACCEPTED",
+            "confirmationLevel": "BACKEND_ACCEPTED",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "transactional-lifecycle-authority",
+              "instanceId": "avm4-isolated-1"
+            },
+            "authorityReceipt": {
+              "verified": true,
+              "principal": {
+                "type": "LIFECYCLE_AUTHORITY",
+                "system": "avm4-offline-fixture",
+                "component": "transactional-lifecycle-authority",
+                "instanceId": "avm4-isolated-1"
+              },
+              "authorizationId": "avm4-simulated-server-authorization",
+              "scheme": "AVM4_OFFLINE_FIXTURE_VERIFIER",
+              "claimsHash": "avm4-fixture-claims",
+              "permission": "lifecycle.plug.record"
+            },
+            "occurredAt": "2026-10-14T20:00:00.000Z",
+            "receivedAt": "2026-10-14T20:00:00.000Z",
+            "correlationId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+            "commandId": null,
+            "evidenceReference": {
+              "kind": "BACKEND_TRANSITION_RECORD",
+              "recordId": "lifecycle-transition:29e48deaacceaf8b5ccf5d91b012ee1a9c8e88fce74b53037ee057433bc5d374",
+              "contentHash": "ce776c739841cefe15cbbf2c83874bdc732eaede320218a14ef528ea9e12d5d6"
+            },
+            "contentHash": "c46f666590ef56ff56ce55a9856f70412dce960c6489396076b7d54a69fbbe7e"
+          }
+        },
+        "baseline": {
+          "baseline": {
+            "schemaVersion": "1.0",
+            "cpsId": "cpslai1",
+            "plugEventId": "avm4-plug-v3",
+            "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+            "profileId": "GOV-CPSLAI1-005",
+            "lifecycleState": "plug",
+            "governanceStatus": "PENDING_APPROVAL",
+            "confirmationLevel": "BACKEND_ACCEPTED",
+            "observedAt": "2026-10-14T20:00:00.000Z",
+            "verifiedAt": "2026-10-14T20:00:00.000Z",
+            "source": {
+              "system": "avm4-offline-fixture",
+              "component": "baseline-recorder",
+              "recordId": "lifecycle-evidence:fad7fac3113b95ad1217f52c340a55d2519893851b8085f3fd8e18a7943b0248",
+              "domain": "BACKEND_LOGICAL"
+            },
+            "provenance": {
+              "kind": "SIMULATED_AUTHENTICATED_FIXTURE",
+              "issuer": "AVM4_OFFLINE_RUNNER",
+              "verificationId": "avm4-baseline-verification:cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031"
+            },
+            "evidenceReference": {
+              "recordId": "avm4-baseline:cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+              "sha256": "f9e6306fe2620c55c59afd62814edf31120356d6bec65c6d96521d26752171c9"
+            },
+            "simulation": true
+          },
+          "validation": {
+            "status": "PASS",
+            "code": "LIFECYCLE_BASELINE_VALID",
+            "message": "Baseline is structurally consistent and source-authorized under the injected policy.",
+            "details": {
+              "cpsId": "cpslai1",
+              "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+              "profileId": "GOV-CPSLAI1-005",
+              "confirmationLevel": "BACKEND_ACCEPTED",
+              "lifecycleState": "plug"
+            }
+          },
+          "evidencePayloadSha256": "f9e6306fe2620c55c59afd62814edf31120356d6bec65c6d96521d26752171c9"
+        },
+        "unplug": null,
+        "simulation": true,
+        "confirmationLevel": "BACKEND_ACCEPTED"
+      },
+      "plugRetry": {
+        "sameCycle": true,
+        "sameProfile": true
+      },
+      "profileStatus": "PENDING_APPROVAL",
+      "playGate": {
+        "ok": false,
+        "status": 409,
+        "cpsId": "cpslai1",
+        "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+        "profileId": "GOV-CPSLAI1-005",
+        "cycleState": "ACTIVE",
+        "governanceStatus": "PENDING_APPROVAL",
+        "lifecyclePhase": "play",
+        "expectedPhase": "play",
+        "correlated": true,
+        "cycleActive": true,
+        "approved": false,
+        "phaseCompatible": true,
+        "reason": "GOVERNANCE_APPROVAL_REQUIRED"
+      },
+      "unplug": null,
+      "finalCycleState": "ACTIVE"
+    }
+  ],
+  "checks": {
+    "distinctCycles": true,
+    "distinctProfiles": true,
+    "evolutionSequence": [
+      "BASELINE",
+      "CHANGED",
+      "CHANGED"
+    ],
+    "finalCycleStates": [
+      "CLOSED",
+      "CLOSED",
+      "ACTIVE"
+    ],
+    "allProfilesPending": true,
+    "allPlayBlocked": true,
+    "noApprovalInherited": true,
+    "archivedRecoverable": {
+      "v1": true,
+      "v2": true,
+      "v3": true
+    },
+    "initialApprovedProfilePreserved": true,
+    "selectionCount": 3,
+    "snapshotCount": 3,
+    "comparisonCount": 3,
+    "governanceRevision": 13
+  },
+  "faultRecovery": {
+    "simulation": true,
+    "activation": {
+      "injectedFailure": "AVM4_INJECTED_AFTER_PLUG_EVIDENCE",
+      "evidenceStoredBeforeRecovery": true,
+      "recoveredState": "ACTIVE"
+    },
+    "close": {
+      "injectedFailure": "AVM4_INJECTED_AFTER_UNPLUG_EVIDENCE",
+      "evidenceStoredBeforeRecovery": true,
+      "recoveredState": "CLOSED"
+    }
+  },
+  "governanceHistory": [
+    {
+      "id": "gov_hist_1a864d6d-9635-4ae4-a2be-2b8adb38390c",
+      "timestamp": "2026-10-14T20:00:00.000Z",
+      "eventType": "GOVERNANCE_PLUG_CYCLE_ACTIVATED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v3",
+      "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+      "profileId": "GOV-CPSLAI1-005",
+      "profileVersion": 5,
+      "status": "PENDING_APPROVAL",
+      "activatedAt": "2026-10-14T20:00:00.000Z",
+      "lifecycleTransitionId": "lifecycle-transition:29e48deaacceaf8b5ccf5d91b012ee1a9c8e88fce74b53037ee057433bc5d374"
+    },
+    {
+      "id": "gov_hist_f468dd56-8a3e-414c-998c-c7420f329555",
+      "timestamp": "2026-10-14T20:00:00.000Z",
+      "eventType": "GOVERNANCE_PLUG_CYCLE_RESERVED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v3",
+      "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+      "profileId": "GOV-CPSLAI1-005",
+      "profileVersion": 5,
+      "previousProfileId": "GOV-CPSLAI1-004",
+      "previousProfileVersion": 4,
+      "status": "PENDING_APPROVAL",
+      "plugCycleState": "RESERVED",
+      "template": "DISTRIBUTION_CONVEYOR"
+    },
+    {
+      "id": "gov_hist_f3d3cbc9-9310-4f21-9563-785d3766ecde",
+      "timestamp": "2026-10-14T20:00:00.000Z",
+      "eventType": "GOVERNANCE_PLUG_CYCLE_CLOSED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v2",
+      "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+      "profileId": "GOV-CPSLAI1-004",
+      "profileVersion": 4,
+      "status": "PENDING_APPROVAL",
+      "closedBy": "verified-unplug",
+      "plugClosedAt": "2026-10-14T20:00:00.000Z",
+      "unplugTransitionId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6"
+    },
+    {
+      "id": "gov_hist_933e7a9d-fcfd-41c1-8e2c-3f9fb2428d13",
+      "timestamp": "2026-10-14T20:00:00.000Z",
+      "eventType": "GOVERNANCE_PLUG_CYCLE_ACTIVATED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v2",
+      "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+      "profileId": "GOV-CPSLAI1-004",
+      "profileVersion": 4,
+      "status": "PENDING_APPROVAL",
+      "activatedAt": "2026-10-14T20:00:00.000Z",
+      "lifecycleTransitionId": "lifecycle-transition:14754c961123bed50b4f2312d5ae28d30d079c9cb579d83234ba53b370460b40"
+    },
+    {
+      "id": "gov_hist_0bab34a6-223c-49ba-89fb-70d26eaa2363",
+      "timestamp": "2026-10-14T20:00:00.000Z",
+      "eventType": "GOVERNANCE_PLUG_CYCLE_RESERVED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v2",
+      "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+      "profileId": "GOV-CPSLAI1-004",
+      "profileVersion": 4,
+      "previousProfileId": "GOV-CPSLAI1-003",
+      "previousProfileVersion": 3,
+      "status": "PENDING_APPROVAL",
+      "plugCycleState": "RESERVED",
+      "template": "DISTRIBUTION_CONVEYOR"
+    },
+    {
+      "id": "gov_hist_58b7f089-25cd-4379-80fb-fa1c1c7fe76c",
+      "timestamp": "2026-10-14T20:00:00.000Z",
+      "eventType": "GOVERNANCE_PLUG_CYCLE_CLOSED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v1",
+      "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+      "profileId": "GOV-CPSLAI1-003",
+      "profileVersion": 3,
+      "status": "PENDING_APPROVAL",
+      "closedBy": "verified-unplug",
+      "plugClosedAt": "2026-10-14T20:00:00.000Z",
+      "unplugTransitionId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68"
+    },
+    {
+      "id": "gov_hist_17b163ac-a470-4fac-ae16-0e2e0f38f805",
+      "timestamp": "2026-10-14T20:00:00.000Z",
+      "eventType": "GOVERNANCE_PLUG_CYCLE_ACTIVATED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v1",
+      "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+      "profileId": "GOV-CPSLAI1-003",
+      "profileVersion": 3,
+      "status": "PENDING_APPROVAL",
+      "activatedAt": "2026-10-14T20:00:00.000Z",
+      "lifecycleTransitionId": "lifecycle-transition:a20dd5e378e649c9fb1f71b7b58532a7cc84efbbee9bcc7c82a7a59f0423ae4b"
+    },
+    {
+      "id": "gov_hist_acbe8dc4-6135-4987-ab6d-fce928f5dba3",
+      "timestamp": "2026-10-14T20:00:00.000Z",
+      "eventType": "GOVERNANCE_PLUG_CYCLE_RESERVED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v1",
+      "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+      "profileId": "GOV-CPSLAI1-003",
+      "profileVersion": 3,
+      "previousProfileId": "gov-cpslai1-v2",
+      "previousProfileVersion": 2,
+      "status": "PENDING_APPROVAL",
+      "plugCycleState": "RESERVED",
+      "template": "DISTRIBUTION_CONVEYOR"
+    },
+    {
+      "id": "history-1",
+      "eventType": "GOVERNANCE_PROFILE_APPROVED"
+    },
+    {
+      "eventId": "LIFECYCLE_TRANSITION_ACCEPTED:lifecycle-transition:a20dd5e378e649c9fb1f71b7b58532a7cc84efbbee9bcc7c82a7a59f0423ae4b",
+      "eventType": "GOVERNANCE_LIFECYCLE_TRANSITION_ACCEPTED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v1",
+      "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+      "profileId": "GOV-CPSLAI1-003",
+      "operation": "PLUG",
+      "previousState": "idle",
+      "resultingState": "plug",
+      "transitionId": "lifecycle-transition:a20dd5e378e649c9fb1f71b7b58532a7cc84efbbee9bcc7c82a7a59f0423ae4b",
+      "evidenceId": "lifecycle-evidence:27a0093599a2690be8eb8833a822f484eda3ea60d1e5ce251ef851a48df9374f",
+      "confirmationLevel": "BACKEND_ACCEPTED",
+      "occurredAt": "2026-10-14T20:00:00.000Z",
+      "storedAt": "2026-10-14T20:00:00.000Z"
+    },
+    {
+      "eventId": "LIFECYCLE_TRANSITION_ACCEPTED:lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+      "eventType": "GOVERNANCE_LIFECYCLE_TRANSITION_ACCEPTED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v1",
+      "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+      "profileId": "GOV-CPSLAI1-003",
+      "operation": "UNPLUG",
+      "previousState": "plug",
+      "resultingState": "unplugged",
+      "transitionId": "lifecycle-transition:22d729084726bbbbd4fac7b121cb58650c398c273f56a125b4b3ceb301e36b68",
+      "evidenceId": "lifecycle-evidence:88f91b325969d113c5d9f59db7d2d6b8ce53d30ad4f008de99d792da53562d30",
+      "confirmationLevel": "BACKEND_ACCEPTED",
+      "occurredAt": "2026-10-14T20:00:00.000Z",
+      "storedAt": "2026-10-14T20:00:00.000Z"
+    },
+    {
+      "eventId": "LIFECYCLE_TRANSITION_ACCEPTED:lifecycle-transition:14754c961123bed50b4f2312d5ae28d30d079c9cb579d83234ba53b370460b40",
+      "eventType": "GOVERNANCE_LIFECYCLE_TRANSITION_ACCEPTED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v2",
+      "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+      "profileId": "GOV-CPSLAI1-004",
+      "operation": "PLUG",
+      "previousState": "unplugged",
+      "resultingState": "plug",
+      "transitionId": "lifecycle-transition:14754c961123bed50b4f2312d5ae28d30d079c9cb579d83234ba53b370460b40",
+      "evidenceId": "lifecycle-evidence:918e7a826891f865fb46d2856e24bf1873b6c6c72e9800f33408606d6f71ce68",
+      "confirmationLevel": "BACKEND_ACCEPTED",
+      "occurredAt": "2026-10-14T20:00:00.000Z",
+      "storedAt": "2026-10-14T20:00:00.000Z"
+    },
+    {
+      "eventId": "LIFECYCLE_TRANSITION_ACCEPTED:lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+      "eventType": "GOVERNANCE_LIFECYCLE_TRANSITION_ACCEPTED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v2",
+      "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+      "profileId": "GOV-CPSLAI1-004",
+      "operation": "UNPLUG",
+      "previousState": "plug",
+      "resultingState": "unplugged",
+      "transitionId": "lifecycle-transition:02847d17dad091a889094656b80e7094b7c97b2653eae9f21d38b1cb7fd7b2f6",
+      "evidenceId": "lifecycle-evidence:2487b817e6321facc1c32606421c039da31aeab13afe0c2927f63655e4df5627",
+      "confirmationLevel": "BACKEND_ACCEPTED",
+      "occurredAt": "2026-10-14T20:00:00.000Z",
+      "storedAt": "2026-10-14T20:00:00.000Z"
+    },
+    {
+      "eventId": "LIFECYCLE_TRANSITION_ACCEPTED:lifecycle-transition:29e48deaacceaf8b5ccf5d91b012ee1a9c8e88fce74b53037ee057433bc5d374",
+      "eventType": "GOVERNANCE_LIFECYCLE_TRANSITION_ACCEPTED",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v3",
+      "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+      "profileId": "GOV-CPSLAI1-005",
+      "operation": "PLUG",
+      "previousState": "unplugged",
+      "resultingState": "plug",
+      "transitionId": "lifecycle-transition:29e48deaacceaf8b5ccf5d91b012ee1a9c8e88fce74b53037ee057433bc5d374",
+      "evidenceId": "lifecycle-evidence:fad7fac3113b95ad1217f52c340a55d2519893851b8085f3fd8e18a7943b0248",
+      "confirmationLevel": "BACKEND_ACCEPTED",
+      "occurredAt": "2026-10-14T20:00:00.000Z",
+      "storedAt": "2026-10-14T20:00:00.000Z"
+    }
+  ],
+  "evolutionHistory": [
+    {
+      "comparisonId": "evo_cmp_8630a27615f5fd7364fd424671ebd06d",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v1",
+      "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+      "previousSnapshotId": null,
+      "currentSnapshotId": "evo_snap_65e399521eb1daeedc49fcdaf047ae96",
+      "aasReference": {
+        "cpsId": "cpslai1",
+        "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+        "assetId": "urn:ufsc:lai:asset:cps-lai-01:distribution-conveyor",
+        "version": null,
+        "revision": null,
+        "contentHash": "7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+        "canonicalHash": null,
+        "sourceId": "cpslai1-avm-experimental-catalog",
+        "sourceType": "EXPERIMENTAL_STATIC_DOCUMENT",
+        "operational": false,
+        "sourceRevision": null,
+        "resolverVersion": "experimental-aas-resolver/1.0.0",
+        "resolvedAt": "2026-10-14T20:00:00.000Z",
+        "archiveReference": "sha256:7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+        "archiveContentHash": "7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+        "evidenceScope": "OFFLINE_DOCUMENTAL_AAS",
+        "physicalStateInferred": false
+      },
+      "comparedAt": "2026-10-14T20:00:00.000Z",
+      "status": "BASELINE",
+      "reason": null,
+      "promoted": true,
+      "differences": [],
+      "ambiguities": [],
+      "result": {
+        "comparisonVersion": "aas-functional-comparator/1.0.0",
+        "previous": null,
+        "current": {
+          "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+          "administration": {
+            "revision": "1",
+            "version": "1"
+          },
+          "functionalHash": "5ca2e6d97211397535372ebbd32bf05f9798021d2b25cbabfc9d00709c1f135e",
+          "extractionVersion": "aas-functional-extractor/1.0.0",
+          "normalizationVersion": "aas-functional-normalizer/1.0.0"
+        },
+        "differences": [],
+        "ambiguities": [],
+        "status": "BASELINE"
+      }
+    },
+    {
+      "comparisonId": "evo_cmp_3d72eeb9524e4a273c4b03b4b16aec02",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v2",
+      "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+      "previousSnapshotId": "evo_snap_65e399521eb1daeedc49fcdaf047ae96",
+      "currentSnapshotId": "evo_snap_8ae0ceb2f772f7f1d4f18e3c3a6a3049",
+      "aasReference": {
+        "cpsId": "cpslai1",
+        "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+        "assetId": "urn:ufsc:lai:asset:cps-lai-01:distribution-conveyor",
+        "version": null,
+        "revision": null,
+        "contentHash": "b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+        "canonicalHash": null,
+        "sourceId": "cpslai1-avm-experimental-catalog",
+        "sourceType": "EXPERIMENTAL_STATIC_DOCUMENT",
+        "operational": false,
+        "sourceRevision": null,
+        "resolverVersion": "experimental-aas-resolver/1.0.0",
+        "resolvedAt": "2026-10-14T20:00:00.000Z",
+        "archiveReference": "sha256:b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+        "archiveContentHash": "b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+        "evidenceScope": "OFFLINE_DOCUMENTAL_AAS",
+        "physicalStateInferred": false
+      },
+      "comparedAt": "2026-10-14T20:00:00.000Z",
+      "status": "CHANGED",
+      "reason": null,
+      "promoted": true,
+      "differences": [
+        {
+          "type": "CHANGED",
+          "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+          "before": {
+            "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+            "identityBasis": "SEMANTIC_REFERENCE",
+            "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/piecedetection",
+            "attributes": {
+              "PieceAtEntry": {
+                "qualifiers": [],
+                "semanticReferences": [],
+                "value": "true",
+                "valueType": "xs:boolean"
+              },
+              "PieceAtExit": {
+                "qualifiers": [],
+                "semanticReferences": [],
+                "value": "true",
+                "valueType": "xs:boolean"
+              },
+              "PieceAtMiddle": {
+                "qualifiers": [],
+                "semanticReferences": [],
+                "value": "true",
+                "valueType": "xs:boolean"
+              }
+            },
+            "enabled": null,
+            "evidence": {
+              "bindingStatus": "NOT_DECLARED",
+              "incompleteFields": [],
+              "level": "DECLARED_ONLY",
+              "physicallyValidated": false
+            },
+            "kind": "CAPABILITY",
+            "name": "PieceDetection",
+            "qualifiers": [
+              {
+                "type": "EvidenceScope",
+                "value": "DECLARED_FUNCTIONAL_SUPPORT",
+                "valueType": "xs:string"
+              },
+              {
+                "type": "ExperimentalModel",
+                "value": "true",
+                "valueType": "xs:boolean"
+              }
+            ],
+            "semanticReferences": [
+              {
+                "type": "GlobalReference",
+                "value": "urn:ufsc:lai:experimental:capability:piece-detection:1"
+              }
+            ],
+            "source": {
+              "idShort": "PieceDetection",
+              "modelType": "SubmodelElementCollection",
+              "path": "Capabilities/PieceDetection",
+              "submodelId": "urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities",
+              "submodelIdShort": "Capabilities"
+            },
+            "contractHash": "39e70f9277ba8293d84bb1ae15c55c00d3f3148acf093ac03438b6deffa44d84"
+          },
+          "current": {
+            "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+            "identityBasis": "SEMANTIC_REFERENCE",
+            "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/piecedetection",
+            "attributes": {
+              "PieceAtEntry": {
+                "qualifiers": [],
+                "semanticReferences": [],
+                "value": "true",
+                "valueType": "xs:boolean"
+              },
+              "PieceAtExit": {
+                "qualifiers": [],
+                "semanticReferences": [],
+                "value": "true",
+                "valueType": "xs:boolean"
+              },
+              "PieceAtMiddle": {
+                "qualifiers": [],
+                "semanticReferences": [],
+                "value": "false",
+                "valueType": "xs:boolean"
+              }
+            },
+            "enabled": null,
+            "evidence": {
+              "bindingStatus": "NOT_DECLARED",
+              "incompleteFields": [],
+              "level": "DECLARED_ONLY",
+              "physicallyValidated": false
+            },
+            "kind": "CAPABILITY",
+            "name": "PieceDetection",
+            "qualifiers": [
+              {
+                "type": "EvidenceScope",
+                "value": "DECLARED_FUNCTIONAL_SUPPORT",
+                "valueType": "xs:string"
+              },
+              {
+                "type": "ExperimentalModel",
+                "value": "true",
+                "valueType": "xs:boolean"
+              }
+            ],
+            "semanticReferences": [
+              {
+                "type": "GlobalReference",
+                "value": "urn:ufsc:lai:experimental:capability:piece-detection:1"
+              }
+            ],
+            "source": {
+              "idShort": "PieceDetection",
+              "modelType": "SubmodelElementCollection",
+              "path": "Capabilities/PieceDetection",
+              "submodelId": "urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities",
+              "submodelIdShort": "Capabilities"
+            },
+            "contractHash": "1549cdd47a129f0031b81c3d458ef6b22ce9a14a9202d69a1deb740e40cb2450"
+          }
+        }
+      ],
+      "ambiguities": [],
+      "result": {
+        "comparisonVersion": "aas-functional-comparator/1.0.0",
+        "previous": {
+          "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+          "administration": {
+            "revision": "1",
+            "version": "1"
+          },
+          "functionalHash": "5ca2e6d97211397535372ebbd32bf05f9798021d2b25cbabfc9d00709c1f135e",
+          "extractionVersion": "aas-functional-extractor/1.0.0",
+          "normalizationVersion": "aas-functional-normalizer/1.0.0"
+        },
+        "current": {
+          "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+          "administration": {
+            "revision": "1",
+            "version": "1"
+          },
+          "functionalHash": "b54732ebc3139fcdc57ba4b02d88d8d1fb99689573c230794026ab71967c5cdb",
+          "extractionVersion": "aas-functional-extractor/1.0.0",
+          "normalizationVersion": "aas-functional-normalizer/1.0.0"
+        },
+        "differences": [
+          {
+            "type": "CHANGED",
+            "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+            "before": {
+              "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+              "identityBasis": "SEMANTIC_REFERENCE",
+              "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/piecedetection",
+              "attributes": {
+                "PieceAtEntry": {
+                  "qualifiers": [],
+                  "semanticReferences": [],
+                  "value": "true",
+                  "valueType": "xs:boolean"
+                },
+                "PieceAtExit": {
+                  "qualifiers": [],
+                  "semanticReferences": [],
+                  "value": "true",
+                  "valueType": "xs:boolean"
+                },
+                "PieceAtMiddle": {
+                  "qualifiers": [],
+                  "semanticReferences": [],
+                  "value": "true",
+                  "valueType": "xs:boolean"
+                }
+              },
+              "enabled": null,
+              "evidence": {
+                "bindingStatus": "NOT_DECLARED",
+                "incompleteFields": [],
+                "level": "DECLARED_ONLY",
+                "physicallyValidated": false
+              },
+              "kind": "CAPABILITY",
+              "name": "PieceDetection",
+              "qualifiers": [
+                {
+                  "type": "EvidenceScope",
+                  "value": "DECLARED_FUNCTIONAL_SUPPORT",
+                  "valueType": "xs:string"
+                },
+                {
+                  "type": "ExperimentalModel",
+                  "value": "true",
+                  "valueType": "xs:boolean"
+                }
+              ],
+              "semanticReferences": [
+                {
+                  "type": "GlobalReference",
+                  "value": "urn:ufsc:lai:experimental:capability:piece-detection:1"
+                }
+              ],
+              "source": {
+                "idShort": "PieceDetection",
+                "modelType": "SubmodelElementCollection",
+                "path": "Capabilities/PieceDetection",
+                "submodelId": "urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities",
+                "submodelIdShort": "Capabilities"
+              },
+              "contractHash": "39e70f9277ba8293d84bb1ae15c55c00d3f3148acf093ac03438b6deffa44d84"
+            },
+            "current": {
+              "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:piece-detection:1",
+              "identityBasis": "SEMANTIC_REFERENCE",
+              "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/piecedetection",
+              "attributes": {
+                "PieceAtEntry": {
+                  "qualifiers": [],
+                  "semanticReferences": [],
+                  "value": "true",
+                  "valueType": "xs:boolean"
+                },
+                "PieceAtExit": {
+                  "qualifiers": [],
+                  "semanticReferences": [],
+                  "value": "true",
+                  "valueType": "xs:boolean"
+                },
+                "PieceAtMiddle": {
+                  "qualifiers": [],
+                  "semanticReferences": [],
+                  "value": "false",
+                  "valueType": "xs:boolean"
+                }
+              },
+              "enabled": null,
+              "evidence": {
+                "bindingStatus": "NOT_DECLARED",
+                "incompleteFields": [],
+                "level": "DECLARED_ONLY",
+                "physicallyValidated": false
+              },
+              "kind": "CAPABILITY",
+              "name": "PieceDetection",
+              "qualifiers": [
+                {
+                  "type": "EvidenceScope",
+                  "value": "DECLARED_FUNCTIONAL_SUPPORT",
+                  "valueType": "xs:string"
+                },
+                {
+                  "type": "ExperimentalModel",
+                  "value": "true",
+                  "valueType": "xs:boolean"
+                }
+              ],
+              "semanticReferences": [
+                {
+                  "type": "GlobalReference",
+                  "value": "urn:ufsc:lai:experimental:capability:piece-detection:1"
+                }
+              ],
+              "source": {
+                "idShort": "PieceDetection",
+                "modelType": "SubmodelElementCollection",
+                "path": "Capabilities/PieceDetection",
+                "submodelId": "urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities",
+                "submodelIdShort": "Capabilities"
+              },
+              "contractHash": "1549cdd47a129f0031b81c3d458ef6b22ce9a14a9202d69a1deb740e40cb2450"
+            }
+          }
+        ],
+        "ambiguities": [],
+        "status": "CHANGED"
+      }
+    },
+    {
+      "comparisonId": "evo_cmp_1e3ff155a24cc6b2ce30a6a2b027b64e",
+      "cpsId": "cpslai1",
+      "plugEventId": "avm4-plug-v3",
+      "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+      "previousSnapshotId": "evo_snap_8ae0ceb2f772f7f1d4f18e3c3a6a3049",
+      "currentSnapshotId": "evo_snap_806be2863445e2f08dcaf3ad95ac99cd",
+      "aasReference": {
+        "cpsId": "cpslai1",
+        "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+        "assetId": "urn:ufsc:lai:asset:cps-lai-01:distribution-conveyor",
+        "version": null,
+        "revision": null,
+        "contentHash": "f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+        "canonicalHash": null,
+        "sourceId": "cpslai1-avm-experimental-catalog",
+        "sourceType": "EXPERIMENTAL_STATIC_DOCUMENT",
+        "operational": false,
+        "sourceRevision": null,
+        "resolverVersion": "experimental-aas-resolver/1.0.0",
+        "resolvedAt": "2026-10-14T20:00:00.000Z",
+        "archiveReference": "sha256:f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+        "archiveContentHash": "f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+        "evidenceScope": "OFFLINE_DOCUMENTAL_AAS",
+        "physicalStateInferred": false
+      },
+      "comparedAt": "2026-10-14T20:00:00.000Z",
+      "status": "CHANGED",
+      "reason": null,
+      "promoted": true,
+      "differences": [
+        {
+          "type": "ADDED",
+          "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1",
+          "before": null,
+          "current": {
+            "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1",
+            "identityBasis": "SEMANTIC_REFERENCE",
+            "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/experimentaladaptivepiecedetection",
+            "attributes": {
+              "declarationValue": {
+                "value": "true",
+                "valueType": "xs:boolean"
+              }
+            },
+            "enabled": true,
+            "evidence": {
+              "bindingStatus": "NOT_DECLARED",
+              "incompleteFields": [],
+              "level": "DECLARED_ONLY",
+              "physicallyValidated": false
+            },
+            "kind": "CAPABILITY",
+            "name": "ExperimentalAdaptivePieceDetection",
+            "qualifiers": [
+              {
+                "type": "EvidenceScope",
+                "value": "DECLARED_ONLY_NO_PHYSICAL_EVIDENCE",
+                "valueType": "xs:string"
+              },
+              {
+                "type": "ExperimentalModel",
+                "value": "true",
+                "valueType": "xs:boolean"
+              }
+            ],
+            "semanticReferences": [
+              {
+                "type": "GlobalReference",
+                "value": "urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1"
+              }
+            ],
+            "source": {
+              "idShort": "ExperimentalAdaptivePieceDetection",
+              "modelType": "Property",
+              "path": "Capabilities/ExperimentalAdaptivePieceDetection",
+              "submodelId": "urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities",
+              "submodelIdShort": "Capabilities"
+            },
+            "contractHash": "469a3e49653bee3a51f1a06dce2331b127705b36c4ca3eb9411b0c3b44f54e04"
+          }
+        }
+      ],
+      "ambiguities": [],
+      "result": {
+        "comparisonVersion": "aas-functional-comparator/1.0.0",
+        "previous": {
+          "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+          "administration": {
+            "revision": "1",
+            "version": "1"
+          },
+          "functionalHash": "b54732ebc3139fcdc57ba4b02d88d8d1fb99689573c230794026ab71967c5cdb",
+          "extractionVersion": "aas-functional-extractor/1.0.0",
+          "normalizationVersion": "aas-functional-normalizer/1.0.0"
+        },
+        "current": {
+          "aasId": "urn:ufsc:lai:ppu:cps-lai-01:aas",
+          "administration": {
+            "revision": "1",
+            "version": "1"
+          },
+          "functionalHash": "d90f9b2a46ba47f543972e1c7b68662d9dac7490a788d5d2e15788627a8ac66d",
+          "extractionVersion": "aas-functional-extractor/1.0.0",
+          "normalizationVersion": "aas-functional-normalizer/1.0.0"
+        },
+        "differences": [
+          {
+            "type": "ADDED",
+            "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1",
+            "before": null,
+            "current": {
+              "identity": "semantic:GlobalReference:urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1",
+              "identityBasis": "SEMANTIC_REFERENCE",
+              "technicalIdentity": "capability:urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities:capabilities/experimentaladaptivepiecedetection",
+              "attributes": {
+                "declarationValue": {
+                  "value": "true",
+                  "valueType": "xs:boolean"
+                }
+              },
+              "enabled": true,
+              "evidence": {
+                "bindingStatus": "NOT_DECLARED",
+                "incompleteFields": [],
+                "level": "DECLARED_ONLY",
+                "physicallyValidated": false
+              },
+              "kind": "CAPABILITY",
+              "name": "ExperimentalAdaptivePieceDetection",
+              "qualifiers": [
+                {
+                  "type": "EvidenceScope",
+                  "value": "DECLARED_ONLY_NO_PHYSICAL_EVIDENCE",
+                  "valueType": "xs:string"
+                },
+                {
+                  "type": "ExperimentalModel",
+                  "value": "true",
+                  "valueType": "xs:boolean"
+                }
+              ],
+              "semanticReferences": [
+                {
+                  "type": "GlobalReference",
+                  "value": "urn:ufsc:lai:experimental:capability:adaptive-piece-detection:1"
+                }
+              ],
+              "source": {
+                "idShort": "ExperimentalAdaptivePieceDetection",
+                "modelType": "Property",
+                "path": "Capabilities/ExperimentalAdaptivePieceDetection",
+                "submodelId": "urn:ufsc:lai:ppu:cps-lai-01:submodel:capabilities",
+                "submodelIdShort": "Capabilities"
+              },
+              "contractHash": "469a3e49653bee3a51f1a06dce2331b127705b36c4ca3eb9411b0c3b44f54e04"
+            }
+          }
+        ],
+        "ambiguities": [],
+        "status": "CHANGED"
+      }
+    }
+  ],
+  "selectionHistory": [
+    {
+      "sequence": 1,
+      "event": "SELECTION_ACCEPTED",
+      "at": "2026-10-14T20:00:00.000Z",
+      "selection": {
+        "cpsId": "cpslai1",
+        "plugEventId": "avm4-plug-v1",
+        "plugCycleId": "cpslai1-cycle-df569c6c5f8533857b99d5284abdcd46",
+        "profileId": "GOV-CPSLAI1-003",
+        "aasVersion": "v1",
+        "aasSha256": "7cd277a57c690f936024ca6ca4c4487be7e35ae1d0617b410cba902b46870cfb",
+        "selectionId": "avm_sel_26bc30dfa49a2a3c4b7ef41a0afec32b",
+        "status": "SELECTED",
+        "sourceClassification": "EXPERIMENTAL_ONLY",
+        "createdAt": "2026-10-14T20:00:00.000Z",
+        "selectedAt": "2026-10-14T20:00:00.000Z"
+      }
+    },
+    {
+      "sequence": 2,
+      "event": "SELECTION_ACCEPTED",
+      "at": "2026-10-14T20:00:00.000Z",
+      "selection": {
+        "cpsId": "cpslai1",
+        "plugEventId": "avm4-plug-v2",
+        "plugCycleId": "cpslai1-cycle-7692a64a1b34e649ba7526a2ff407ca0",
+        "profileId": "GOV-CPSLAI1-004",
+        "aasVersion": "v2",
+        "aasSha256": "b406945e7c540c2013390ff3f111116cb90093d106e2df629f2daf6f018f32fd",
+        "selectionId": "avm_sel_b0adbdcdff92b166229a112aa23f0eda",
+        "status": "SELECTED",
+        "sourceClassification": "EXPERIMENTAL_ONLY",
+        "createdAt": "2026-10-14T20:00:00.000Z",
+        "selectedAt": "2026-10-14T20:00:00.000Z"
+      }
+    },
+    {
+      "sequence": 3,
+      "event": "SELECTION_ACCEPTED",
+      "at": "2026-10-14T20:00:00.000Z",
+      "selection": {
+        "cpsId": "cpslai1",
+        "plugEventId": "avm4-plug-v3",
+        "plugCycleId": "cpslai1-cycle-4f521bdb68399c8d54d34b1f9bba6031",
+        "profileId": "GOV-CPSLAI1-005",
+        "aasVersion": "v3",
+        "aasSha256": "f79fbe4b819d3bc1d477f540ce1a3f024ad9f739cf7e72e91fe210913b28c33d",
+        "selectionId": "avm_sel_9a294b6a852a4e186788180880ff03b3",
+        "status": "SELECTED",
+        "sourceClassification": "EXPERIMENTAL_ONLY",
+        "createdAt": "2026-10-14T20:00:00.000Z",
+        "selectedAt": "2026-10-14T20:00:00.000Z"
+      }
+    }
+  ]
+}

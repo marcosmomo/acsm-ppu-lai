@@ -42,6 +42,19 @@ const HCM_READ_CACHE_KEY = '__acsmHcmReadCache';
 const dataFilePath = () =>
   process.env.HCM_STORE_PATH || path.join(process.cwd(), 'data', 'hcm-store.json');
 
+export const getHcmRepositoryDiagnostics = () => {
+  const file = dataFilePath();
+  const exists = fs.existsSync(file);
+  const stat = exists ? fs.statSync(file) : null;
+  return {
+    repositoryId: crypto.createHash('sha256').update(path.resolve(file)).digest('hex').slice(0, 12),
+    pathMode: process.env.HCM_STORE_PATH ? 'configured' : 'project-default',
+    exists,
+    sizeBytes: stat?.size ?? 0,
+    updatedAt: stat?.mtime?.toISOString?.() || null,
+  };
+};
+
 const nowIso = () => new Date().toISOString();
 const clone = (value) => {
   if (value === undefined) return undefined;
@@ -124,6 +137,7 @@ const writeStore = (store) => {
   inMemoryStore.events = normalized.events;
   inMemoryStore.decisions = normalized.decisions;
   inMemoryStore.effectiveness = normalized.effectiveness;
+  inMemoryStore.knowledgeItems = normalized.knowledgeItems;
 
   const file = dataFilePath();
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -569,8 +583,9 @@ export const registerKnowledgeItem = (payload = {}) => {
 export const listKnowledgeItems = (filters = {}) => {
   const store = readStore({ cached: true });
   const cpsId = normalizeCpsId(filters.cpsId);
+  const source = safeText(filters.source);
   const items = store.knowledgeItems
-    .filter((item) => !cpsId || item.cpsId === cpsId)
+    .filter((item) => (!cpsId || item.cpsId === cpsId) && (!source || item.source === source))
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .map(clone);
   return applyLimit(items, filters.limit);

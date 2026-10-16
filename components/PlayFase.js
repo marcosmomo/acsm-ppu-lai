@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCPSContext } from '../context/CPSContext';
-import { getActiveAcsmConfig, normalizeCpsId } from '../lib/acsm/config';
+import { normalizeCpsId } from '../lib/acsm/config';
+import { buildCpsAnalyticsHref } from '../lib/acsm/analyticsNavigation.mjs';
 import {
   getOperationalStateForPresentation,
   getOperationalStatePresentation,
@@ -421,27 +423,6 @@ const openExternalUrl = (url, emptyMessage) => {
   window.open(finalUrl, '_blank', 'noopener,noreferrer');
 };
 
-const openAnalyticsPage = (router, cps) => {
-  const activeAcsm = getActiveAcsmConfig();
-  const rawId = cps?.id || cps?.cpsId || cps?.baseTopic || cps?.cps;
-  const cleanId = normalizeCpsId(rawId);
-
-  if (!cleanId) {
-    console.warn('[ACSM Analytics] Cannot open analytics without a CPS id from the selected card.', {
-      cps,
-      rawId,
-      defaultCpsId: activeAcsm.defaultCpsId,
-    });
-    alert('CPS id not available for this card.');
-    return;
-  }
-
-  const cpsId = encodeURIComponent(cleanId);
-  const cpsName = encodeURIComponent(cps?.nome || rawId || 'CPS');
-
-  router.push(`/analytics?cpsId=${cpsId}&cpsName=${cpsName}`);
-};
-
 const openSystemAnalyticsPage = (router) => {
   router.push('/analytics-system');
 };
@@ -481,6 +462,7 @@ const PlayFase = () => {
     unplugCPS,
     systemAnalytics,
     stableSystemAnalytics,
+    cpsAnalytics,
     getCanonicalOperationalState,
     pendingGovernanceActions,
     decidePendingGovernanceAction,
@@ -558,7 +540,12 @@ const PlayFase = () => {
 
   const globalOee = useMemo(() => {
     const validOees = visibleCPS
-      .map((cps) => cps?.oee?.value ?? cps?.oee?.current)
+      .map((cps) => {
+        const cpsId = normalizeCpsId(cps?.id || cps?.cpsId || cps?.topic);
+        const analyticsOee = cpsAnalytics?.[cpsId]?.oee;
+        return cps?.oee?.value ?? cps?.oee?.current ?? analyticsOee?.oee ??
+          analyticsOee?.value ?? analyticsOee?.current;
+      })
       .filter((value) => value !== null && value !== undefined && value !== '')
       .map(Number)
       .filter((v) => Number.isFinite(v) && v >= 0);
@@ -582,7 +569,7 @@ const PlayFase = () => {
       cpsCount: visibleCPS.length,
       measuredCount: validOees.length,
     };
-  }, [visibleCPS]);
+  }, [cpsAnalytics, visibleCPS]);
 
   const executiveSummary = useMemo(() => {
     if (activeCpsCount === 0) {
@@ -813,6 +800,8 @@ const PlayFase = () => {
               const dataUrl = getDataUrl(cps);
               const usesLocalTelemetryModal = shouldUseLocalTelemetryModal(cps);
               const normalizedCpsId = normalizeCpsId(cps?.id || cps?.cpsId || cps?.topic);
+              const analyticsHref = buildCpsAnalyticsHref(cps);
+              const operationalAnalytics = cpsAnalytics?.[normalizedCpsId] || null;
               const isCpsLai2 = normalizedCpsId === 'cpslai2';
               const isCpsLai3 = normalizedCpsId === 'cpslai3';
               const usesSyntheticIndicators = isCpsLai2 || isCpsLai3;
@@ -930,27 +919,30 @@ const PlayFase = () => {
 
               const oeeValue = usesSyntheticIndicators
                 ? syntheticOeeAvailable ? syntheticOeePayload?.oee?.current ?? null : null
-                : cps.oee?.value ?? null;
+                : cps.oee?.value ?? cps.oee?.current ?? operationalAnalytics?.oee?.oee ??
+                  operationalAnalytics?.oee?.value ?? operationalAnalytics?.oee?.current ?? null;
               const oeeAvailability = usesSyntheticIndicators
                 ? syntheticOeeAvailable ? syntheticOeePayload?.oee?.availability ?? null : null
-                : cps.oee?.availability ?? null;
+                : cps.oee?.availability ?? operationalAnalytics?.oee?.availability ?? null;
               const oeePerformance = usesSyntheticIndicators
                 ? syntheticOeeAvailable ? syntheticOeePayload?.oee?.performance ?? null : null
-                : cps.oee?.performance ?? null;
+                : cps.oee?.performance ?? operationalAnalytics?.oee?.performance ?? null;
               const oeeQuality = usesSyntheticIndicators
                 ? syntheticOeeAvailable ? syntheticOeePayload?.oee?.quality ?? null : null
-                : cps.oee?.quality ?? null;
+                : cps.oee?.quality ?? operationalAnalytics?.oee?.quality ?? null;
               const oeeText = humanizeOeeLabel(usesSyntheticIndicators ? formatSyntheticRatioForBadge(oeeValue) : oeeValue);
               const oeeBadgeCls = mapOeeBadgeClass(usesSyntheticIndicators ? formatSyntheticRatioForBadge(oeeValue) : oeeValue);
               const oeeWhen = formatDateTime(usesSyntheticIndicators
                 ? syntheticOeePayload?.calculatedAt || syntheticOeeRecord?.receivedAt
-                : cps.oee?.lastUpdate);
+                : cps.oee?.lastUpdate || operationalAnalytics?.timestamp || operationalAnalytics?.ts);
               const oeeTitle = usesSyntheticIndicators
                 ? syntheticOeeHeld ? 'Último OEE — cálculo pausado' : 'Experimental OEE'
                 : 'Local OEE';
               const isCpsLai1 =
                 normalizeCpsId(cps?.id || cps?.cpsId || cps?.topic) === 'cpslai1';
-              const production = isCpsLai1 ? cps?.production : null;
+              const production = isCpsLai1
+                ? cps?.production || operationalAnalytics?.production || null
+                : null;
               const governanceStatus = String(
                 cps?.governanceStatus || cps?.governanceProfile?.status || 'NOT_DEFINED'
               );
@@ -1072,13 +1064,13 @@ const PlayFase = () => {
                             {isCpsLai3 ? 'Synthetic Health API' : 'Health API'}
                           </button>
 
-                          <button
-                            onClick={() => openAnalyticsPage(router, cps)}
+                          <Link
+                            href={analyticsHref}
                             className="desc-btn"
                             title={`Open analytics page for ${cps.nome}`}
                           >
                             Analytics
-                          </button>
+                          </Link>
 
                           <button
                             onClick={() =>
@@ -1184,13 +1176,13 @@ const PlayFase = () => {
                             {isCpsLai3 ? 'Synthetic Health API' : 'Health API'}
                           </button>
 
-                          <button
-                            onClick={() => openAnalyticsPage(router, cps)}
+                          <Link
+                            href={analyticsHref}
                             className="desc-btn"
                             title={`Open analytics page for ${cps.nome}`}
                           >
                             Analytics
-                          </button>
+                          </Link>
 
                           <button
                             onClick={() =>
@@ -1292,13 +1284,13 @@ const PlayFase = () => {
                             {isCpsLai3 ? 'Synthetic Health API' : 'Health API'}
                           </button>
 
-                          <button
-                            onClick={() => openAnalyticsPage(router, cps)}
+                          <Link
+                            href={analyticsHref}
                             className="desc-btn"
                             title={`Open analytics page for ${cps.nome}`}
                           >
                             Analytics
-                          </button>
+                          </Link>
 
                           <button
                             onClick={() =>

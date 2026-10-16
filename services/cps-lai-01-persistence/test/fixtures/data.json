@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0",
+  "cpsId": "cpslai1",
+  "assetName": "DistributionConveyorStationLAI",
+  "source": "OPC_UA",
+  "timestamp": "2026-01-15T12:00:02.000Z",
+  "PieceAtEntry": false,
+  "PieceAtMiddle": false,
+  "PieceAtExit": false,
+  "operationMode": "AUTOMATIC",
+  "evidence": {
+    "PieceAtEntry": { "value": false, "tag": "ENTRY_TAG", "nodeId": "ns=3;s=ENTRY_TAG", "dataType": "Boolean", "evidenceStatus": "FIELD_VALIDATED", "timestamp": "2026-01-15T12:00:01.800Z", "sourceTimestamp": "2026-01-15T12:00:01.800Z", "serverTimestamp": "2026-01-15T12:00:01.801Z" },
+    "PieceAtMiddle": { "value": false, "tag": "MIDDLE_TAG", "nodeId": "ns=3;s=MIDDLE_TAG", "dataType": "Boolean", "evidenceStatus": "FIELD_VALIDATED", "timestamp": "2026-01-15T12:00:01.900Z", "sourceTimestamp": "2026-01-15T12:00:01.900Z", "serverTimestamp": "2026-01-15T12:00:01.901Z" },
+    "PieceAtExit": { "value": false, "tag": "EXIT_TAG", "nodeId": "ns=3;s=EXIT_TAG", "dataType": "Boolean", "evidenceStatus": "FIELD_VALIDATED", "timestamp": "2026-01-15T12:00:02.000Z", "sourceTimestamp": "2026-01-15T12:00:02.000Z", "serverTimestamp": "2026-01-15T12:00:02.001Z" },
+    "MagazineFeedSensor": { "value": true, "tag": "MAGAZINE_TAG", "nodeId": "ns=3;s=MAGAZINE_TAG", "dataType": "Boolean", "evidenceStatus": "SEMANTIC_VALIDATION_PENDING", "timestamp": "2026-01-15T12:00:02.000Z", "sourceTimestamp": "2026-01-15T12:00:02.000Z", "serverTimestamp": "2026-01-15T12:00:02.001Z" }
+  },
+  "mode": {
+    "AutomaticModeSignal": { "value": true, "tag": "AUTO_TAG", "nodeId": "ns=3;s=AUTO_TAG", "dataType": "Boolean", "evidenceStatus": "PHYSICALLY_VALIDATED_MODE_MARKER", "timestamp": "2026-01-15T12:00:02.000Z", "sourceTimestamp": "2026-01-15T12:00:02.000Z", "serverTimestamp": "2026-01-15T12:00:02.001Z" }
+  }
+}

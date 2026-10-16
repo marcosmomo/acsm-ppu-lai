@@ -2,8 +2,6 @@
 
 import React, { useState } from 'react';
 
-const API_BASE = process.env.NEXT_PUBLIC_NODE_RED_BASE_URL || 'http://localhost:1881';
-
 function getNestedValue(record, keys) {
   for (const key of keys) {
     const value = key.split('.').reduce((current, part) => current?.[part], record);
@@ -34,7 +32,16 @@ function summarizeRecord(record) {
   };
 }
 
-export default function HistoryRecordsButton({ level, label = 'Last 25 records', variant = 'light' }) {
+const toHistoryRecord = (item, level) => ({
+  id: item.knowledgeId,
+  timestamp: item.timestamp || item.createdAt,
+  source: item.source,
+  kind: item.originalKnowledge?.level || level,
+  messageType: item.originalKnowledge?.messageType || 'cognitive_snapshot',
+  payload: item.originalKnowledge || {},
+});
+
+export default function HistoryRecordsButton({ cpsId, level, label = 'Last 25 records', variant = 'light' }) {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState({});
   const [state, setState] = useState({ loading: false, error: '', records: [] });
@@ -44,12 +51,29 @@ export default function HistoryRecordsButton({ level, label = 'Last 25 records',
     setOpen(true);
     setState({ loading: true, error: '', records: [] });
     try {
-      const res = await fetch(`${API_BASE}/api/history/${level}?limit=25`, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setState({ loading: false, error: '', records: Array.isArray(data.records) ? data.records : [] });
+      const query = new URLSearchParams({ cpsId, source: level, limit: '25' });
+      const endpoint = `/api/hcm/knowledge?${query.toString()}`;
+      const res = await fetch(endpoint, { cache: 'no-store' });
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error(`Invalid JSON response from ${endpoint} (HTTP ${res.status}).`);
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || 'History request failed.'}`);
+      if (!Array.isArray(data.knowledgeItems)) {
+        throw new Error(`Invalid history response from ${endpoint}.`);
+      }
+      const records = data.knowledgeItems
+        .map((item) => toHistoryRecord(item, level))
+        .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))
+        .slice(0, 25);
+      setState({ loading: false, error: '', records });
     } catch (err) {
-      setState({ loading: false, error: err?.message || 'Could not load history records.', records: [] });
+      const message = err instanceof TypeError
+        ? 'Connection failed while requesting the application HCM endpoint.'
+        : err?.message || 'Could not load history records.';
+      setState({ loading: false, error: message, records: [] });
     }
   }
 

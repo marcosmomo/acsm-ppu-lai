@@ -17,8 +17,16 @@ import {
   registerEvent,
 } from '../memory/cognitiveEpisodicMemoryService.js';
 import { executeGovernedAction } from './governedActionExecutor.js';
+import { buildGovernanceDecisionPpuEvent } from '../../lib/acsm/ppuEventBuilder.mjs';
+import {
+  enqueuePpuOutbox,
+  markPpuOutboxFailed as markFailed,
+  markPpuOutboxPublished as markPublished,
+  normalizePpuOutbox,
+  sanitizeOutboxError,
+} from '../../lib/acsm/ppuOutbox.mjs';
 
-const DEFAULT_STORE = { profiles: {}, profileVersions: {}, pendingActions: {}, history: [] };
+const DEFAULT_STORE = { profiles: {}, profileVersions: {}, pendingActions: {}, history: [], ppuOutbox: {} };
 
 const storePath = () =>
   process.env.GOVERNANCE_STORE_PATH || path.join(process.cwd(), 'data', 'governance-store.json');
@@ -91,6 +99,7 @@ const normalizeStore = (store = {}) => {
     pendingActions:
       store.pendingActions && typeof store.pendingActions === 'object' ? store.pendingActions : {},
     history: Array.isArray(store.history) ? store.history : [],
+    ppuOutbox: normalizePpuOutbox(store.ppuOutbox),
   };
 };
 
@@ -108,8 +117,49 @@ const writeStore = (store) => {
   const normalized = normalizeStore(store);
   const file = storePath();
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, `${JSON.stringify(normalized, null, 2)}\n`, 'utf-8');
+  const temporaryFile = `${file}.${process.pid}.${Date.now()}.tmp`;
+  try {
+    fs.writeFileSync(temporaryFile, `${JSON.stringify(normalized, null, 2)}\n`, 'utf-8');
+    fs.renameSync(temporaryFile, file);
+  } catch (error) {
+    try {
+      if (fs.existsSync(temporaryFile)) fs.unlinkSync(temporaryFile);
+    } catch {
+      // Preserve the original storage failure; temporary cleanup is best effort.
+    }
+    throw error;
+  }
   return clone(normalized);
+};
+
+export const enqueuePpuOutboxEvent = (ppuEvent) => {
+  const store = readStore();
+  const result = enqueuePpuOutbox(store, ppuEvent);
+  if (!result.duplicate) writeStore(store);
+  return result;
+};
+
+export const listPpuOutboxEvents = () =>
+  Object.values(readStore().ppuOutbox || {}).sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+
+export const markPpuOutboxEventPublished = (eventId, options = {}) => {
+  const store = readStore();
+  const entry = markPublished(store, eventId, options);
+  writeStore(store);
+  return entry;
+};
+
+export const markPpuOutboxEventFailed = (eventId, error, options = {}) => {
+  const store = readStore();
+  const entry = markFailed(store, eventId, error, options);
+  writeStore(store);
+  return entry;
+};
+
+export const ppuOutboxRepository = {
+  list: listPpuOutboxEvents,
+  markPublished: markPpuOutboxEventPublished,
+  markFailed: markPpuOutboxEventFailed,
 };
 
 const recordHistory = (store, event) => {
@@ -576,8 +626,29 @@ export const approveGovernanceProfile = (cpsId, approvedBy = 'human-operator') =
     approvedBy,
   });
   recordHcmGovernanceEvent('governance_profile_approved', event);
+  const ppuEvent = key === 'cpslai1'
+    ? buildGovernanceDecisionPpuEvent({
+        cpsId: key,
+        decision: 'APPROVED',
+        decidedBy: approvedBy,
+        decisionEvent: event,
+        profile,
+      })
+    : null;
+  let ppuOutbox = null;
+  if (ppuEvent) {
+    try {
+      ppuOutbox = enqueuePpuOutbox(store, ppuEvent);
+    } catch (error) {
+      const failure = sanitizeOutboxError(error);
+      recordHistory(store, {
+        eventType: 'PPU_OUTBOX_PREPARATION_FAILED', cpsId: key, ppuEventId: ppuEvent.eventId, error: failure,
+      });
+      ppuOutbox = { stored: false, error: failure };
+    }
+  }
   writeStore(store);
-  return { profile, governanceStatus: profile.status };
+  return { profile, governanceStatus: profile.status, ppuEvent, ppuOutbox };
 };
 
 export const rejectGovernanceProfile = (cpsId, rejectedBy = 'human-operator') => {
@@ -590,6 +661,7 @@ export const rejectGovernanceProfile = (cpsId, rejectedBy = 'human-operator') =>
     error.details = { code: 'GOVERNANCE_PROFILE_REQUIRED', cpsId: key };
     throw error;
   }
+  const decisionEffective = normalizeGovernanceStatus(current.status) !== GOVERNANCE_STATUS.DENIED;
   const profile = {
     ...current,
     status: GOVERNANCE_STATUS.DENIED,
@@ -614,8 +686,29 @@ export const rejectGovernanceProfile = (cpsId, rejectedBy = 'human-operator') =>
     rejectedBy,
   });
   recordHcmGovernanceEvent('governance_profile_rejected', event);
+  const ppuEvent = key === 'cpslai1' && decisionEffective
+    ? buildGovernanceDecisionPpuEvent({
+        cpsId: key,
+        decision: 'REJECTED',
+        decidedBy: rejectedBy,
+        decisionEvent: event,
+        profile,
+      })
+    : null;
+  let ppuOutbox = null;
+  if (ppuEvent) {
+    try {
+      ppuOutbox = enqueuePpuOutbox(store, ppuEvent);
+    } catch (error) {
+      const failure = sanitizeOutboxError(error);
+      recordHistory(store, {
+        eventType: 'PPU_OUTBOX_PREPARATION_FAILED', cpsId: key, ppuEventId: ppuEvent.eventId, error: failure,
+      });
+      ppuOutbox = { stored: false, error: failure };
+    }
+  }
   writeStore(store);
-  return { profile, governanceStatus: profile.status };
+  return { profile, governanceStatus: profile.status, ppuEvent, ppuOutbox };
 };
 
 export const checkGovernance = async (request = {}) => {
@@ -834,4 +927,8 @@ export const governanceStoreService = {
   checkGovernance,
   listPendingGovernanceActions,
   decideGovernanceAction,
+  enqueuePpuOutboxEvent,
+  listPpuOutboxEvents,
+  markPpuOutboxEventPublished,
+  markPpuOutboxEventFailed,
 };
